@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.3</title>
+<title>MosquitoApp v20260516.4</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -1119,6 +1119,7 @@ function App() {
   // ── Import modal state ──
   const [importModal,setImportModal]=useState(null); // {imp, mode, kalNum, kalLoading, kalError, kalData, pozycje}
   const [zamOpenBox,setZamOpenBox]=useState({});
+  const [zamChatHistory,setZamChatHistory]=useState({});
   const [zamSearch,setZamSearch]=useState('');
   const [zamKonto,setZamKonto]=useState('');
   const [zamOnlyInvoice,setZamOnlyInvoice]=useState(false);
@@ -5294,7 +5295,7 @@ function App() {
                         color:_batchSel.includes(imp.allegroOrderId)?'#9a9aff':'#4a4a9a'}}>
                       📦{_batchSel.includes(imp.allegroOrderId)?'✓':''}
                     </button>}
-                    <button onClick={()=>toggleBox(imp.allegroOrderId,'chat')} title="Napisz wiadomość do klienta"
+                    <button onClick={async()=>{toggleBox(imp.allegroOrderId,'chat');if(zamOpenBox[imp.allegroOrderId]==='chat') return;try{const r=await fetch(AUTORESPONDER_URL+'/messaging/threads?kontoId='+imp.kontoId+'&orderId='+imp.allegroOrderId+'&limit=10',{headers:{'x-api-key':AUTORESPONDER_KEY}});const d=await r.json();const threads=d.threads||[];const thread=threads[0];if(thread){const mr=await fetch(AUTORESPONDER_URL+'/messaging/threads/'+thread.id+'/messages?kontoId='+imp.kontoId,{headers:{'x-api-key':AUTORESPONDER_KEY}});const md=await mr.json();setZamChatHistory(prev=>({...prev,[imp.allegroOrderId]:md.messages||[]}));}}catch(e){console.warn('chat history error',e);}}} title="Napisz wiadomość do klienta"
                       style={{padding:'4px 7px',fontSize:12,borderRadius:5,cursor:'pointer',
                         background:openBox==='chat'?'#1a3a3a':'#1a2a2a',
                         border:`1px solid ${openBox==='chat'?'#3a8a8a':'#2a5a5a'}`,
@@ -5318,7 +5319,23 @@ function App() {
                 {openBox==='chat'&&(
                   <div style={{background:'#0a1a1a',borderTop:'1px solid #1a5a5a',padding:'10px 14px'}}>
                     <div style={{fontSize:11,color:'#3a7a7a',marginBottom:6,fontWeight:700}}>✉️ Wiadomość do klienta — {imp.klientImie}</div>
-                    {imp.buyerMsg&&<div style={{fontSize:11,color:'#cfaf6f',fontStyle:'italic',marginBottom:8,padding:'5px 8px',background:'#0a1400',border:'1px solid #2a3a1a',borderRadius:4,whiteSpace:'pre-wrap',wordBreak:'break-word'}}>💬 Ostatnia wiadomość: {imp.buyerMsg}</div>}
+                    {(zamChatHistory[imp.allegroOrderId]||[]).length>0&&(
+                      <div style={{maxHeight:200,overflowY:'auto',marginBottom:8,display:'flex',flexDirection:'column',gap:4}}>
+                        {(zamChatHistory[imp.allegroOrderId]||[]).map((m,i)=>(
+                          <div key={i} style={{fontSize:11,padding:'4px 8px',borderRadius:4,
+                            background:m.author?.isInterlocutor?'#0a1a0a':'#0a0a1a',
+                            border:'1px solid '+(m.author?.isInterlocutor?'#1a3a1a':'#1a1a3a'),
+                            color:m.author?.isInterlocutor?'#7acf9a':'#9a9adf',
+                            alignSelf:m.author?.isInterlocutor?'flex-start':'flex-end',
+                            maxWidth:'85%'}}>
+                            <span style={{fontWeight:700,marginRight:4}}>{m.author?.isInterlocutor?imp.klientImie:'Ty'}:</span>
+                            {m.text}
+                            <span style={{fontSize:9,color:'#3a5a5a',marginLeft:6}}>{m.createdAt?new Date(m.createdAt).toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'}):''}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {imp.buyerMsg&&!(zamChatHistory[imp.allegroOrderId]||[]).length&&<div style={{fontSize:11,color:'#cfaf6f',fontStyle:'italic',marginBottom:8,padding:'5px 8px',background:'#0a1400',border:'1px solid #2a3a1a',borderRadius:4,whiteSpace:'pre-wrap',wordBreak:'break-word'}}>💬 Ostatnia wiadomość: {imp.buyerMsg}</div>}
                     <textarea id={`chat_${imp.allegroOrderId}`}
                       placeholder="Wpisz wiadomość do klienta..."
                       rows={3}
