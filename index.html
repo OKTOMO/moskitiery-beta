@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.11</title>
+<title>MosquitoApp v20260516.12</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -3536,7 +3536,16 @@ function App() {
           localStorage.setItem('allegro_shipments',JSON.stringify(next));
           return next;
         });
-        if(shipmentModal.imp.allegroOrderId) setOrderAppStatus(shipmentModal.imp.allegroOrderId,"W realizacji");
+        if(shipmentModal.imp.allegroOrderId){
+          setOrderAppStatus(shipmentModal.imp.allegroOrderId,"W realizacji");
+          // Wyślij status PROCESSING do Allegro w tle
+          const _wKey=localStorage.getItem('mosk_worker_key')||'';
+          fetch(AUTORESPONDER_URL+'/order/status',{
+            method:'POST',
+            headers:{'Content-Type':'application/json','x-api-key':_wKey||AUTORESPONDER_KEY},
+            body:JSON.stringify({allegroOrderId:shipmentModal.imp.allegroOrderId,kontoId:shipmentModal.imp.kontoId,status:'PROCESSING'})
+          }).catch(function(e){console.warn('Status update failed:',e);});
+        }
       }
       // Zostaw modal otwarty z sekcją zamówienia odbioru
       setShipmentModal(prev=>({...prev, createdShipmentId:d1.shipmentId, createdCarrierId:d1.carrierId}));
@@ -7386,15 +7395,27 @@ function App() {
               const razemWart=(parseFloat(gr1Wart)+parseFloat(gr2Wart)+parseFloat(pomWart)).toFixed(2);
               // Kwota sprzedaży brutto kosmetyków — tylko PLN, bez gratisów
               const kosmSprzedazBrutto=zamMies.reduce(function(s,imp){
-                if((imp.kwotaWaluta||'PLN')!=='PLN') return s;
+                var waluta=imp.kwotaWaluta||'PLN';
                 var poz=imp.pozycje&&imp.pozycje.length>0?imp.pozycje:[{nazwa:imp.offerNames||"",ilosc:1,cenaNetto:parseFloat(imp.totalAmount||0)/1.23}];
                 var kwotaPoz=0;
                 poz.forEach(function(p){
                   var n=(p.nazwa||imp.offerNames||"").toLowerCase();
                   if(n.includes('dostawa')||n.includes('przesylka')||n.includes('kurier')) return;
-                  var cenaB=parseFloat(p.cenaNetto||0)*1.23*(parseInt(p.ilosc)||1);
-                  if(!cenaB&&poz.length===1) cenaB=parseFloat(imp.totalAmount||0);
-                  if(cenaB<0.10) return;
+                  var szt=parseInt(p.ilosc)||1;
+                  var cenaB;
+                  if(waluta!=='PLN'){
+                    // Zagraniczne — licz po cenie PLN (gr1=64,99 gr2=84,99 pom=7,99)
+                    var isGr1=false,isGr2=false,isPom=false;
+                    KAT.forEach(function(k){if(k.match(n)){if(k.gr===1)isGr1=true;else if(k.gr===2)isGr2=true;else isPom=true;}});
+                    if(isGr1) cenaB=64.99*szt;
+                    else if(isGr2) cenaB=84.99*szt;
+                    else if(isPom) cenaB=7.99*szt;
+                    else return;
+                  } else {
+                    cenaB=parseFloat(p.cenaNetto||0)*1.23*szt;
+                    if(!cenaB&&poz.length===1) cenaB=parseFloat(imp.totalAmount||0);
+                    if(cenaB<0.10) return;
+                  }
                   var isKosm=false;
                   KAT.forEach(function(k){if(k.match(n)) isKosm=true;});
                   if(isKosm) kwotaPoz+=cenaB;
