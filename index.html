@@ -5113,6 +5113,19 @@ function App() {
                   </div>
                   <select value={as||effStatus} onChange={e=>{
                       const newSt=e.target.value;
+                      if(newSt==='W realizacji'&&(effStatus==='Nowe'||!effStatus)){
+                        const _shipKey=imp.allegroOrderId||imp._kalNum||'';
+                        const _hasSh=!!(_shipKey&&allegroShipments[_shipKey]);
+                        const _hasOrd=orders.some(o=>o.allegroOrderId===imp.allegroOrderId||(imp._kalNum&&o.kalNumer===imp._kalNum));
+                        const _offerL=(imp.offerNames||'').toLowerCase();
+                        const _isMosk=_offerL.includes('moskitier')||_offerL.includes('siatk')||_offerL.includes('ramk')||_offerL.includes('drzwi');
+                        const braki=[];
+                        if(!_hasSh) braki.push('brak etykiety');
+                        if(_isMosk&&!_hasOrd) braki.push('brak zlecenia produkcji');
+                        if(braki.length>0&&!window.confirm('⚠️ Uwaga: '+braki.join(', ')+'
+
+Czy mimo to przenieść do W realizacji?')) return;
+                      }
                       setOrderAppStatus(imp.allegroOrderId,newSt,true);
                     }}
                     style={{padding:'3px 5px',fontSize:11,borderRadius:4,cursor:'pointer',
