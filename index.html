@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.1</title>
+<title>MosquitoApp v20260516.3</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -5404,7 +5404,7 @@ function App() {
                     🧾 Faktury ({fvCount})
                   </button>
                 );})()}
-                <button onClick={()=>{setZamTab('szablony_fak');setSzablonEditId(null);}} style={{padding:'7px 16px',fontSize:13,fontWeight:700,cursor:'pointer',border:'none',borderRadius:'6px 6px 0 0',background:zamTab==='szablony_fak'?'#2a1a0a':'#1a1208',color:zamTab==='szablony_fak'?'#f0c060':'#af8a3a',borderBottom:zamTab==='szablony_fak'?'2px solid #cf8a1a':'2px solid transparent'}}>
+                <button onClick={()=>{const _pin=localStorage.getItem('admin_pin');if(_pin){const _e=prompt('PIN (szablony FV):');if(_e!==_pin){alert('Błędny PIN.');return;}}setZamTab('szablony_fak');setSzablonEditId(null);}} style={{padding:'7px 16px',fontSize:13,fontWeight:700,cursor:'pointer',border:'none',borderRadius:'6px 6px 0 0',background:zamTab==='szablony_fak'?'#2a1a0a':'#1a1208',color:zamTab==='szablony_fak'?'#f0c060':'#af8a3a',borderBottom:zamTab==='szablony_fak'?'2px solid #cf8a1a':'2px solid transparent'}}>
                   📋 Szablony FV ({fakSzablony.length})
                 </button>
                 <button onClick={()=>{setZamTab('porzucone');fetchLeads();}} style={{padding:'7px 16px',fontSize:13,fontWeight:700,cursor:'pointer',border:'none',borderRadius:'6px 6px 0 0',background:zamTab==='porzucone'?'#1a2a3a':'#0a1828',color:zamTab==='porzucone'?'#7adfff':'#4a8aaf',borderBottom:zamTab==='porzucone'?'2px solid #3aafd0':'2px solid transparent'}}>
@@ -5812,6 +5812,7 @@ function App() {
                     </div>
                   );
                 }
+                if(zamTab==='porzucone'||zamTab==='szablony_fak'||zamTab==='faktury_zam') return null;
                 const active=zamTab==='nowe'?noweList:zamTab==='realizacja'?realizacjaList:zrealizowaneList;
                 if(active.length===0&&allegroImportResults.length>0) return <div style={{textAlign:'center',color:'#3a5a3a',padding:'40px 0'}}>{zamTab==='nowe'?'🎉 Brak nowych zamówień!':zamTab==='realizacja'?'Brak zamówień w realizacji':'Brak zrealizowanych'}</div>;
                 return <div>
