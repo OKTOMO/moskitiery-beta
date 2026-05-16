@@ -2056,8 +2056,8 @@ function App() {
         szerokosc: mm2cmStr(p.szerokosc),
         wysokosc:  mm2cmStr(p.wysokosc),
         glebokosc: p.felc?mm2cmStr(p.felc):String(DOMYSLNA_GLEBOKOS),
-        kolorRamki: p.kolorProfilu||'Antracyt',
-        kolorSiatki: p.kolorSiatki||'Czarna',
+        kolorRamki: mapKolorProfilu(p.kolorProfilu)||'Antracyt',
+        kolorSiatki: mapKolorSiatki(p.kolorSiatki)||'Czarna',
         ilosc: parseInt(p.ilosc)||1,
       }));
       if(poz.length===0){alert('❌ Brak pozycji w zapytaniu '+n);return;}
