@@ -1126,6 +1126,8 @@ function App() {
   const [mergeSelected,setMergeSelected]=useState(new Set());
   const [batchMailSelected,setBatchMailSelected]=useState([]);
   const [zamTab,setZamTab]=useState('nowe');
+  const [leads,setLeads]=useState([]);
+  const [leadsLoading,setLeadsLoading]=useState(false);
   const [fakSzablony,setFakSzablony]=useState(()=>{try{return JSON.parse(localStorage.getItem('fak_szablony')||'[]');}catch{return [];}});
   const [szablonEditId,setSzablonEditId]=useState(null); // null=lista, 'new'=nowy, id=edycja
   const [szablonNipLoading,setSzablonNipLoading]=useState(false);
@@ -1553,6 +1555,19 @@ function App() {
     const tokens={};
     Object.keys(access).forEach(k=>{if(access[k]) tokens[k]={access:access[k],refresh:refresh[k]||""};});
     return tokens;
+  }
+  async function fetchLeads(){
+    setLeadsLoading(true);
+    try{
+      const r=await fetch(AUTORESPONDER_URL+'/kalkulator/leads',{headers:{'x-api-key':AUTORESPONDER_KEY}});
+      const d=await r.json();
+      if(d.ok) setLeads(d.leads||[]);
+    }catch(e){console.warn('leads error',e);}
+    setLeadsLoading(false);
+  }
+  async function deleteLead(id){
+    await fetch(AUTORESPONDER_URL+'/kalkulator/lead/'+id,{method:'DELETE',headers:{'x-api-key':AUTORESPONDER_KEY}});
+    setLeads(prev=>prev.filter(l=>l.id!==id));
   }
   async function syncAutoresponderTokens(){
     setAutoSyncing(true);setAutoSyncResult("");
@@ -5392,6 +5407,9 @@ function App() {
                 <button onClick={()=>{setZamTab('szablony_fak');setSzablonEditId(null);}} style={{padding:'7px 16px',fontSize:13,fontWeight:700,cursor:'pointer',border:'none',borderRadius:'6px 6px 0 0',background:zamTab==='szablony_fak'?'#2a1a0a':'#1a1208',color:zamTab==='szablony_fak'?'#f0c060':'#af8a3a',borderBottom:zamTab==='szablony_fak'?'2px solid #cf8a1a':'2px solid transparent'}}>
                   📋 Szablony FV ({fakSzablony.length})
                 </button>
+                <button onClick={()=>{setZamTab('porzucone');fetchLeads();}} style={{padding:'7px 16px',fontSize:13,fontWeight:700,cursor:'pointer',border:'none',borderRadius:'6px 6px 0 0',background:zamTab==='porzucone'?'#1a2a3a':'#0a1828',color:zamTab==='porzucone'?'#7adfff':'#4a8aaf',borderBottom:zamTab==='porzucone'?'2px solid #3aafd0':'2px solid transparent'}}>
+                  👀 Porzucone {leads.length>0&&<span style={{background:'#2a4a6a',borderRadius:10,padding:'1px 7px',fontSize:11,marginLeft:4}}>{leads.length}</span>}
+                </button>
               </div>
               {allegroImportResults.length===0&&zamTab!=='szablony_fak'&&<div style={{textAlign:'center',color:'#2a5a3a',padding:'40px 0',fontSize:14}}>Kliknij "Pobierz zamówienia" żeby załadować listę</div>}
               {mergeSelected.size>=2&&(
@@ -5509,6 +5527,42 @@ function App() {
                   pobierzNIP={pobierzKontrahentaNIP}
                 />;
               })()}
+              {zamTab==='porzucone'&&(
+                <div style={{padding:'12px 0'}}>
+                  <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
+                    <div style={{fontWeight:700,fontSize:15,color:'#7adfff'}}>👀 Porzucone zapytania</div>
+                    <button onClick={fetchLeads} disabled={leadsLoading} style={{padding:'3px 12px',fontSize:12,background:'#0a2a3a',border:'1px solid #2a6a8a',borderRadius:5,color:'#5abfdf',cursor:'pointer'}}>
+                      {leadsLoading?'⟳ ładuję...':'🔄 Odśwież'}
+                    </button>
+                    <div style={{fontSize:12,color:'#3a6a7a',marginLeft:'auto'}}>{leads.length} zapytań</div>
+                  </div>
+                  {leads.length===0&&!leadsLoading&&<div style={{color:'#3a5a6a',textAlign:'center',padding:'30px 0',fontSize:14}}>Brak porzuconych zapytań</div>}
+                  {leads.map(lead=>(
+                    <div key={lead.id} style={{background:'#0a1a2a',border:'1px solid #1a3a4a',borderRadius:7,padding:'10px 14px',marginBottom:8,display:'flex',gap:12,alignItems:'flex-start'}}>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginBottom:4}}>
+                          {lead.name&&<span style={{fontWeight:700,color:'#9fcfdf',fontSize:14}}>{lead.name}</span>}
+                          {lead.phone&&<a href={'tel:'+lead.phone} style={{color:'#7acf9f',fontSize:13,textDecoration:'none'}}>📞 {lead.phone}</a>}
+                          {lead.email&&<a href={'mailto:'+lead.email} style={{color:'#7aafcf',fontSize:13,textDecoration:'none'}}>✉️ {lead.email}</a>}
+                          <span style={{fontSize:11,color:'#3a6a7a',marginLeft:'auto'}}>{lead.brandName||lead.brand||''}</span>
+                        </div>
+                        {lead.pozycje&&lead.pozycje.length>0&&(
+                          <div style={{fontSize:12,color:'#5a8a9a',marginBottom:3}}>
+                            {lead.pozycje.slice(0,3).map((p,i)=><span key={i} style={{marginRight:8}}>{p.szerokosc&&p.wysokosc?p.szerokosc+'×'+p.wysokosc+' cm':'—'}{p.kolorProfilu?' '+p.kolorProfilu:''}{p.ilosc>1?' ×'+p.ilosc:''}</span>)}
+                            {lead.pozycje.length>3&&<span style={{color:'#3a6a7a'}}>+{lead.pozycje.length-3} więcej</span>}
+                          </div>
+                        )}
+                        <div style={{display:'flex',gap:10,alignItems:'center'}}>
+                          {lead.totalCost>0&&<span style={{fontSize:12,color:'#cfaf5a',fontWeight:700}}>{lead.totalCost.toFixed(2)} zł</span>}
+                          {lead.notes&&<span style={{fontSize:12,color:'#5a7a7a',fontStyle:'italic'}}>{lead.notes}</span>}
+                          <span style={{fontSize:11,color:'#2a5a6a',marginLeft:'auto'}}>{lead.savedAt?new Date(lead.savedAt).toLocaleString('pl-PL'):''}</span>
+                        </div>
+                      </div>
+                      <button onClick={()=>deleteLead(lead.id)} title="Usuń" style={{background:'#2a0a0a',border:'1px solid #5a2a2a',color:'#af5a5a',borderRadius:5,padding:'3px 8px',cursor:'pointer',fontSize:12,flexShrink:0}}>✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
               {(()=>{
                 // ── Zakładka Faktury w module zamówień ──
                 if(zamTab==='faktury_zam'){
