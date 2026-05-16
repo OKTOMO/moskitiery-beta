@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260514.34</title>
+<title>MosquitoApp v20260516.1</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -2068,7 +2068,7 @@ function App() {
       setForm(f=>({...f,firma,pozycje:poz}));
       // Otwórz modal importu z danymi z kalkulatora
       const fakeImp={
-        allegroOrderId:'',kontoId:d.brand||'favo5',
+        allegroOrderId:'',_kalNum:n,kontoId:d.brand||'favo5',
         klientImie:'',klientLogin:'',klientMiasto:'',klientUlica:'',klientKod:'',telefon:'',
         offerNames:d.pozycje?.map(p=>p.kolorProfilu?'Moskitiera '+p.kolorProfilu:'Moskitiera').join(', ')||'Moskitiera',
         boughtAt:new Date().toISOString().slice(0,10),
@@ -2415,7 +2415,7 @@ function App() {
     const emailCfg=JSON.parse(localStorage.getItem('email_produkcji_config')||'{}');
     const to=emailCfg.emailProdukcji||'biuro@superis.pl';
     const subject=`${order.numerZlecenia||''} ${order.klientImie||imp.klientImie||''} ${order.klientMiasto||imp.klientMiasto||''}`.trim();
-    const sh=allegroShipments[imp.allegroOrderId];
+    const sh=allegroShipments[imp.allegroOrderId||imp._kalNum||""];
     const threadMessageId=await fetchMailThread(imp.allegroOrderId);
     setMailPreview({imp, order, to, subject, hasEtykieta:!!sh, threadMessageId});
     loadRecentEmails();
@@ -2457,8 +2457,8 @@ function App() {
         }
       }
       // Etykieta PDF — tylko dla prawdziwych zamówień Allegro i jeśli nie usunięta
-      const allegroId = imp.allegroOrderId;
-      const sh = allegroId && /^[0-9a-f]{8}-[0-9a-f]{4}/i.test(allegroId) ? allegroShipments[allegroId] : null;
+      const allegroId = imp.allegroOrderId||imp._kalNum||'';
+      const sh = allegroId ? allegroShipments[allegroId] : null;
       if(sh && extraFiles.length===0 && !removedFiles.includes('etykieta')){
         try{
           const lr=await fetch(AUTORESPONDER_URL+"/shipment/label?kontoId="+sh.kontoId,{
@@ -3499,9 +3499,10 @@ function App() {
       const pdfBlob=new Blob([Uint8Array.from(atob(d2.pdf),c=>c.charCodeAt(0))],{type:"application/pdf"});
       const pdfUrl=URL.createObjectURL(pdfBlob);
             // Zapisz shipmentId + waybill do ponownego druku i trackingu
-      if(shipmentModal.imp.allegroOrderId){
+      const _shipKey=shipmentModal.imp.allegroOrderId||shipmentModal.imp._kalNum||'';
+      if(_shipKey){
         setAllegroShipments(prev=>{
-          const next={...prev,[shipmentModal.imp.allegroOrderId]:{
+          const next={...prev,[_shipKey]:{
             shipmentId:d1.shipmentId,
             waybill:d1.waybill||null,
             carrierId:d1.carrierId||null,
@@ -3514,7 +3515,7 @@ function App() {
           localStorage.setItem('allegro_shipments',JSON.stringify(next));
           return next;
         });
-        setOrderAppStatus(shipmentModal.imp.allegroOrderId,"W realizacji");
+        if(shipmentModal.imp.allegroOrderId) setOrderAppStatus(shipmentModal.imp.allegroOrderId,"W realizacji");
       }
       // Zostaw modal otwarty z sekcją zamówienia odbioru
       setShipmentModal(prev=>({...prev, createdShipmentId:d1.shipmentId, createdCarrierId:d1.carrierId}));
