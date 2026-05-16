@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.8</title>
+<title>MosquitoApp v20260516.10</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -7384,15 +7384,22 @@ function App() {
               const gr2Wart=(gr2Fakt*24.0).toFixed(2);
               const pomWart=(pomSzt*1.85).toFixed(2);
               const razemWart=(parseFloat(gr1Wart)+parseFloat(gr2Wart)+parseFloat(pomWart)).toFixed(2);
-              // Kwota sprzedaży brutto kosmetyków
+              // Kwota sprzedaży brutto kosmetyków — tylko PLN, bez gratisów
               const kosmSprzedazBrutto=zamMies.reduce(function(s,imp){
-                var isKosm=false;
-                var poz=imp.pozycje&&imp.pozycje.length>0?imp.pozycje:[{nazwa:imp.offerNames||"",ilosc:1}];
+                if((imp.kwotaWaluta||'PLN')!=='PLN') return s;
+                var poz=imp.pozycje&&imp.pozycje.length>0?imp.pozycje:[{nazwa:imp.offerNames||"",ilosc:1,cenaNetto:parseFloat(imp.totalAmount||0)/1.23}];
+                var kwotaPoz=0;
                 poz.forEach(function(p){
                   var n=(p.nazwa||imp.offerNames||"").toLowerCase();
+                  if(n.includes('dostawa')||n.includes('przesylka')||n.includes('kurier')) return;
+                  var cenaB=parseFloat(p.cenaNetto||0)*1.23*(parseInt(p.ilosc)||1);
+                  if(!cenaB&&poz.length===1) cenaB=parseFloat(imp.totalAmount||0);
+                  if(cenaB<0.10) return;
+                  var isKosm=false;
                   KAT.forEach(function(k){if(k.match(n)) isKosm=true;});
+                  if(isKosm) kwotaPoz+=cenaB;
                 });
-                return isKosm?s+parseFloat(imp.totalAmount||0):s;
+                return s+kwotaPoz;
               },0);
               // ── HTML MAILA ──
               function buildMailHtml(){
@@ -7532,7 +7539,7 @@ function App() {
                           </div>
                         );})}
                         <div style={{display:'flex',justifyContent:'space-between',padding:'4px 0',marginTop:4}}>
-                          <span style={{color:'#5a7a5a',fontSize:11}}>Sprzedaż brutto Allegro:</span>
+                          <span style={{color:'#5a7a5a',fontSize:11}} title='Tylko zamówienia PLN'>Sprzedaż brutto PLN ℹ️:</span>
                           <span style={{color:'#7acf7a',fontWeight:700}}>{kosmSprzedazBrutto.toFixed(2)} zł</span>
                         </div>
                         <div style={{display:'flex',justifyContent:'space-between',padding:'6px 0',fontWeight:700,borderTop:'2px solid #2a2a5a',marginTop:4}}>
