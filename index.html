@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.10</title>
+<title>MosquitoApp v20260516.11</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -1122,8 +1122,8 @@ function App() {
   const [zamChatHistory,setZamChatHistory]=useState({});
   const [statMonth,setStatMonth]=useState(()=>new Date().getMonth()+1);
   const [statYear,setStatYear]=useState(()=>new Date().getFullYear());
-  const [statMatyDuzaExtra,setStatMatyDuzaExtra]=useState(0);
-  const [statMatyMalaExtra,setStatMatyMalaExtra]=useState(0);
+  const [statMatyDuzaExtra,setStatMatyDuzaExtra]=useState(()=>parseInt(localStorage.getItem('stat_maty_duza_extra')||'0'));
+  const [statMatyMalaExtra,setStatMatyMalaExtra]=useState(()=>parseInt(localStorage.getItem('stat_maty_mala_extra')||'0'));
   const [statKosmExtra,setStatKosmExtra]=useState({});
   const [zamSearch,setZamSearch]=useState('');
   const [zamKonto,setZamKonto]=useState('');
@@ -7474,7 +7474,7 @@ function App() {
                           <span style={{fontSize:11,color:'#3a6a3a'}}>Allegro: {countSzt(matyDuza)}</span>
                           <span style={{fontSize:11,color:'#3a6a3a'}}> + ręcznie:</span>
                           <input type="number" min="0" value={statMatyDuzaExtra}
-                            onChange={function(e){setStatMatyDuzaExtra(parseInt(e.target.value)||0);}}
+                            onChange={function(e){var v=parseInt(e.target.value)||0;setStatMatyDuzaExtra(v);localStorage.setItem('stat_maty_duza_extra',String(v));}}
                             style={{width:50,padding:'2px 4px',fontSize:12,background:'#0a1a0a',border:'1px solid #2a5a2a',borderRadius:4,color:'#afffaf',textAlign:'center'}}/>
                           <span style={{fontSize:11,color:'#3a6a3a',marginLeft:'auto'}}>{matyDuzaWart.toFixed(2)} zł</span>
                         </div>
@@ -7489,7 +7489,7 @@ function App() {
                           <span style={{fontSize:11,color:'#3a6a3a'}}>Allegro: {countSzt(matyMala)}</span>
                           <span style={{fontSize:11,color:'#3a6a3a'}}> + ręcznie:</span>
                           <input type="number" min="0" value={statMatyMalaExtra}
-                            onChange={function(e){setStatMatyMalaExtra(parseInt(e.target.value)||0);}}
+                            onChange={function(e){var v=parseInt(e.target.value)||0;setStatMatyMalaExtra(v);localStorage.setItem('stat_maty_mala_extra',String(v));}}
                             style={{width:50,padding:'2px 4px',fontSize:12,background:'#0a1a0a',border:'1px solid #2a5a2a',borderRadius:4,color:'#afffaf',textAlign:'center'}}/>
                           <span style={{fontSize:11,color:'#3a6a3a',marginLeft:'auto'}}>{matyMalaWart.toFixed(2)} zł</span>
                         </div>
