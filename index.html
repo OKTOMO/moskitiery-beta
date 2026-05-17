@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.34</title>
+<title>MosquitoApp v20260516.35</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -5354,7 +5354,7 @@ function App() {
                         color:_batchSel.includes(imp.allegroOrderId)?'#9a9aff':'#4a4a9a'}}>
                       📦{_batchSel.includes(imp.allegroOrderId)?'✓':''}
                     </button>}
-                    <button onClick={function(){var _oid=imp.allegroOrderId;toggleBox(_oid,'chat');if(zamOpenBox[_oid]==='chat') return;fetch(AUTORESPONDER_URL+'/messaging/threads?kontoId='+imp.kontoId+'&orderId='+_oid+'&limit=10',{headers:{'x-api-key':AUTORESPONDER_KEY}}).then(function(r){return r.json();}).then(function(d){var thread=(d.threads||[])[0];if(thread){fetch(AUTORESPONDER_URL+'/messaging/threads/'+thread.id+'/messages?kontoId='+imp.kontoId,{headers:{'x-api-key':AUTORESPONDER_KEY}}).then(function(r2){return r2.json();}).then(function(md){setZamChatHistory(function(prev){var n={};Object.keys(prev).forEach(function(k){n[k]=prev[k];});n[_oid]=md.messages||[];return n;});});}}).catch(function(e){console.warn('chat history error',e);});}} title="Napisz wiadomość do klienta"
+                    <button onClick={function(){var _oid=imp.allegroOrderId;toggleBox(_oid,'chat');if(zamOpenBox[_oid]==='chat') return;fetch(AUTORESPONDER_URL+'/messaging/threads?kontoId='+imp.kontoId+'&orderId='+_oid+'&limit=10',{headers:{'x-api-key':AUTORESPONDER_KEY}}).then(function(r){return r.json();}).then(function(d){var threads=d.threads||[];var _login=(imp.klientLogin||'').toLowerCase();var thread=threads.find(function(t){return t.interlocutor&&t.interlocutor.login&&t.interlocutor.login.toLowerCase()===_login;});if(!thread&&threads.length===1) thread=threads[0];if(thread&&thread.id){fetch(AUTORESPONDER_URL+'/messaging/threads/'+thread.id+'/messages?kontoId='+imp.kontoId,{headers:{'x-api-key':AUTORESPONDER_KEY}}).then(function(r2){return r2.json();}).then(function(md){setZamChatHistory(function(prev){var n={};Object.keys(prev).forEach(function(k){n[k]=prev[k];});n[_oid]=md.messages||[];return n;});});}}).catch(function(e){console.warn('chat history error',e);});}} title="Napisz wiadomość do klienta"
                       style={{padding:'4px 7px',fontSize:12,borderRadius:5,cursor:'pointer',
                         background:openBox==='chat'?'#1a3a3a':'#1a2a2a',
                         border:`1px solid ${openBox==='chat'?'#3a8a8a':'#2a5a5a'}`,
