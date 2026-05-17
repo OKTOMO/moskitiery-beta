@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.17</title>
+<title>MosquitoApp v20260516.18</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -4441,7 +4441,7 @@ function App() {
       </div>
 
       <div style={{display:"flex",borderBottom:"1px solid #1e2a1e",paddingLeft:16,background:"#0e1420",flexWrap:"wrap"}}>
-        {[["zamowienia","📦 Zamówienia"],["nowe","➕ Dodaj"],["al_zam","🛒 Allegro"],["baza","📋 Zlecenia"],["zapytania","📨 KAL"],["stat","📊 Stat"],["produkcja","🏭 Produkcja"],["kalk","🧮 Kalkulator"],["wiadomosci","💬 Wiadomości"]].map(([id,l])=>(
+        {[["zamowienia","📦 Zamówienia"],["al_zam","🛒 Allegro"],["baza","📋 Zlecenia"],["zapytania","📨 KAL"],["stat","📊 Stat"],["produkcja","🏭 Produkcja"],["kalk","🧮 Kalkulator"]].map(([id,l])=>(
           <button key={id} className={`tab ${tab===id?"on":""}`} onClick={()=>setTab(id)}>{l}</button>
         ))}
         <button className={`tab ${(tab==="allegro"||tab==="ustawienia"||tab==="historia")?"on":""}`} onClick={()=>{
@@ -5443,26 +5443,32 @@ function App() {
                   ➕ Dodaj ręcznie
                 </button>
               </div>
-              <div style={{display:'flex',borderBottom:'2px solid #1a2a1a',marginBottom:0}}>
-                <button onClick={()=>setZamTab('nowe')} style={{padding:'7px 16px',fontSize:13,fontWeight:700,cursor:'pointer',border:'none',borderRadius:'6px 6px 0 0',background:zamTab==='nowe'?'#1a3a1a':'#0f1f0f',color:zamTab==='nowe'?'#afffaf':'#7acf7a',borderBottom:zamTab==='nowe'?'2px solid #3acf6a':'2px solid transparent'}}>
-                  🆕 Nowe ({noweList.length}){(()=>{const n=noweList.filter(i=>i.invoiceRequired&&!invoicesSent[i.allegroOrderId]).length;return n>0?` 🧾${n}`:''})()}
+              <div style={{display:'flex',borderBottom:'2px solid #1a2a1a',marginBottom:0,flexWrap:'wrap'}}>
+                <button onClick={()=>setZamTab('nowe')} style={{padding:'6px 12px',fontSize:12,fontWeight:700,cursor:'pointer',border:'none',borderRadius:'6px 6px 0 0',background:zamTab==='nowe'?'#1a3a1a':'#0f1f0f',color:zamTab==='nowe'?'#afffaf':'#7acf7a',borderBottom:zamTab==='nowe'?'2px solid #3acf6a':'2px solid transparent'}}>
+                  📦 Nowe ({noweList.length}){(()=>{const n=noweList.filter(i=>i.invoiceRequired&&!invoicesSent[i.allegroOrderId]).length;return n>0?` 🧾${n}`:''})()}
                 </button>
-                <button onClick={()=>setZamTab('realizacja')} style={{padding:'7px 16px',fontSize:13,fontWeight:700,cursor:'pointer',border:'none',borderRadius:'6px 6px 0 0',background:zamTab==='realizacja'?'#1a2a0a':'#0f1a0a',color:zamTab==='realizacja'?'#afdf6f':'#8abf4a',borderBottom:zamTab==='realizacja'?'2px solid #8acf3a':'2px solid transparent'}}>
-                  ⚙️ W realizacji ({realizacjaList.length}){(()=>{const n=realizacjaList.filter(i=>i.invoiceRequired&&!invoicesSent[i.allegroOrderId]).length;return n>0?` 🧾${n}`:''})()}
+                <button onClick={()=>setZamTab('realizacja')} style={{padding:'6px 12px',fontSize:12,fontWeight:700,cursor:'pointer',border:'none',borderRadius:'6px 6px 0 0',background:zamTab==='realizacja'?'#1a2a0a':'#0f1a0a',color:zamTab==='realizacja'?'#afdf6f':'#8abf4a',borderBottom:zamTab==='realizacja'?'2px solid #8acf3a':'2px solid transparent'}}>
+                  ⚙️ Realizacja ({realizacjaList.length}){(()=>{const n=realizacjaList.filter(i=>i.invoiceRequired&&!invoicesSent[i.allegroOrderId]).length;return n>0?` 🧾${n}`:''})()}
                 </button>
-                <button onClick={()=>setZamTab('pozostale')} style={{padding:'7px 16px',fontSize:13,fontWeight:700,cursor:'pointer',border:'none',borderRadius:'6px 6px 0 0',background:zamTab==='pozostale'?'#1a2a3a':'#0a1828',color:zamTab==='pozostale'?'#7acfdf':'#5a9abf',borderBottom:zamTab==='pozostale'?'2px solid #3a8acf':'2px solid transparent'}}>
-                  ✅ Zrealizowane ({zrealizowaneList.length}){(()=>{const n=zrealizowaneList.filter(i=>i.invoiceRequired&&!invoicesSent[i.allegroOrderId]).length;return n>0?` 🧾${n}`:''})()}
+                <button onClick={()=>setZamTab('pozostale')} style={{padding:'6px 12px',fontSize:12,fontWeight:700,cursor:'pointer',border:'none',borderRadius:'6px 6px 0 0',background:zamTab==='pozostale'?'#1a2a3a':'#0a1828',color:zamTab==='pozostale'?'#7acfdf':'#5a9abf',borderBottom:zamTab==='pozostale'?'2px solid #3a8acf':'2px solid transparent'}}>
+                  ✅ Zreal. ({zrealizowaneList.length}){(()=>{const n=zrealizowaneList.filter(i=>i.invoiceRequired&&!invoicesSent[i.allegroOrderId]).length;return n>0?` 🧾${n}`:''})()}
+                </button>
+                <button onClick={()=>{setZamTab('wiadomosci_zam');}} style={{padding:'6px 12px',fontSize:12,fontWeight:700,cursor:'pointer',border:'none',borderRadius:'6px 6px 0 0',background:zamTab==='wiadomosci_zam'?'#1a2a2a':'#0a1818',color:zamTab==='wiadomosci_zam'?'#7adfdf':'#4a9a9a',borderBottom:zamTab==='wiadomosci_zam'?'2px solid #3abfbf':'2px solid transparent'}}>
+                  💬 Wiad.{(()=>{const n=Object.values(unreadCounts||{}).reduce((s,v)=>s+(v||0),0);return n>0?<span style={{background:'#2a6a6a',borderRadius:10,padding:'1px 6px',fontSize:10,marginLeft:3}}>{n}</span>:null;})()}
+                </button>
+                <button onClick={()=>{setZamTab('reklamacje_zam');}} style={{padding:'6px 12px',fontSize:12,fontWeight:700,cursor:'pointer',border:'none',borderRadius:'6px 6px 0 0',background:zamTab==='reklamacje_zam'?'#2a1a1a':'#180a0a',color:zamTab==='reklamacje_zam'?'#df9a7a':'#af6a4a',borderBottom:zamTab==='reklamacje_zam'?'2px solid #cf6a3a':'2px solid transparent'}}>
+                  ⚠️ Rekl.
                 </button>
                 {(()=>{const fvCount=Object.keys(invoicesSent).filter(k=>invoicesSent[k]?.id).length;return(
-                  <button onClick={()=>setZamTab('faktury_zam')} style={{padding:'7px 16px',fontSize:13,fontWeight:700,cursor:'pointer',border:'none',borderRadius:'6px 6px 0 0',background:zamTab==='faktury_zam'?'#2a1a3a':'#120a20',color:zamTab==='faktury_zam'?'#cf9fff':'#9a6abf',borderBottom:zamTab==='faktury_zam'?'2px solid #9a4acf':'2px solid transparent'}}>
+                  <button onClick={()=>setZamTab('faktury_zam')} style={{padding:'6px 12px',fontSize:12,fontWeight:700,cursor:'pointer',border:'none',borderRadius:'6px 6px 0 0',background:zamTab==='faktury_zam'?'#2a1a3a':'#120a20',color:zamTab==='faktury_zam'?'#cf9fff':'#9a6abf',borderBottom:zamTab==='faktury_zam'?'2px solid #9a4acf':'2px solid transparent'}}>
                     🧾 Faktury ({fvCount})
                   </button>
                 );})()}
-                <button onClick={()=>{const _pin=localStorage.getItem('admin_pin');if(_pin){const _e=prompt('PIN (szablony FV):');if(_e!==_pin){alert('Błędny PIN.');return;}}setZamTab('szablony_fak');setSzablonEditId(null);}} style={{padding:'7px 16px',fontSize:13,fontWeight:700,cursor:'pointer',border:'none',borderRadius:'6px 6px 0 0',background:zamTab==='szablony_fak'?'#2a1a0a':'#1a1208',color:zamTab==='szablony_fak'?'#f0c060':'#af8a3a',borderBottom:zamTab==='szablony_fak'?'2px solid #cf8a1a':'2px solid transparent'}}>
-                  📋 Szablony FV ({fakSzablony.length})
+                <button onClick={()=>{const _pin=localStorage.getItem('admin_pin');if(_pin){const _e=prompt('PIN (szablony FV):');if(_e!==_pin){alert('Błędny PIN.');return;}}setZamTab('szablony_fak');setSzablonEditId(null);}} style={{padding:'6px 12px',fontSize:12,fontWeight:700,cursor:'pointer',border:'none',borderRadius:'6px 6px 0 0',background:zamTab==='szablony_fak'?'#2a1a0a':'#1a1208',color:zamTab==='szablony_fak'?'#f0c060':'#af8a3a',borderBottom:zamTab==='szablony_fak'?'2px solid #cf8a1a':'2px solid transparent'}}>
+                  📋 Szablony ({fakSzablony.length})
                 </button>
-                <button onClick={()=>{setZamTab('porzucone');fetchLeads();}} style={{padding:'7px 16px',fontSize:13,fontWeight:700,cursor:'pointer',border:'none',borderRadius:'6px 6px 0 0',background:zamTab==='porzucone'?'#1a2a3a':'#0a1828',color:zamTab==='porzucone'?'#7adfff':'#4a8aaf',borderBottom:zamTab==='porzucone'?'2px solid #3aafd0':'2px solid transparent'}}>
-                  👀 Porzucone {leads.length>0&&<span style={{background:'#2a4a6a',borderRadius:10,padding:'1px 7px',fontSize:11,marginLeft:4}}>{leads.length}</span>}
+                <button onClick={()=>{setZamTab('porzucone');fetchLeads();}} style={{padding:'6px 12px',fontSize:12,fontWeight:700,cursor:'pointer',border:'none',borderRadius:'6px 6px 0 0',background:zamTab==='porzucone'?'#1a2a3a':'#0a1828',color:zamTab==='porzucone'?'#7adfff':'#4a8aaf',borderBottom:zamTab==='porzucone'?'2px solid #3aafd0':'2px solid transparent'}}>
+                  👀 Porzucone {leads.length>0&&<span style={{background:'#2a4a6a',borderRadius:10,padding:'1px 6px',fontSize:10,marginLeft:3}}>{leads.length}</span>}
                 </button>
               </div>
               {allegroImportResults.length===0&&zamTab!=='szablony_fak'&&<div style={{textAlign:'center',color:'#2a5a3a',padding:'40px 0',fontSize:14}}>Kliknij "Pobierz zamówienia" żeby załadować listę</div>}
@@ -5581,6 +5587,54 @@ function App() {
                   pobierzNIP={pobierzKontrahentaNIP}
                 />;
               })()}
+              {zamTab==='wiadomosci_zam'&&(
+                <div style={{padding:'12px 0'}}>
+                  <div style={{fontWeight:700,fontSize:15,color:'#7adfdf',marginBottom:12}}>💬 Wiadomości</div>
+                  {(()=>{
+                    const watki=(allegroThreads||[]).filter(function(t){return !t.hasDispute;});
+                    if(watki.length===0) return <div style={{color:'#3a6a6a',textAlign:'center',padding:'30px 0',fontSize:14}}>Brak wiadomości — pobierz zamówienia</div>;
+                    return watki.map(function(t){
+                      const imp=allegroImportResults.find(function(i){return i.allegroOrderId===t.relatedTo?.find(function(r){return r.type==='ORDER';})?.id;});
+                      const unread=(unreadCounts||{})[t.id]||0;
+                      const lastMsg=t.messages?.[t.messages.length-1];
+                      return (
+                        <div key={t.id} style={{background:'#0a1a1a',border:'1px solid '+(unread?'#2a6a6a':'#1a3a3a'),borderRadius:7,padding:'10px 14px',marginBottom:6,cursor:'pointer'}}
+                          onClick={function(){if(imp) setZamOpenBox(function(prev){var n={...prev};n[imp.allegroOrderId]='chat';return n;});setZamTab('nowe');}}>
+                          <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:4}}>
+                            {unread>0&&<span style={{background:'#2a6a6a',color:'#afffff',borderRadius:10,padding:'1px 7px',fontSize:11,fontWeight:700}}>{unread}</span>}
+                            <span style={{fontWeight:700,color:'#9fcfdf',fontSize:13}}>{imp?.klientImie||t.interlocutor?.login||'Klient'}</span>
+                            <span style={{fontSize:11,color:'#3a6a6a',marginLeft:'auto'}}>{t.lastMessageAt?new Date(t.lastMessageAt).toLocaleString('pl-PL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</span>
+                          </div>
+                          {lastMsg&&<div style={{fontSize:12,color:'#5a8a8a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{lastMsg.text}</div>}
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              )}
+              {zamTab==='reklamacje_zam'&&(
+                <div style={{padding:'12px 0'}}>
+                  <div style={{fontWeight:700,fontSize:15,color:'#df9a7a',marginBottom:12}}>⚠️ Reklamacje i dyskusje</div>
+                  {(()=>{
+                    const disputes=(allegroThreads||[]).filter(function(t){return t.hasDispute||t.isDispute;});
+                    if(disputes.length===0) return <div style={{color:'#6a3a3a',textAlign:'center',padding:'30px 0',fontSize:14}}>Brak aktywnych reklamacji</div>;
+                    return disputes.map(function(t){
+                      const imp=allegroImportResults.find(function(i){return i.allegroOrderId===t.relatedTo?.find(function(r){return r.type==='ORDER';})?.id;});
+                      const lastMsg=t.messages?.[t.messages.length-1];
+                      return (
+                        <div key={t.id} style={{background:'#1a0a0a',border:'1px solid #4a2a1a',borderRadius:7,padding:'10px 14px',marginBottom:6}}>
+                          <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:4}}>
+                            <span style={{background:'#3a1a0a',color:'#df9a5a',borderRadius:4,padding:'1px 7px',fontSize:11,fontWeight:700}}>⚠️ dyskusja</span>
+                            <span style={{fontWeight:700,color:'#df9a7a',fontSize:13}}>{imp?.klientImie||t.interlocutor?.login||'Klient'}</span>
+                            <span style={{fontSize:11,color:'#5a3a3a',marginLeft:'auto'}}>{t.lastMessageAt?new Date(t.lastMessageAt).toLocaleString('pl-PL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</span>
+                          </div>
+                          {lastMsg&&<div style={{fontSize:12,color:'#8a5a5a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{lastMsg.text}</div>}
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              )}
               {zamTab==='porzucone'&&(
                 <div style={{padding:'12px 0'}}>
                   <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
@@ -5866,7 +5920,7 @@ function App() {
                     </div>
                   );
                 }
-                if(zamTab==='porzucone'||zamTab==='szablony_fak'||zamTab==='faktury_zam') return null;
+                if(zamTab==='porzucone'||zamTab==='szablony_fak'||zamTab==='faktury_zam'||zamTab==='wiadomosci_zam'||zamTab==='reklamacje_zam') return null;
                 const active=zamTab==='nowe'?noweList:zamTab==='realizacja'?realizacjaList:zrealizowaneList;
                 if(active.length===0&&allegroImportResults.length>0) return <div style={{textAlign:'center',color:'#3a5a3a',padding:'40px 0'}}>{zamTab==='nowe'?'🎉 Brak nowych zamówień!':zamTab==='realizacja'?'Brak zamówień w realizacji':'Brak zrealizowanych'}</div>;
                 return <div>
