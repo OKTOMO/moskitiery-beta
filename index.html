@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.18</title>
+<title>MosquitoApp v20260516.19</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -5454,7 +5454,7 @@ function App() {
                   ✅ Zreal. ({zrealizowaneList.length}){(()=>{const n=zrealizowaneList.filter(i=>i.invoiceRequired&&!invoicesSent[i.allegroOrderId]).length;return n>0?` 🧾${n}`:''})()}
                 </button>
                 <button onClick={()=>{setZamTab('wiadomosci_zam');}} style={{padding:'6px 12px',fontSize:12,fontWeight:700,cursor:'pointer',border:'none',borderRadius:'6px 6px 0 0',background:zamTab==='wiadomosci_zam'?'#1a2a2a':'#0a1818',color:zamTab==='wiadomosci_zam'?'#7adfdf':'#4a9a9a',borderBottom:zamTab==='wiadomosci_zam'?'2px solid #3abfbf':'2px solid transparent'}}>
-                  💬 Wiad.{(()=>{const n=Object.values(unreadCounts||{}).reduce((s,v)=>s+(v||0),0);return n>0?<span style={{background:'#2a6a6a',borderRadius:10,padding:'1px 6px',fontSize:10,marginLeft:3}}>{n}</span>:null;})()}
+                  💬 Wiad.{(()=>{const n=(msgThreads||[]).filter(function(t){return t.unread||t.hasUnreadMessages;}).length;return n>0?<span style={{background:'#2a6a6a',borderRadius:10,padding:'1px 6px',fontSize:10,marginLeft:3}}>{n}</span>:null;})()}
                 </button>
                 <button onClick={()=>{setZamTab('reklamacje_zam');}} style={{padding:'6px 12px',fontSize:12,fontWeight:700,cursor:'pointer',border:'none',borderRadius:'6px 6px 0 0',background:zamTab==='reklamacje_zam'?'#2a1a1a':'#180a0a',color:zamTab==='reklamacje_zam'?'#df9a7a':'#af6a4a',borderBottom:zamTab==='reklamacje_zam'?'2px solid #cf6a3a':'2px solid transparent'}}>
                   ⚠️ Rekl.
@@ -5591,11 +5591,11 @@ function App() {
                 <div style={{padding:'12px 0'}}>
                   <div style={{fontWeight:700,fontSize:15,color:'#7adfdf',marginBottom:12}}>💬 Wiadomości</div>
                   {(()=>{
-                    const watki=(allegroThreads||[]).filter(function(t){return !t.hasDispute;});
+                    const watki=(msgThreads||[]).filter(function(t){return !t.hasDispute;});
                     if(watki.length===0) return <div style={{color:'#3a6a6a',textAlign:'center',padding:'30px 0',fontSize:14}}>Brak wiadomości — pobierz zamówienia</div>;
                     return watki.map(function(t){
                       const imp=allegroImportResults.find(function(i){return i.allegroOrderId===t.relatedTo?.find(function(r){return r.type==='ORDER';})?.id;});
-                      const unread=(unreadCounts||{})[t.id]||0;
+                      const unread=t.unread||t.hasUnreadMessages?1:0;
                       const lastMsg=t.messages?.[t.messages.length-1];
                       return (
                         <div key={t.id} style={{background:'#0a1a1a',border:'1px solid '+(unread?'#2a6a6a':'#1a3a3a'),borderRadius:7,padding:'10px 14px',marginBottom:6,cursor:'pointer'}}
@@ -5616,7 +5616,7 @@ function App() {
                 <div style={{padding:'12px 0'}}>
                   <div style={{fontWeight:700,fontSize:15,color:'#df9a7a',marginBottom:12}}>⚠️ Reklamacje i dyskusje</div>
                   {(()=>{
-                    const disputes=(allegroThreads||[]).filter(function(t){return t.hasDispute||t.isDispute;});
+                    const disputes=(msgThreads||[]).filter(function(t){return t.hasDispute||t.isDispute;});
                     if(disputes.length===0) return <div style={{color:'#6a3a3a',textAlign:'center',padding:'30px 0',fontSize:14}}>Brak aktywnych reklamacji</div>;
                     return disputes.map(function(t){
                       const imp=allegroImportResults.find(function(i){return i.allegroOrderId===t.relatedTo?.find(function(r){return r.type==='ORDER';})?.id;});
