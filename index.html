@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.28</title>
+<title>MosquitoApp v20260516.30</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -1120,6 +1120,9 @@ function App() {
   const [importModal,setImportModal]=useState(null); // {imp, mode, kalNum, kalLoading, kalError, kalData, pozycje}
   const [zamOpenBox,setZamOpenBox]=useState({});
   const [zamChatHistory,setZamChatHistory]=useState({});
+  const [wiadActiveThread,setWiadActiveThread]=useState(null);
+  const [wiadMessages,setWiadMessages]=useState([]);
+  const [wiadLoading,setWiadLoading]=useState(false);
   const [statMonth,setStatMonth]=useState(()=>new Date().getMonth()+1);
   const [statYear,setStatYear]=useState(()=>new Date().getFullYear());
   const [nbpRates,setNbpRates]=useState({CZK:0.168,EUR:4.25,HUF:0.011,SKK:0.168});
@@ -5631,7 +5634,7 @@ function App() {
                       const lastMsg=t.messages&&t.messages[t.messages.length-1];
                       return (
                         <div key={t.id} style={{background:'#0a1a1a',border:'1px solid '+(unread?'#2a6a6a':'#1a3a3a'),borderRadius:7,padding:'8px 12px',marginBottom:5,cursor:'pointer'}}
-                          onClick={function(){if(imp){setZamOpenBox(function(prev){var n={...prev};n[imp.allegroOrderId]='chat';return n;});setZamTab('nowe');}}}>
+                          onClick={async function(){setWiadActiveThread(t);setWiadMessages([]);setWiadLoading(true);try{const r=await fetch(AUTORESPONDER_URL+'/messaging/threads/'+t.id+'/messages?kontoId='+konto,{headers:{'x-api-key':AUTORESPONDER_KEY}});const d=await r.json();setWiadMessages((d.messages||[]).slice().reverse());}catch(e){}setWiadLoading(false);}}>
                           <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:3}}>
                             {unread>0&&<span style={{background:'#2a6a6a',color:'#afffff',borderRadius:10,padding:'1px 6px',fontSize:10,fontWeight:700}}>●</span>}
                             {(function(){const KCOL={favo5:['#4a8a5a','#7fcf7f'],staroleska_pl:['#4a7a4a','#5abf7a'],sinlook_pl:['#1a4a3a','#4abf9a'],arlis_pl:['#2a3a5a','#7abfdf'],everis_pl:['#3a2a5a','#af8fdf'],albama_eu:['#8a6a3a','#dfaf5a'],pedroshop_pl_365:['#3a2a1a','#cf8a4a']};const[bg,col]=KCOL[konto]||['#2a2a2a','#9a9a9a'];return <span style={{fontSize:10,padding:'1px 6px',borderRadius:4,background:bg,color:col,fontFamily:'monospace',fontWeight:700,marginRight:4}}>{konto}</span>;})()}
@@ -5643,6 +5646,50 @@ function App() {
                       );
                     });
                   })()}
+                  {wiadActiveThread&&(
+                    <div style={{background:'#071a1a',border:'1px solid #1a5a5a',borderRadius:8,padding:'12px 14px',marginTop:8}}>
+                      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
+                        <button onClick={function(){setWiadActiveThread(null);setWiadMessages([]);}} style={{background:'none',border:'none',color:'#5abfbf',cursor:'pointer',fontSize:14}}>← Wróć</button>
+                        <span style={{fontWeight:700,color:'#9fcfdf',fontSize:13}}>{wiadActiveThread.interlocutor?.login||'Klient'}</span>
+                        <span style={{background:'#0a2a3a',borderRadius:4,padding:'1px 6px',fontSize:10,color:'#4a9aaf'}}>{wiadActiveThread._kontoId}</span>
+                        {imp&&<span style={{fontSize:11,color:'#3a6a6a',marginLeft:'auto'}}>{imp.klientImie} — {imp.klientMiasto}</span>}
+                      </div>
+                      {wiadLoading&&<div style={{textAlign:'center',color:'#3a7a7a',padding:'20px 0'}}>⟳ ładuję wiadomości...</div>}
+                      <div style={{maxHeight:300,overflowY:'auto',display:'flex',flexDirection:'column',gap:6,marginBottom:10}}>
+                        {wiadMessages.map(function(m,i){
+                          const isMe=m.author&&m.author.role==='OPERATOR';
+                          return (
+                            <div key={i} style={{display:'flex',flexDirection:'column',alignItems:isMe?'flex-end':'flex-start'}}>
+                              <div style={{fontSize:10,color:'#3a6a6a',marginBottom:2,paddingLeft:isMe?0:4,paddingRight:isMe?4:0}}>
+                                {isMe?'Ty':wiadActiveThread.interlocutor?.login||'Klient'} · {m.createdAt?new Date(m.createdAt).toLocaleString('pl-PL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}
+                              </div>
+                              <div style={{fontSize:12,padding:'6px 10px',borderRadius:isMe?'12px 4px 4px 12px':'4px 12px 12px 4px',background:isMe?'#0a0a1e':'#0a1e0a',border:'1px solid '+(isMe?'#1a1a4a':'#1a4a1a'),color:isMe?'#9a9adf':'#7acf9a',maxWidth:'82%',whiteSpace:'pre-wrap',wordBreak:'break-word',lineHeight:1.4}}>
+                                {m.text}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <textarea id="wiad_reply_input" placeholder="Wpisz odpowiedź..." rows={3}
+                        style={{width:'100%',padding:'6px 10px',borderRadius:5,border:'1px solid #1a5a5a',background:'#0a1a1a',color:'#9adfdf',fontSize:12,fontFamily:'monospace',resize:'vertical',boxSizing:'border-box'}}/>
+                      <div style={{display:'flex',justifyContent:'flex-end',marginTop:6}}>
+                        <button onClick={async function(){
+                          const txt=document.getElementById('wiad_reply_input').value.trim();
+                          if(!txt) return;
+                          try{
+                            await fetch(AUTORESPONDER_URL+'/messaging/threads/'+wiadActiveThread.id+'/messages?kontoId='+wiadActiveThread._kontoId,{
+                              method:'POST',headers:{'Content-Type':'application/json','x-api-key':AUTORESPONDER_KEY},
+                              body:JSON.stringify({text:txt})
+                            });
+                            document.getElementById('wiad_reply_input').value='';
+                            setWiadMessages(function(prev){return [...prev,{text:txt,author:{role:'OPERATOR'},createdAt:new Date().toISOString()}];});
+                          }catch(e){alert('Błąd wysyłki: '+e.message);}
+                        }} style={{padding:'6px 18px',background:'#1a4a3a',border:'1px solid #2a7a5a',borderRadius:5,color:'#afffaf',cursor:'pointer',fontWeight:700,fontSize:12}}>
+                          ✉️ Wyślij
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
               {zamTab==='reklamacje_zam'&&(
