@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.32</title>
+<title>MosquitoApp v20260516.33</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -5624,41 +5624,15 @@ function App() {
               {zamTab==='wiadomosci_zam'&&(
                 <div style={{padding:'12px 0'}}>
                   <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
-                    <div style={{fontWeight:700,fontSize:15,color:'#7adfdf'}}>💬 Wiadomości</div>
-                    <button onClick={loadAllThreads} style={{padding:'3px 10px',fontSize:11,background:'#0a2a2a',border:'1px solid #2a6a6a',borderRadius:5,color:'#5abfbf',cursor:'pointer'}}>🔄 Odśwież</button>
+                    {wiadActiveThread&&<button onClick={function(){setWiadActiveThread(null);setWiadMessages([]);}} style={{background:'none',border:'none',color:'#5abfbf',cursor:'pointer',fontSize:14,padding:0}}>←</button>}
+                    <div style={{fontWeight:700,fontSize:15,color:'#7adfdf'}}>{wiadActiveThread?wiadActiveThread.interlocutor?.login||'Klient':'💬 Wiadomości'}</div>
+                    {wiadActiveThread&&<span style={{background:'#0a2a3a',borderRadius:4,padding:'1px 6px',fontSize:10,color:'#4a9aaf'}}>{wiadActiveThread._kontoId}</span>}
+                    {!wiadActiveThread&&<button onClick={loadAllThreads} style={{padding:'3px 10px',fontSize:11,background:'#0a2a2a',border:'1px solid #2a6a6a',borderRadius:5,color:'#5abfbf',cursor:'pointer'}}>🔄 Odśwież</button>}
                   </div>
-                  {(()=>{
-                    const watki=(msgThreads||[]).filter(function(t){return !t.hasDispute&&!t.isDispute;});
-                    if(watki.length===0) return <div style={{color:'#3a6a6a',textAlign:'center',padding:'30px 0',fontSize:14}}>Brak wiadomości — kliknij Odśwież</div>;
-                    return watki.map(function(t){
-                      const konto=t._kontoId||'?';
-                      const imp=allegroImportResults.find(function(i){return i.allegroOrderId===(t.relatedTo||[]).find(function(r){return r.type==='ORDER';})?.id;});
-                      const unread=(t.read===false||t.hasUnreadMessages||t.unread)?1:0;
-                      const lastMsg=t.messages&&t.messages[t.messages.length-1];
-                      return (
-                        <div key={t.id} style={{background:'#0a1a1a',border:'1px solid '+(unread?'#2a6a6a':'#1a3a3a'),borderRadius:7,padding:'8px 12px',marginBottom:5,cursor:'pointer'}}
-                          onClick={function(){setWiadActiveThread(t);setWiadMessages([]);setWiadLoading(true);fetch(AUTORESPONDER_URL+'/messaging/threads/'+t.id+'/messages?kontoId='+konto,{headers:{'x-api-key':AUTORESPONDER_KEY}}).then(function(r){return r.json();}).then(function(d){setWiadMessages((d.messages||[]).slice().reverse());setWiadLoading(false);}).catch(function(){setWiadLoading(false);});}}>
-                          <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:3}}>
-                            {unread>0&&<span style={{background:'#2a6a6a',color:'#afffff',borderRadius:10,padding:'1px 6px',fontSize:10,fontWeight:700}}>●</span>}
-                            {(function(){const KCOL={favo5:['#4a8a5a','#7fcf7f'],staroleska_pl:['#4a7a4a','#5abf7a'],sinlook_pl:['#1a4a3a','#4abf9a'],arlis_pl:['#2a3a5a','#7abfdf'],everis_pl:['#3a2a5a','#af8fdf'],albama_eu:['#8a6a3a','#dfaf5a'],pedroshop_pl_365:['#3a2a1a','#cf8a4a']};const[bg,col]=KCOL[konto]||['#2a2a2a','#9a9a9a'];return <span style={{fontSize:10,padding:'1px 6px',borderRadius:4,background:bg,color:col,fontFamily:'monospace',fontWeight:700,marginRight:4}}>{konto}</span>;})()}
-                            <span style={{fontWeight:700,color:'#9fcfdf',fontSize:12}}>{imp?.klientImie||t.interlocutor?.login||t.subject||'Klient'}</span>
-                            <span style={{fontSize:10,color:'#3a6a6a',marginLeft:'auto'}}>{(t.lastMessageDateTime||t.modifiedAt||t.lastMessageAt)?new Date(t.lastMessageDateTime||t.modifiedAt||t.lastMessageAt).toLocaleString('pl-PL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</span>
-                          </div>
-                          {lastMsg&&<div style={{fontSize:11,color:'#5a8a8a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{lastMsg.text}</div>}
-                        </div>
-                      );
-                    });
-                  })()}
-                  {wiadActiveThread&&(
-                    <div style={{background:'#071a1a',border:'1px solid #1a5a5a',borderRadius:8,padding:'12px 14px',marginTop:8}}>
-                      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
-                        <button onClick={function(){setWiadActiveThread(null);setWiadMessages([]);}} style={{background:'none',border:'none',color:'#5abfbf',cursor:'pointer',fontSize:14}}>← Wróć</button>
-                        <span style={{fontWeight:700,color:'#9fcfdf',fontSize:13}}>{wiadActiveThread.interlocutor?.login||'Klient'}</span>
-                        <span style={{background:'#0a2a3a',borderRadius:4,padding:'1px 6px',fontSize:10,color:'#4a9aaf'}}>{wiadActiveThread._kontoId}</span>
-                        {(()=>{const _imp=wiadActiveThread&&allegroImportResults.find(function(i){return i.allegroOrderId===(wiadActiveThread.relatedTo||[]).find(function(r){return r.type==='ORDER';})?.id;});return _imp?<span style={{fontSize:11,color:'#3a6a6a',marginLeft:'auto'}}>{_imp.klientImie} — {_imp.klientMiasto}</span>:null;})()}
-                      </div>
+                  {wiadActiveThread?(
+                    <div>
                       {wiadLoading&&<div style={{textAlign:'center',color:'#3a7a7a',padding:'20px 0'}}>⟳ ładuję wiadomości...</div>}
-                      <div style={{maxHeight:300,overflowY:'auto',display:'flex',flexDirection:'column',gap:6,marginBottom:10}}>
+                      <div style={{maxHeight:350,overflowY:'auto',display:'flex',flexDirection:'column',gap:6,marginBottom:10}}>
                         {wiadMessages.map(function(m,i){
                           const isMe=m.author&&m.author.role==='OPERATOR';
                           return (
@@ -5681,6 +5655,31 @@ function App() {
                         </button>
                       </div>
                     </div>
+                  ):(
+                  <div>
+                  {(()=>{
+                    const watki=(msgThreads||[]).filter(function(t){return !t.hasDispute&&!t.isDispute;});
+                    if(watki.length===0) return <div style={{color:'#3a6a6a',textAlign:'center',padding:'30px 0',fontSize:14}}>Brak wiadomości — kliknij Odśwież</div>;
+                    return watki.map(function(t){
+                      const konto=t._kontoId||'?';
+                      const imp=allegroImportResults.find(function(i){return i.allegroOrderId===(t.relatedTo||[]).find(function(r){return r.type==='ORDER';})?.id;});
+                      const unread=(t.read===false||t.hasUnreadMessages||t.unread)?1:0;
+                      const lastMsg=t.messages&&t.messages[t.messages.length-1];
+                      return (
+                        <div key={t.id} style={{background:'#0a1a1a',border:'1px solid '+(unread?'#2a6a6a':'#1a3a3a'),borderRadius:7,padding:'8px 12px',marginBottom:5,cursor:'pointer'}}
+                          onClick={function(){setWiadActiveThread(t);setWiadMessages([]);setWiadLoading(true);fetch(AUTORESPONDER_URL+'/messaging/threads/'+t.id+'/messages?kontoId='+konto,{headers:{'x-api-key':AUTORESPONDER_KEY}}).then(function(r){return r.json();}).then(function(d){setWiadMessages((d.messages||[]).slice().reverse());setWiadLoading(false);}).catch(function(){setWiadLoading(false);});}}>
+                          <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:3}}>
+                            {unread>0&&<span style={{background:'#2a6a6a',color:'#afffff',borderRadius:10,padding:'1px 6px',fontSize:10,fontWeight:700}}>●</span>}
+                            {(function(){const KCOL={favo5:['#4a8a5a','#7fcf7f'],staroleska_pl:['#4a7a4a','#5abf7a'],sinlook_pl:['#1a4a3a','#4abf9a'],arlis_pl:['#2a3a5a','#7abfdf'],everis_pl:['#3a2a5a','#af8fdf'],albama_eu:['#8a6a3a','#dfaf5a'],pedroshop_pl_365:['#3a2a1a','#cf8a4a']};const[bg,col]=KCOL[konto]||['#2a2a2a','#9a9a9a'];return <span style={{fontSize:10,padding:'1px 6px',borderRadius:4,background:bg,color:col,fontFamily:'monospace',fontWeight:700,marginRight:4}}>{konto}</span>;})()}
+                            <span style={{fontWeight:700,color:'#9fcfdf',fontSize:12}}>{imp?.klientImie||t.interlocutor?.login||t.subject||'Klient'}</span>
+                            <span style={{fontSize:10,color:'#3a6a6a',marginLeft:'auto'}}>{(t.lastMessageDateTime||t.modifiedAt||t.lastMessageAt)?new Date(t.lastMessageDateTime||t.modifiedAt||t.lastMessageAt).toLocaleString('pl-PL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</span>
+                          </div>
+                          {lastMsg&&<div style={{fontSize:11,color:'#5a8a8a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{lastMsg.text}</div>}
+                        </div>
+                      );
+                    });
+                  })()}
+                  </div>
                   )}
                 </div>
               )}
