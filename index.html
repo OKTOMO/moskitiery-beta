@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.13</title>
+<title>MosquitoApp v20260516.14</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -7355,8 +7355,13 @@ function App() {
               const matyMalaSzt=countSzt(matyMala)+(parseInt(statMatyMalaExtra)||0);
               const matyDuzaWart=sumWart(matyDuza);
               const matyMalaWart=sumWart(matyMala);
+              // Średnia cena z Allegro do przeliczenia ręcznych sztuk
+              const avgDuza=matyDuza.length>0?matyDuzaWart/countSzt(matyDuza):0;
+              const avgMala=matyMala.length>0?matyMalaWart/countSzt(matyMala):0;
+              const matyDuzaWartRazem=matyDuzaWart+(parseInt(statMatyDuzaExtra)||0)*avgDuza;
+              const matyMalaWartRazem=matyMalaWart+(parseInt(statMatyMalaExtra)||0)*avgMala;
               const matySzt=matyDuzaSzt+matyMalaSzt;
-              const matyWart=matyDuzaWart+matyMalaWart;
+              const matyWart=matyDuzaWartRazem+matyMalaWartRazem;
               const matyFavo=zamMies.filter(function(i){return isMata(i)&&i.kontoId==='favo5';});
               const matyArlis=zamMies.filter(function(i){return isMata(i)&&(i.kontoId==='arlis_pl'||i.kontoId==='arlis');});
               // ── KOSMETYKI — definicja kategorii ──
@@ -7507,7 +7512,7 @@ function App() {
                           <input type="number" min="0" value={statMatyDuzaExtra}
                             onChange={function(e){var v=parseInt(e.target.value)||0;setStatMatyDuzaExtra(v);localStorage.setItem('stat_maty_duza_extra',String(v));}}
                             style={{width:50,padding:'2px 4px',fontSize:12,background:'#0a1a0a',border:'1px solid #2a5a2a',borderRadius:4,color:'#afffaf',textAlign:'center'}}/>
-                          <span style={{fontSize:11,color:'#3a6a3a',marginLeft:'auto'}}>{matyDuzaWart.toFixed(2)} zł</span>
+                          <span style={{fontSize:11,color:'#3a6a3a',marginLeft:'auto'}}>{matyDuzaWartRazem.toFixed(2)} zł{(parseInt(statMatyDuzaExtra)||0)>0&&avgDuza>0?<span style={{color:'#5a9a7a'}}> (+{((parseInt(statMatyDuzaExtra)||0)*avgDuza).toFixed(2)})</span>:null}</span>
                         </div>
                       </div>
                       {/* Mała 102x125 */}
@@ -7522,7 +7527,7 @@ function App() {
                           <input type="number" min="0" value={statMatyMalaExtra}
                             onChange={function(e){var v=parseInt(e.target.value)||0;setStatMatyMalaExtra(v);localStorage.setItem('stat_maty_mala_extra',String(v));}}
                             style={{width:50,padding:'2px 4px',fontSize:12,background:'#0a1a0a',border:'1px solid #2a5a2a',borderRadius:4,color:'#afffaf',textAlign:'center'}}/>
-                          <span style={{fontSize:11,color:'#3a6a3a',marginLeft:'auto'}}>{matyMalaWart.toFixed(2)} zł</span>
+                          <span style={{fontSize:11,color:'#3a6a3a',marginLeft:'auto'}}>{matyMalaWartRazem.toFixed(2)} zł{(parseInt(statMatyMalaExtra)||0)>0&&avgMala>0?<span style={{color:'#5a9a7a'}}> (+{((parseInt(statMatyMalaExtra)||0)*avgMala).toFixed(2)})</span>:null}</span>
                         </div>
                       </div>
                       <div style={{fontSize:11,color:'#3a7a5a',borderTop:'1px solid #0f2a1a',paddingTop:6}}>
