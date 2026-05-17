@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.23</title>
+<title>MosquitoApp v20260516.24</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -5608,24 +5608,23 @@ function App() {
                     const watki=(msgThreads||[]).filter(function(t){return !t.hasDispute&&!t.isDispute;});
                     if(watki.length===0) return <div style={{color:'#3a6a6a',textAlign:'center',padding:'30px 0',fontSize:14}}>Brak wiadomości — kliknij Odśwież</div>;
                     return watki.map(function(t){
-                          const konto=t._kontoId||'?';
-                          {
-                            const imp=allegroImportResults.find(function(i){return i.allegroOrderId===(t.relatedTo||[]).find(function(r){return r.type==='ORDER';})?.id;});
-                            const unread=t.unread||t.hasUnreadMessages?1:0;
-                            const lastMsg=t.messages&&t.messages[t.messages.length-1];
-                            return (
-                              <div key={t.id} style={{background:'#0a1a1a',border:'1px solid '+(unread?'#2a6a6a':'#1a3a3a'),borderRadius:7,padding:'8px 12px',marginBottom:5,cursor:'pointer'}}
-                                onClick={function(){if(imp){setZamOpenBox(function(prev){var n={...prev};n[imp.allegroOrderId]='chat';return n;});setZamTab('nowe');}}}>
-                                <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:3}}>
-                                  {unread>0&&<span style={{background:'#2a6a6a',color:'#afffff',borderRadius:10,padding:'1px 6px',fontSize:10,fontWeight:700}}>●</span>}
-                                  <span style={{background:'#0a2a3a',border:'1px solid #1a5a5a',borderRadius:4,padding:'1px 5px',fontSize:10,color:'#4a9aaf',marginRight:2}}>{konto}</span>
-                                  <span style={{fontWeight:700,color:'#9fcfdf',fontSize:12}}>{imp?.klientImie||t.interlocutor?.login||'Klient'}</span>
-                                  <span style={{fontSize:10,color:'#3a6a6a',marginLeft:'auto'}}>{t.lastMessageAt?new Date(t.lastMessageAt).toLocaleString('pl-PL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</span>
-                                </div>
-                                {lastMsg&&<div style={{fontSize:11,color:'#5a8a8a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{lastMsg.text}</div>}
-                              </div>
-                            );
-                          });
+                      const konto=t._kontoId||'?';
+                      const imp=allegroImportResults.find(function(i){return i.allegroOrderId===(t.relatedTo||[]).find(function(r){return r.type==='ORDER';})?.id;});
+                      const unread=t.unread||t.hasUnreadMessages?1:0;
+                      const lastMsg=t.messages&&t.messages[t.messages.length-1];
+                      return (
+                        <div key={t.id} style={{background:'#0a1a1a',border:'1px solid '+(unread?'#2a6a6a':'#1a3a3a'),borderRadius:7,padding:'8px 12px',marginBottom:5,cursor:'pointer'}}
+                          onClick={function(){if(imp){setZamOpenBox(function(prev){var n={...prev};n[imp.allegroOrderId]='chat';return n;});setZamTab('nowe');}}}>
+                          <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:3}}>
+                            {unread>0&&<span style={{background:'#2a6a6a',color:'#afffff',borderRadius:10,padding:'1px 6px',fontSize:10,fontWeight:700}}>●</span>}
+                            <span style={{background:'#0a2a3a',border:'1px solid #1a5a5a',borderRadius:4,padding:'1px 5px',fontSize:10,color:'#4a9aaf',marginRight:2}}>{konto}</span>
+                            <span style={{fontWeight:700,color:'#9fcfdf',fontSize:12}}>{imp?.klientImie||t.interlocutor?.login||'Klient'}</span>
+                            <span style={{fontSize:10,color:'#3a6a6a',marginLeft:'auto'}}>{t.lastMessageAt?new Date(t.lastMessageAt).toLocaleString('pl-PL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</span>
+                          </div>
+                          {lastMsg&&<div style={{fontSize:11,color:'#5a8a8a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{lastMsg.text}</div>}
+                        </div>
+                      );
+                    });
                   })()}
                 </div>
               )}
