@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.39</title>
+<title>MosquitoApp v20260516.40</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -5741,8 +5741,7 @@ function App() {
                     Object.values(seen).forEach(function(l){uniq.push(l);});
                     uniq.sort(function(a,b){return (b.savedAt||'').localeCompare(a.savedAt||'');});
                     if(uniq.length===0&&!leadsLoading) return <div style={{color:'#3a5a6a',textAlign:'center',padding:'30px 0',fontSize:14}}>Brak porzuconych zapytań</div>;
-                    return uniq.map(function(lead){
-                  {leads.map(lead=>(
+                    return uniq.map(function(lead){return (
                     <div key={lead.id} style={{background:'#0a1a2a',border:'1px solid #1a3a4a',borderRadius:7,padding:'10px 14px',marginBottom:8,display:'flex',gap:12,alignItems:'flex-start'}}>
                       <div style={{flex:1,minWidth:0}}>
                         <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginBottom:4}}>
@@ -5753,7 +5752,7 @@ function App() {
                         </div>
                         {lead.pozycje&&lead.pozycje.length>0&&(
                           <div style={{fontSize:12,color:'#5a8a9a',marginBottom:3}}>
-                            {lead.pozycje.slice(0,3).map((p,i)=><span key={i} style={{marginRight:8}}>{p.szerokosc&&p.wysokosc?p.szerokosc+'×'+p.wysokosc+' cm':'—'}{p.kolorProfilu?' '+p.kolorProfilu:''}{p.ilosc>1?' ×'+p.ilosc:''}</span>)}
+                            {lead.pozycje.slice(0,3).map(function(p,i){return <span key={i} style={{marginRight:8}}>{p.szerokosc&&p.wysokosc?p.szerokosc+'x'+p.wysokosc+' cm':'—'}{p.kolorProfilu?' '+p.kolorProfilu:''}{p.ilosc>1?' x'+p.ilosc:''}</span>;})}
                             {lead.pozycje.length>3&&<span style={{color:'#3a6a7a'}}>+{lead.pozycje.length-3} więcej</span>}
                           </div>
                         )}
@@ -5763,10 +5762,9 @@ function App() {
                           <span style={{fontSize:11,color:'#2a5a6a',marginLeft:'auto'}}>{lead.savedAt?new Date(lead.savedAt).toLocaleString('pl-PL'):''}</span>
                         </div>
                       </div>
-                      <button onClick={()=>deleteLead(lead.id)} title="Usuń" style={{background:'#2a0a0a',border:'1px solid #5a2a2a',color:'#af5a5a',borderRadius:5,padding:'3px 8px',cursor:'pointer',fontSize:12,flexShrink:0}}>✕</button>
+                      <button onClick={function(){deleteLead(lead.id);}} title="Usuń" style={{background:'#2a0a0a',border:'1px solid #5a2a2a',color:'#af5a5a',borderRadius:5,padding:'3px 8px',cursor:'pointer',fontSize:12,flexShrink:0}}>✕</button>
                     </div>
-                  );
-                    });
+                    );});
                   })()}
                 </div>
               )}
