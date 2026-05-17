@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.12</title>
+<title>MosquitoApp v20260516.13</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -1122,6 +1122,7 @@ function App() {
   const [zamChatHistory,setZamChatHistory]=useState({});
   const [statMonth,setStatMonth]=useState(()=>new Date().getMonth()+1);
   const [statYear,setStatYear]=useState(()=>new Date().getFullYear());
+  const [nbpRates,setNbpRates]=useState({CZK:0.168,EUR:4.25,HUF:0.011,SKK:0.168});
   const [statMatyDuzaExtra,setStatMatyDuzaExtra]=useState(()=>parseInt(localStorage.getItem('stat_maty_duza_extra')||'0'));
   const [statMatyMalaExtra,setStatMatyMalaExtra]=useState(()=>parseInt(localStorage.getItem('stat_maty_mala_extra')||'0'));
   const [statKosmExtra,setStatKosmExtra]=useState({});
@@ -1562,6 +1563,15 @@ function App() {
     Object.keys(access).forEach(k=>{if(access[k]) tokens[k]={access:access[k],refresh:refresh[k]||""};});
     return tokens;
   }
+  async function fetchNbpRates(){
+    try{
+      const r=await fetch('https://api.nbp.pl/api/exchangerates/tables/A/?format=json');
+      const d=await r.json();
+      const rates={};
+      (d[0]?.rates||[]).forEach(function(r){rates[r.code]=r.mid;});
+      if(Object.keys(rates).length>0) setNbpRates(prev=>({...prev,...rates}));
+    }catch(e){console.warn('NBP rates error',e);}
+  }
   async function fetchLeads(){
     setLeadsLoading(true);
     try{
@@ -1604,6 +1614,7 @@ function App() {
     }catch(e){setAutoRunResult({error:e.message});}
     setAutoRunning(false);
     fetchAutoStatus();
+    fetchNbpRates();
   }
   async function resetAutoHistory(){
     if(!confirm("Resetować historię? Autoresponder wyśle ponownie do wszystkich wątków.")) return;
@@ -7404,13 +7415,12 @@ function App() {
                   var szt=parseInt(p.ilosc)||1;
                   var cenaB;
                   if(waluta!=='PLN'){
-                    // Zagraniczne — licz po cenie PLN (gr1=64,99 gr2=84,99 pom=7,99)
-                    var isGr1=false,isGr2=false,isPom=false;
-                    KAT.forEach(function(k){if(k.match(n)){if(k.gr===1)isGr1=true;else if(k.gr===2)isGr2=true;else isPom=true;}});
-                    if(isGr1) cenaB=64.99*szt;
-                    else if(isGr2) cenaB=84.99*szt;
-                    else if(isPom) cenaB=7.99*szt;
-                    else return;
+                    // Zagraniczne — przelicz po kursie NBP
+                    var kurs=nbpRates[waluta]||0;
+                    if(!kurs) return;
+                    cenaB=parseFloat(p.cenaNetto||0)*1.23*szt*kurs;
+                    if(!cenaB&&poz.length===1) cenaB=parseFloat(imp.totalAmount||0)*kurs;
+                    if(cenaB<0.10) return;
                   } else {
                     cenaB=parseFloat(p.cenaNetto||0)*1.23*szt;
                     if(!cenaB&&poz.length===1) cenaB=parseFloat(imp.totalAmount||0);
