@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.35</title>
+<title>MosquitoApp v20260516.36</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -5426,7 +5426,7 @@ function App() {
                             body:JSON.stringify({allegroOrderId:imp.allegroOrderId,kontoId:imp.kontoId,text:txt})
                           });
                           const d=await r.json();
-                          if(d.ok){alert('✅ Wiadomość wysłana');toggleBox(imp.allegroOrderId,'chat');}
+                          if(d.ok){alert('✅ Wiadomość wysłana');toggleBox(imp.allegroOrderId,'chat');setMsgThreads(function(prev){return prev.map(function(t){return t.interlocutor&&t.interlocutor.login&&imp.klientLogin&&t.interlocutor.login.toLowerCase()===imp.klientLogin.toLowerCase()?{...t,read:true}:t;});});}
                           else alert('❌ '+JSON.stringify(d));
                         }catch(e){alert('❌ '+e.message);}
                       }}
@@ -5650,7 +5650,7 @@ function App() {
                       <textarea id="wiad_reply_input" placeholder="Wpisz odpowiedź..." rows={3}
                         style={{width:'100%',padding:'6px 10px',borderRadius:5,border:'1px solid #1a5a5a',background:'#0a1a1a',color:'#9adfdf',fontSize:12,fontFamily:'monospace',resize:'vertical',boxSizing:'border-box'}}/>
                       <div style={{display:'flex',justifyContent:'flex-end',marginTop:6}}>
-                        <button onClick={function(){var txt=document.getElementById('wiad_reply_input').value.trim();if(!txt) return;fetch(AUTORESPONDER_URL+'/messaging/threads/'+wiadActiveThread.id+'/messages?kontoId='+wiadActiveThread._kontoId,{method:'POST',headers:{'Content-Type':'application/json','x-api-key':AUTORESPONDER_KEY},body:JSON.stringify({text:txt})}).then(function(){document.getElementById('wiad_reply_input').value='';setWiadMessages(function(prev){return [...prev,{text:txt,author:{role:'OPERATOR'},createdAt:new Date().toISOString()}];});}).catch(function(e){alert('Błąd: '+e.message);});}} style={{padding:'6px 18px',background:'#1a4a3a',border:'1px solid #2a7a5a',borderRadius:5,color:'#afffaf',cursor:'pointer',fontWeight:700,fontSize:12}}>
+                        <button onClick={function(){var txt=document.getElementById('wiad_reply_input').value.trim();if(!txt) return;fetch(AUTORESPONDER_URL+'/messaging/threads/'+wiadActiveThread.id+'/messages?kontoId='+wiadActiveThread._kontoId,{method:'POST',headers:{'Content-Type':'application/json','x-api-key':AUTORESPONDER_KEY},body:JSON.stringify({text:txt})}).then(function(){document.getElementById('wiad_reply_input').value='';setWiadMessages(function(prev){return [...prev,{text:txt,author:{role:'OPERATOR'},createdAt:new Date().toISOString()}];});setMsgThreads(function(prev){return prev.map(function(t){return t.id===wiadActiveThread.id?{...t,read:true}:t;});});}).catch(function(e){alert('Błąd: '+e.message);});}} style={{padding:'6px 18px',background:'#1a4a3a',border:'1px solid #2a7a5a',borderRadius:5,color:'#afffaf',cursor:'pointer',fontWeight:700,fontSize:12}}>
                           ✉️ Wyślij
                         </button>
                       </div>
@@ -5658,7 +5658,7 @@ function App() {
                   ):(
                   <div>
                   {(()=>{
-                    const watki=(msgThreads||[]).filter(function(t){return !t.hasDispute&&!t.isDispute;});
+                    const watki=(msgThreads||[]).filter(function(t){return !t.hasDispute&&!t.isDispute&&(t.read===false||t.hasUnreadMessages||t.unread);});
                     if(watki.length===0) return <div style={{color:'#3a6a6a',textAlign:'center',padding:'30px 0',fontSize:14}}>Brak wiadomości — kliknij Odśwież</div>;
                     return watki.map(function(t){
                       const konto=t._kontoId||'?';
