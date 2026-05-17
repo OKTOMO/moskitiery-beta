@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.30</title>
+<title>MosquitoApp v20260516.31</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -1727,6 +1727,9 @@ function App() {
       setAllegroImportResults(allResults);
       try{localStorage.setItem('allegro_import_results',JSON.stringify(allResults));}catch(e){console.warn('localStorage full:',e);}
       setAllegroImportShow(true);
+      // Auto-pobierz wiadomości i porzucone po załadowaniu zamówień
+      loadAllThreads().catch(function(){});
+      fetchLeads().catch(function(){});
       // Auto-aktualizuj statusy na podstawie fulfillmentStatus z Allegro
       setAppStatuses(prev=>{
         const next={...prev};
@@ -5652,7 +5655,7 @@ function App() {
                         <button onClick={function(){setWiadActiveThread(null);setWiadMessages([]);}} style={{background:'none',border:'none',color:'#5abfbf',cursor:'pointer',fontSize:14}}>← Wróć</button>
                         <span style={{fontWeight:700,color:'#9fcfdf',fontSize:13}}>{wiadActiveThread.interlocutor?.login||'Klient'}</span>
                         <span style={{background:'#0a2a3a',borderRadius:4,padding:'1px 6px',fontSize:10,color:'#4a9aaf'}}>{wiadActiveThread._kontoId}</span>
-                        {imp&&<span style={{fontSize:11,color:'#3a6a6a',marginLeft:'auto'}}>{imp.klientImie} — {imp.klientMiasto}</span>}
+                        {(()=>{const _imp=wiadActiveThread&&allegroImportResults.find(function(i){return i.allegroOrderId===(wiadActiveThread.relatedTo||[]).find(function(r){return r.type==='ORDER';})?.id;});return _imp?<span style={{fontSize:11,color:'#3a6a6a',marginLeft:'auto'}}>{_imp.klientImie} — {_imp.klientMiasto}</span>:null;})()}
                       </div>
                       {wiadLoading&&<div style={{textAlign:'center',color:'#3a7a7a',padding:'20px 0'}}>⟳ ładuję wiadomości...</div>}
                       <div style={{maxHeight:300,overflowY:'auto',display:'flex',flexDirection:'column',gap:6,marginBottom:10}}>
