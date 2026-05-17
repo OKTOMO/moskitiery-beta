@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.36</title>
+<title>MosquitoApp v20260516.37</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -5416,19 +5416,18 @@ function App() {
                         style={{padding:'5px 14px',borderRadius:5,border:'1px solid #2a4a4a',background:'none',color:'#3a7a7a',cursor:'pointer',fontSize:12}}>
                         Anuluj
                       </button>
-                      <button onClick={async()=>{
-                        const txt=document.getElementById(`chat_${imp.allegroOrderId}`)?.value?.trim();
+                      <button onClick={function(){
+                        var _el=document.getElementById('chat_'+imp.allegroOrderId);
+                        var txt=_el?_el.value.trim():'';
                         if(!txt){alert('Wpisz wiadomość');return;}
-                        try{
-                          const r=await fetch(AUTORESPONDER_URL+'/message/send',{
-                            method:'POST',
-                            headers:{'Content-Type':'application/json','x-api-key':AUTORESPONDER_KEY},
-                            body:JSON.stringify({allegroOrderId:imp.allegroOrderId,kontoId:imp.kontoId,text:txt})
-                          });
-                          const d=await r.json();
-                          if(d.ok){alert('✅ Wiadomość wysłana');toggleBox(imp.allegroOrderId,'chat');setMsgThreads(function(prev){return prev.map(function(t){return t.interlocutor&&t.interlocutor.login&&imp.klientLogin&&t.interlocutor.login.toLowerCase()===imp.klientLogin.toLowerCase()?{...t,read:true}:t;});});}
+                        fetch(AUTORESPONDER_URL+'/message/send',{
+                          method:'POST',
+                          headers:{'Content-Type':'application/json','x-api-key':AUTORESPONDER_KEY},
+                          body:JSON.stringify({allegroOrderId:imp.allegroOrderId,kontoId:imp.kontoId,text:txt})
+                        }).then(function(r){return r.json();}).then(function(d){
+                          if(d.ok){alert('✅ Wiadomość wysłana');if(_el)_el.value='';toggleBox(imp.allegroOrderId,'chat');setMsgThreads(function(prev){return prev.map(function(t){return t.interlocutor&&t.interlocutor.login&&imp.klientLogin&&t.interlocutor.login.toLowerCase()===imp.klientLogin.toLowerCase()?{...t,read:true}:t;});});}
                           else alert('❌ '+JSON.stringify(d));
-                        }catch(e){alert('❌ '+e.message);}
+                        }).catch(function(e){alert('❌ '+e.message);});
                       }}
                         style={{padding:'5px 18px',borderRadius:5,border:'1px solid #1a7a7a',background:'#0a3a3a',color:'#5adfdf',cursor:'pointer',fontSize:12,fontWeight:700}}>
                         📨 Wyślij
