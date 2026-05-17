@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.37</title>
+<title>MosquitoApp v20260516.38</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -1123,6 +1123,7 @@ function App() {
   const [wiadActiveThread,setWiadActiveThread]=useState(null);
   const [wiadMessages,setWiadMessages]=useState([]);
   const [wiadLoading,setWiadLoading]=useState(false);
+  const [msgDisputes,setMsgDisputes]=useState([]);
   const [statMonth,setStatMonth]=useState(()=>new Date().getMonth()+1);
   const [statYear,setStatYear]=useState(()=>new Date().getFullYear());
   const [nbpRates,setNbpRates]=useState({CZK:0.168,EUR:4.25,HUF:0.011,SKK:0.168});
@@ -4220,6 +4221,15 @@ function App() {
     allThreads.sort(function(a,b){var da=b.lastMessageDateTime||b.modifiedAt||b.createdAt||'';var db=a.lastMessageDateTime||a.modifiedAt||a.createdAt||'';return da.localeCompare(db);});
     setMsgThreads(allThreads);
     setMsgLoading(false);
+    // Pobierz dyskusje/reklamacje dla każdego konta
+    const disputeResults=await Promise.allSettled(kontoIds.map(function(k){
+      return fetch(AUTORESPONDER_URL+'/sale/disputes?kontoId='+k+'&limit=20',{headers:{'x-api-key':AUTORESPONDER_KEY}})
+        .then(function(r){return r.json();})
+        .then(function(d){return (d.disputes||[]).map(function(t){return {...t,_kontoId:k,hasDispute:true};});});
+    }));
+    const allDisputes=[];
+    disputeResults.forEach(function(r){if(r.status==='fulfilled') r.value.forEach(function(t){allDisputes.push(t);});});
+    setMsgDisputes(allDisputes);
   }
   async function msgLoadThreads(kontoId, retried){
     const k=kontoId||msgKontoRef.current;
@@ -5425,7 +5435,7 @@ function App() {
                           headers:{'Content-Type':'application/json','x-api-key':AUTORESPONDER_KEY},
                           body:JSON.stringify({allegroOrderId:imp.allegroOrderId,kontoId:imp.kontoId,text:txt})
                         }).then(function(r){return r.json();}).then(function(d){
-                          if(d.ok){alert('✅ Wiadomość wysłana');if(_el)_el.value='';toggleBox(imp.allegroOrderId,'chat');setMsgThreads(function(prev){return prev.map(function(t){return t.interlocutor&&t.interlocutor.login&&imp.klientLogin&&t.interlocutor.login.toLowerCase()===imp.klientLogin.toLowerCase()?{...t,read:true}:t;});});}
+                          if(d.ok){alert('✅ Wiadomość wysłana');if(_el)_el.value='';toggleBox(imp.allegroOrderId,'chat');setMsgThreads(function(prev){return prev.filter(function(t){return !(t.interlocutor&&t.interlocutor.login&&imp.klientLogin&&t.interlocutor.login.toLowerCase()===imp.klientLogin.toLowerCase());});});}
                           else alert('❌ '+JSON.stringify(d));
                         }).catch(function(e){alert('❌ '+e.message);});
                       }}
@@ -5649,7 +5659,7 @@ function App() {
                       <textarea id="wiad_reply_input" placeholder="Wpisz odpowiedź..." rows={3}
                         style={{width:'100%',padding:'6px 10px',borderRadius:5,border:'1px solid #1a5a5a',background:'#0a1a1a',color:'#9adfdf',fontSize:12,fontFamily:'monospace',resize:'vertical',boxSizing:'border-box'}}/>
                       <div style={{display:'flex',justifyContent:'flex-end',marginTop:6}}>
-                        <button onClick={function(){var txt=document.getElementById('wiad_reply_input').value.trim();if(!txt) return;fetch(AUTORESPONDER_URL+'/messaging/threads/'+wiadActiveThread.id+'/messages?kontoId='+wiadActiveThread._kontoId,{method:'POST',headers:{'Content-Type':'application/json','x-api-key':AUTORESPONDER_KEY},body:JSON.stringify({text:txt})}).then(function(){document.getElementById('wiad_reply_input').value='';setWiadMessages(function(prev){return [...prev,{text:txt,author:{role:'OPERATOR'},createdAt:new Date().toISOString()}];});setMsgThreads(function(prev){return prev.map(function(t){return t.id===wiadActiveThread.id?{...t,read:true}:t;});});}).catch(function(e){alert('Błąd: '+e.message);});}} style={{padding:'6px 18px',background:'#1a4a3a',border:'1px solid #2a7a5a',borderRadius:5,color:'#afffaf',cursor:'pointer',fontWeight:700,fontSize:12}}>
+                        <button onClick={function(){var txt=document.getElementById('wiad_reply_input').value.trim();if(!txt) return;fetch(AUTORESPONDER_URL+'/messaging/threads/'+wiadActiveThread.id+'/messages?kontoId='+wiadActiveThread._kontoId,{method:'POST',headers:{'Content-Type':'application/json','x-api-key':AUTORESPONDER_KEY},body:JSON.stringify({text:txt})}).then(function(){document.getElementById('wiad_reply_input').value='';setWiadMessages(function(prev){return [...prev,{text:txt,author:{role:'OPERATOR'},createdAt:new Date().toISOString()}];});setMsgThreads(function(prev){return prev.filter(function(t){return t.id!==wiadActiveThread.id;});});setWiadActiveThread(null);setWiadMessages([]);}).catch(function(e){alert('Błąd: '+e.message);});}} style={{padding:'6px 18px',background:'#1a4a3a',border:'1px solid #2a7a5a',borderRadius:5,color:'#afffaf',cursor:'pointer',fontWeight:700,fontSize:12}}>
                           ✉️ Wyślij
                         </button>
                       </div>
@@ -5689,20 +5699,20 @@ function App() {
                     <button onClick={loadAllThreads} style={{padding:'3px 10px',fontSize:11,background:'#2a1a0a',border:'1px solid #6a3a1a',borderRadius:5,color:'#bf7a4a',cursor:'pointer'}}>🔄 Odśwież</button>
                   </div>
                   {(()=>{
-                    const disputes=(msgThreads||[]).filter(function(t){return t.hasDispute||t.isDispute;});
+                    const disputes=msgDisputes||[];
                     if(disputes.length===0) return <div style={{color:'#6a3a3a',textAlign:'center',padding:'30px 0',fontSize:14}}>Brak aktywnych reklamacji</div>;
                     return disputes.map(function(t){
-                      const imp=allegroImportResults.find(function(i){return i.allegroOrderId===t.relatedTo?.find(function(r){return r.type==='ORDER';})?.id;});
-                      const lastMsg=t.messages?.[t.messages.length-1];
+                      const imp=allegroImportResults.find(function(i){return i.allegroOrderId===(t.checkoutForm&&t.checkoutForm.id);});
                       return (
-                        <div key={t.id} style={{background:'#1a0a0a',border:'1px solid #4a2a1a',borderRadius:7,padding:'10px 14px',marginBottom:6}}>
+                        <div key={t.id} style={{background:'#1a0a0a',border:'1px solid #4a2a1a',borderRadius:7,padding:'10px 14px',marginBottom:6,cursor:'pointer'}}
+                          onClick={function(){setWiadActiveThread({...t,_isDispute:true});setWiadMessages([]);setWiadLoading(true);fetch(AUTORESPONDER_URL+'/sale/disputes/'+t.id+'/messages?kontoId='+t._kontoId,{headers:{'x-api-key':AUTORESPONDER_KEY}}).then(function(r){return r.json();}).then(function(d){setWiadMessages((d.messages||[]).slice().reverse());setWiadLoading(false);}).catch(function(){setWiadLoading(false);});}}>
                           <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:4}}>
-                            <span style={{background:'#3a1a0a',color:'#df9a5a',borderRadius:4,padding:'1px 7px',fontSize:11,fontWeight:700}}>⚠️ dyskusja</span>
+                            <span style={{background:'#3a1a0a',color:'#df9a5a',borderRadius:4,padding:'1px 7px',fontSize:11,fontWeight:700}}>⚠️ {t.status||'dyskusja'}</span>
                             {(function(){const KCOL={favo5:['#4a8a5a','#7fcf7f'],staroleska_pl:['#4a7a4a','#5abf7a'],sinlook_pl:['#1a4a3a','#4abf9a'],arlis_pl:['#2a3a5a','#7abfdf'],everis_pl:['#3a2a5a','#af8fdf'],albama_eu:['#8a6a3a','#dfaf5a'],pedroshop_pl_365:['#3a2a1a','#cf8a4a']};const k=t._kontoId||'?';const[bg,col]=KCOL[k]||['#2a2a2a','#9a9a9a'];return <span style={{fontSize:10,padding:'1px 6px',borderRadius:4,background:bg,color:col,fontFamily:'monospace',fontWeight:700,marginRight:4}}>{k}</span>;})()}
-                            <span style={{fontWeight:700,color:'#df9a7a',fontSize:13}}>{imp?.klientImie||t.interlocutor?.login||t.subject||'Klient'}</span>
-                            <span style={{fontSize:11,color:'#5a3a3a',marginLeft:'auto'}}>{(t.lastMessageDateTime||t.modifiedAt||t.lastMessageAt)?new Date(t.lastMessageDateTime||t.modifiedAt||t.lastMessageAt).toLocaleString('pl-PL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</span>
+                            <span style={{fontWeight:700,color:'#df9a7a',fontSize:13}}>{imp?.klientImie||t.buyer?.login||'Klient'}</span>
+                            <span style={{fontSize:11,color:'#5a3a3a',marginLeft:'auto'}}>{t.createdAt?new Date(t.createdAt).toLocaleString('pl-PL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</span>
                           </div>
-                          {lastMsg&&<div style={{fontSize:12,color:'#8a5a5a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{lastMsg.text}</div>}
+                          {t.subject&&<div style={{fontSize:11,color:'#8a5a5a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{t.subject}</div>}
                         </div>
                       );
                     });
