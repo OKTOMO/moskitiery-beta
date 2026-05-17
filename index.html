@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.43</title>
+<title>MosquitoApp v20260516.44</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -2051,19 +2051,33 @@ function App() {
     const offerL=(imp.offerNames||'').toLowerCase();
     if(!offerL.includes('moskitier')&&!offerL.includes('siatk')) return null;
     // Wyciągnij wymiary z wiadomości
-    const wymPattern=/(\d+[\.,]?\d*)\s*[x×xX\*]\s*(\d+[\.,]?\d*)/g;
-    const wymPattern2=/(?:szeroko[śs][ćc]|szer\.?|width)\D{0,5}(\d+[\.,]?\d*)/i;
-    const wymPattern3=/(?:wysoko[śs][ćc]|wys\.?|height)\D{0,5}(\d+[\.,]?\d*)/i;
+    // Szukaj wymiarów TYLKO z jednostką cm/mm lub w kontekście "szerokość/wysokość"
+    const wymPattern=/(\d+[\.,]?\d*)\s*(?:cm|mm)\s*[x×xX\*]\s*(\d+[\.,]?\d*)\s*(?:cm|mm)/gi;
+    const wymPattern2=/(\d+[\.,]?\d*)\s*[x×xX\*]\s*(\d+[\.,]?\d*)\s*(?:cm|mm)/gi;
+    const wymPattern3=/(?:szeroko[śs][ćc]|szer\.?|width)[^\d]{0,10}(\d{2,3}(?:[\.,]\d)?)\s*(?:cm|mm)?/i;
+    const wymPattern4=/(?:wysoko[śs][ćc]|wys\.?|height)[^\d]{0,10}(\d{2,3}(?:[\.,]\d)?)\s*(?:cm|mm)?/i;
     let wymiary=[];
     let m;
+    // Wzorzec 1: X cm x Y cm
     while((m=wymPattern.exec(msg))!==null){
-      wymiary.push([parseFloat(m[1].replace(',','.')),parseFloat(m[2].replace(',','.'))]);
+      const a=parseFloat(m[1].replace(',','.')), b=parseFloat(m[2].replace(',','.'));
+      if(a>10&&b>10&&a<400&&b<400) wymiary.push([a,b]);
     }
+    // Wzorzec 2: X x Y cm (tylko jedna jednostka)
     if(wymiary.length===0){
-      // Próbuj wyciągnąć osobno
-      const mSzer=wymPattern2.exec(msg);
-      const mWys=wymPattern3.exec(msg);
-      if(mSzer&&mWys) wymiary.push([parseFloat(mSzer[1]),parseFloat(mWys[1])]);
+      while((m=wymPattern2.exec(msg))!==null){
+        const a=parseFloat(m[1].replace(',','.')), b=parseFloat(m[2].replace(',','.'));
+        if(a>10&&b>10&&a<400&&b<400) wymiary.push([a,b]);
+      }
+    }
+    // Wzorzec 3: szerokość X wysokość Y
+    if(wymiary.length===0){
+      const mSzer=wymPattern3.exec(msg);
+      const mWys=wymPattern4.exec(msg);
+      if(mSzer&&mWys){
+        const a=parseFloat(mSzer[1]),b=parseFloat(mWys[1]);
+        if(a>10&&b>10&&a<400&&b<400) wymiary.push([a,b]);
+      }
     }
     if(wymiary.length===0){
       // Brak wymiarów - alert tylko przy bardzo małej ilości
