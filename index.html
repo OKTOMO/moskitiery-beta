@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.38</title>
+<title>MosquitoApp v20260516.39</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -5499,7 +5499,7 @@ function App() {
                 <button onClick={()=>{setZamTab('wiadomosci_zam');if((msgThreads||[]).length===0) loadAllThreads();}} style={{padding:'6px 12px',fontSize:12,fontWeight:700,cursor:'pointer',border:'none',borderRadius:'6px 6px 0 0',background:zamTab==='wiadomosci_zam'?'#1a2a2a':'#0a1818',color:zamTab==='wiadomosci_zam'?'#7adfdf':'#4a9a9a',borderBottom:zamTab==='wiadomosci_zam'?'2px solid #3abfbf':'2px solid transparent'}}>
                   💬 Wiad.{(()=>{const n=(msgThreads||[]).filter(function(t){return t.read===false||t.hasUnreadMessages||t.unread;}).length;return n>0?<span style={{background:'#2a6a6a',borderRadius:10,padding:'1px 6px',fontSize:10,marginLeft:3}}>{n}</span>:null;})()}
                 </button>
-                <button onClick={()=>{setZamTab('reklamacje_zam');if((msgThreads||[]).length===0) loadAllThreads();}} style={{padding:'6px 12px',fontSize:12,fontWeight:700,cursor:'pointer',border:'none',borderRadius:'6px 6px 0 0',background:zamTab==='reklamacje_zam'?'#2a1a1a':'#180a0a',color:zamTab==='reklamacje_zam'?'#df9a7a':'#af6a4a',borderBottom:zamTab==='reklamacje_zam'?'2px solid #cf6a3a':'2px solid transparent'}}>
+                <button onClick={()=>{setZamTab('reklamacje_zam');if((msgDisputes||[]).length===0) loadAllThreads();}} style={{padding:'6px 12px',fontSize:12,fontWeight:700,cursor:'pointer',border:'none',borderRadius:'6px 6px 0 0',background:zamTab==='reklamacje_zam'?'#2a1a1a':'#180a0a',color:zamTab==='reklamacje_zam'?'#df9a7a':'#af6a4a',borderBottom:zamTab==='reklamacje_zam'?'2px solid #cf6a3a':'2px solid transparent'}}>
                   ⚠️ Rekl.
                 </button>
                 {(()=>{const fvCount=Object.keys(invoicesSent).filter(k=>invoicesSent[k]?.id).length;return(
@@ -5729,7 +5729,19 @@ function App() {
                     </button>
                     <div style={{fontSize:12,color:'#3a6a7a',marginLeft:'auto'}}>{leads.length} zapytań</div>
                   </div>
-                  {leads.length===0&&!leadsLoading&&<div style={{color:'#3a5a6a',textAlign:'center',padding:'30px 0',fontSize:14}}>Brak porzuconych zapytań</div>}
+                  {(()=>{
+                    // Scal duplikaty po telefonie/emailu - zachowaj najnowszy
+                    const seen={};
+                    const uniq=[];
+                    leads.forEach(function(l){
+                      const key=(l.phone||'')+'|'+(l.email||'');
+                      if(!key||key==='|'){uniq.push(l);return;}
+                      if(!seen[key]||l.savedAt>seen[key].savedAt) seen[key]=l;
+                    });
+                    Object.values(seen).forEach(function(l){uniq.push(l);});
+                    uniq.sort(function(a,b){return (b.savedAt||'').localeCompare(a.savedAt||'');});
+                    if(uniq.length===0&&!leadsLoading) return <div style={{color:'#3a5a6a',textAlign:'center',padding:'30px 0',fontSize:14}}>Brak porzuconych zapytań</div>;
+                    return uniq.map(function(lead){
                   {leads.map(lead=>(
                     <div key={lead.id} style={{background:'#0a1a2a',border:'1px solid #1a3a4a',borderRadius:7,padding:'10px 14px',marginBottom:8,display:'flex',gap:12,alignItems:'flex-start'}}>
                       <div style={{flex:1,minWidth:0}}>
@@ -5753,7 +5765,9 @@ function App() {
                       </div>
                       <button onClick={()=>deleteLead(lead.id)} title="Usuń" style={{background:'#2a0a0a',border:'1px solid #5a2a2a',color:'#af5a5a',borderRadius:5,padding:'3px 8px',cursor:'pointer',fontSize:12,flexShrink:0}}>✕</button>
                     </div>
-                  ))}
+                  );
+                    });
+                  })()}
                 </div>
               )}
               {(()=>{
