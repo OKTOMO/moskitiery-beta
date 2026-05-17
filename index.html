@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.24</title>
+<title>MosquitoApp v20260516.25</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -4194,9 +4194,26 @@ function App() {
   async function loadAllThreads(){
     const acc=JSON.parse(localStorage.getItem('allegro_tokens')||'{}');
     const kontoIds=ALLEGRO_KONTA.map(function(k){return k.id;}).filter(function(id){return !!acc[id];});
-    for(var i=0;i<kontoIds.length;i++){
-      try{ await msgLoadThreads(kontoIds[i],false); }catch(e){}
-    }
+    if(kontoIds.length===0) return;
+    setMsgLoading(true); setMsgError(''); setMsgThreads([]);
+    // Sync tokenów do workera
+    const _ref=JSON.parse(localStorage.getItem('allegro_refreshes')||'{}');
+    const _wt={};
+    Object.keys(acc).forEach(function(x){if(acc[x]) _wt[x]={access:acc[x],refresh:_ref[x]||''};});
+    await fetch(AUTORESPONDER_URL+'/sync',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':AUTORESPONDER_KEY},body:JSON.stringify({tokens:_wt})}).catch(function(){});
+    // Pobierz wątki z każdego konta równolegle
+    const results=await Promise.allSettled(kontoIds.map(async function(k){
+      const r=await fetch(AUTORESPONDER_URL+'/messaging/threads?kontoId='+k+'&limit=20',{headers:{'x-api-key':AUTORESPONDER_KEY}});
+      if(!r.ok) return [];
+      const d=await r.json();
+      return (d.threads||[]).map(function(t){return {...t,_kontoId:k};});
+    }));
+    const allThreads=[];
+    results.forEach(function(r){if(r.status==='fulfilled') r.value.forEach(function(t){allThreads.push(t);});});
+    // Sortuj po dacie ostatniej wiadomości
+    allThreads.sort(function(a,b){return (b.lastMessageAt||'').localeCompare(a.lastMessageAt||'');});
+    setMsgThreads(allThreads);
+    setMsgLoading(false);
   }
   async function msgLoadThreads(kontoId, retried){
     const k=kontoId||msgKontoRef.current;
