@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.25</title>
+<title>MosquitoApp v20260516.26</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -4211,7 +4211,7 @@ function App() {
     const allThreads=[];
     results.forEach(function(r){if(r.status==='fulfilled') r.value.forEach(function(t){allThreads.push(t);});});
     // Sortuj po dacie ostatniej wiadomości
-    allThreads.sort(function(a,b){return (b.lastMessageAt||'').localeCompare(a.lastMessageAt||'');});
+    allThreads.sort(function(a,b){var da=b.lastMessageAt||b.createdAt||'';var db=a.lastMessageAt||a.createdAt||'';return da.localeCompare(db);});
     setMsgThreads(allThreads);
     setMsgLoading(false);
   }
@@ -5634,7 +5634,7 @@ function App() {
                           onClick={function(){if(imp){setZamOpenBox(function(prev){var n={...prev};n[imp.allegroOrderId]='chat';return n;});setZamTab('nowe');}}}>
                           <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:3}}>
                             {unread>0&&<span style={{background:'#2a6a6a',color:'#afffff',borderRadius:10,padding:'1px 6px',fontSize:10,fontWeight:700}}>●</span>}
-                            <span style={{background:'#0a2a3a',border:'1px solid #1a5a5a',borderRadius:4,padding:'1px 5px',fontSize:10,color:'#4a9aaf',marginRight:2}}>{konto}</span>
+                            {(function(){const KCOL={favo5:['#4a8a5a','#7fcf7f'],staroleska_pl:['#4a7a4a','#5abf7a'],sinlook_pl:['#1a4a3a','#4abf9a'],arlis_pl:['#2a3a5a','#7abfdf'],everis_pl:['#3a2a5a','#af8fdf'],albama_eu:['#8a6a3a','#dfaf5a'],pedroshop_pl_365:['#3a2a1a','#cf8a4a']};const[bg,col]=KCOL[konto]||['#2a2a2a','#9a9a9a'];return <span style={{fontSize:10,padding:'1px 6px',borderRadius:4,background:bg,color:col,fontFamily:'monospace',fontWeight:700,marginRight:4}}>{konto}</span>;})()}
                             <span style={{fontWeight:700,color:'#9fcfdf',fontSize:12}}>{imp?.klientImie||t.interlocutor?.login||'Klient'}</span>
                             <span style={{fontSize:10,color:'#3a6a6a',marginLeft:'auto'}}>{t.lastMessageAt?new Date(t.lastMessageAt).toLocaleString('pl-PL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</span>
                           </div>
@@ -5661,7 +5661,7 @@ function App() {
                         <div key={t.id} style={{background:'#1a0a0a',border:'1px solid #4a2a1a',borderRadius:7,padding:'10px 14px',marginBottom:6}}>
                           <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:4}}>
                             <span style={{background:'#3a1a0a',color:'#df9a5a',borderRadius:4,padding:'1px 7px',fontSize:11,fontWeight:700}}>⚠️ dyskusja</span>
-                            <span style={{background:'#2a1a0a',border:'1px solid #5a3a1a',borderRadius:4,padding:'1px 5px',fontSize:10,color:'#af7a4a',marginRight:2}}>{t._kontoId||'?'}</span>
+                            {(function(){const KCOL={favo5:['#4a8a5a','#7fcf7f'],staroleska_pl:['#4a7a4a','#5abf7a'],sinlook_pl:['#1a4a3a','#4abf9a'],arlis_pl:['#2a3a5a','#7abfdf'],everis_pl:['#3a2a5a','#af8fdf'],albama_eu:['#8a6a3a','#dfaf5a'],pedroshop_pl_365:['#3a2a1a','#cf8a4a']};const k=t._kontoId||'?';const[bg,col]=KCOL[k]||['#2a2a2a','#9a9a9a'];return <span style={{fontSize:10,padding:'1px 6px',borderRadius:4,background:bg,color:col,fontFamily:'monospace',fontWeight:700,marginRight:4}}>{k}</span>;})()}
                             <span style={{fontWeight:700,color:'#df9a7a',fontSize:13}}>{imp?.klientImie||t.interlocutor?.login||'Klient'}</span>
                             <span style={{fontSize:11,color:'#5a3a3a',marginLeft:'auto'}}>{t.lastMessageAt?new Date(t.lastMessageAt).toLocaleString('pl-PL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</span>
                           </div>
