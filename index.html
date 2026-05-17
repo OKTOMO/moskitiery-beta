@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.19</title>
+<title>MosquitoApp v20260516.22</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -4191,6 +4191,13 @@ function App() {
     setMsgNewSending(false);
   }
 
+  async function loadAllThreads(){
+    const acc=JSON.parse(localStorage.getItem('allegro_tokens')||'{}');
+    const kontoIds=ALLEGRO_KONTA.map(function(k){return k.id;}).filter(function(id){return !!acc[id];});
+    for(var i=0;i<kontoIds.length;i++){
+      try{ await msgLoadThreads(kontoIds[i],false); }catch(e){}
+    }
+  }
   async function msgLoadThreads(kontoId, retried){
     const k=kontoId||msgKontoRef.current;
     const tok=allegroTokens[k]||"";
@@ -4224,7 +4231,11 @@ function App() {
         setMsgLoading(false);return;
       }
       const d=await r.json();
-      setMsgThreads(d.threads||[]);
+      const newThreads=(d.threads||[]).map(function(t){return {...t,_kontoId:k};});
+      setMsgThreads(function(prev){
+        const withoutKonto=prev.filter(function(t){return t._kontoId!==k;});
+        return [...withoutKonto,...newThreads];
+      });
     }catch(e){setMsgError("Błąd połączenia: "+e.message);}
     setMsgLoading(false);
   }
@@ -5453,10 +5464,10 @@ function App() {
                 <button onClick={()=>setZamTab('pozostale')} style={{padding:'6px 12px',fontSize:12,fontWeight:700,cursor:'pointer',border:'none',borderRadius:'6px 6px 0 0',background:zamTab==='pozostale'?'#1a2a3a':'#0a1828',color:zamTab==='pozostale'?'#7acfdf':'#5a9abf',borderBottom:zamTab==='pozostale'?'2px solid #3a8acf':'2px solid transparent'}}>
                   ✅ Zreal. ({zrealizowaneList.length}){(()=>{const n=zrealizowaneList.filter(i=>i.invoiceRequired&&!invoicesSent[i.allegroOrderId]).length;return n>0?` 🧾${n}`:''})()}
                 </button>
-                <button onClick={()=>{setZamTab('wiadomosci_zam');}} style={{padding:'6px 12px',fontSize:12,fontWeight:700,cursor:'pointer',border:'none',borderRadius:'6px 6px 0 0',background:zamTab==='wiadomosci_zam'?'#1a2a2a':'#0a1818',color:zamTab==='wiadomosci_zam'?'#7adfdf':'#4a9a9a',borderBottom:zamTab==='wiadomosci_zam'?'2px solid #3abfbf':'2px solid transparent'}}>
+                <button onClick={()=>{setZamTab('wiadomosci_zam');if((msgThreads||[]).length===0) loadAllThreads();}} style={{padding:'6px 12px',fontSize:12,fontWeight:700,cursor:'pointer',border:'none',borderRadius:'6px 6px 0 0',background:zamTab==='wiadomosci_zam'?'#1a2a2a':'#0a1818',color:zamTab==='wiadomosci_zam'?'#7adfdf':'#4a9a9a',borderBottom:zamTab==='wiadomosci_zam'?'2px solid #3abfbf':'2px solid transparent'}}>
                   💬 Wiad.{(()=>{const n=(msgThreads||[]).filter(function(t){return t.unread||t.hasUnreadMessages;}).length;return n>0?<span style={{background:'#2a6a6a',borderRadius:10,padding:'1px 6px',fontSize:10,marginLeft:3}}>{n}</span>:null;})()}
                 </button>
-                <button onClick={()=>{setZamTab('reklamacje_zam');}} style={{padding:'6px 12px',fontSize:12,fontWeight:700,cursor:'pointer',border:'none',borderRadius:'6px 6px 0 0',background:zamTab==='reklamacje_zam'?'#2a1a1a':'#180a0a',color:zamTab==='reklamacje_zam'?'#df9a7a':'#af6a4a',borderBottom:zamTab==='reklamacje_zam'?'2px solid #cf6a3a':'2px solid transparent'}}>
+                <button onClick={()=>{setZamTab('reklamacje_zam');if((msgThreads||[]).length===0) loadAllThreads();}} style={{padding:'6px 12px',fontSize:12,fontWeight:700,cursor:'pointer',border:'none',borderRadius:'6px 6px 0 0',background:zamTab==='reklamacje_zam'?'#2a1a1a':'#180a0a',color:zamTab==='reklamacje_zam'?'#df9a7a':'#af6a4a',borderBottom:zamTab==='reklamacje_zam'?'2px solid #cf6a3a':'2px solid transparent'}}>
                   ⚠️ Rekl.
                 </button>
                 {(()=>{const fvCount=Object.keys(invoicesSent).filter(k=>invoicesSent[k]?.id).length;return(
@@ -5589,23 +5600,36 @@ function App() {
               })()}
               {zamTab==='wiadomosci_zam'&&(
                 <div style={{padding:'12px 0'}}>
-                  <div style={{fontWeight:700,fontSize:15,color:'#7adfdf',marginBottom:12}}>💬 Wiadomości</div>
+                  <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
+                    <div style={{fontWeight:700,fontSize:15,color:'#7adfdf'}}>💬 Wiadomości</div>
+                    <button onClick={loadAllThreads} style={{padding:'3px 10px',fontSize:11,background:'#0a2a2a',border:'1px solid #2a6a6a',borderRadius:5,color:'#5abfbf',cursor:'pointer'}}>🔄 Odśwież</button>
+                  </div>
                   {(()=>{
-                    const watki=(msgThreads||[]).filter(function(t){return !t.hasDispute;});
-                    if(watki.length===0) return <div style={{color:'#3a6a6a',textAlign:'center',padding:'30px 0',fontSize:14}}>Brak wiadomości — pobierz zamówienia</div>;
-                    return watki.map(function(t){
-                      const imp=allegroImportResults.find(function(i){return i.allegroOrderId===t.relatedTo?.find(function(r){return r.type==='ORDER';})?.id;});
-                      const unread=t.unread||t.hasUnreadMessages?1:0;
-                      const lastMsg=t.messages?.[t.messages.length-1];
+                    const watki=(msgThreads||[]).filter(function(t){return !t.hasDispute&&!t.isDispute;});
+                    if(watki.length===0) return <div style={{color:'#3a6a6a',textAlign:'center',padding:'30px 0',fontSize:14}}>Brak wiadomości — kliknij Odśwież</div>;
+                    // Grupuj po koncie
+                    const kontoGroups={};
+                    watki.forEach(function(t){const k=t._kontoId||'?';if(!kontoGroups[k])kontoGroups[k]=[];kontoGroups[k].push(t);});
+                    return Object.keys(kontoGroups).map(function(konto){
                       return (
-                        <div key={t.id} style={{background:'#0a1a1a',border:'1px solid '+(unread?'#2a6a6a':'#1a3a3a'),borderRadius:7,padding:'10px 14px',marginBottom:6,cursor:'pointer'}}
-                          onClick={function(){if(imp) setZamOpenBox(function(prev){var n={...prev};n[imp.allegroOrderId]='chat';return n;});setZamTab('nowe');}}>
-                          <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:4}}>
-                            {unread>0&&<span style={{background:'#2a6a6a',color:'#afffff',borderRadius:10,padding:'1px 7px',fontSize:11,fontWeight:700}}>{unread}</span>}
-                            <span style={{fontWeight:700,color:'#9fcfdf',fontSize:13}}>{imp?.klientImie||t.interlocutor?.login||'Klient'}</span>
-                            <span style={{fontSize:11,color:'#3a6a6a',marginLeft:'auto'}}>{t.lastMessageAt?new Date(t.lastMessageAt).toLocaleString('pl-PL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</span>
-                          </div>
-                          {lastMsg&&<div style={{fontSize:12,color:'#5a8a8a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{lastMsg.text}</div>}
+                        <div key={konto} style={{marginBottom:12}}>
+                          <div style={{fontSize:11,color:'#3a7a7a',fontWeight:700,letterSpacing:'.1em',padding:'3px 0 5px',borderBottom:'1px solid #1a3a3a',marginBottom:6}}>{konto} ({kontoGroups[konto].length})</div>
+                          {kontoGroups[konto].map(function(t){
+                            const imp=allegroImportResults.find(function(i){return i.allegroOrderId===(t.relatedTo||[]).find(function(r){return r.type==='ORDER';})?.id;});
+                            const unread=t.unread||t.hasUnreadMessages?1:0;
+                            const lastMsg=t.messages&&t.messages[t.messages.length-1];
+                            return (
+                              <div key={t.id} style={{background:'#0a1a1a',border:'1px solid '+(unread?'#2a6a6a':'#1a3a3a'),borderRadius:7,padding:'8px 12px',marginBottom:5,cursor:'pointer'}}
+                                onClick={function(){if(imp){setZamOpenBox(function(prev){var n={...prev};n[imp.allegroOrderId]='chat';return n;});setZamTab('nowe');}}}>
+                                <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:3}}>
+                                  {unread>0&&<span style={{background:'#2a6a6a',color:'#afffff',borderRadius:10,padding:'1px 6px',fontSize:10,fontWeight:700}}>●</span>}
+                                  <span style={{fontWeight:700,color:'#9fcfdf',fontSize:12}}>{imp?.klientImie||t.interlocutor?.login||'Klient'}</span>
+                                  <span style={{fontSize:10,color:'#3a6a6a',marginLeft:'auto'}}>{t.lastMessageAt?new Date(t.lastMessageAt).toLocaleString('pl-PL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</span>
+                                </div>
+                                {lastMsg&&<div style={{fontSize:11,color:'#5a8a8a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{lastMsg.text}</div>}
+                              </div>
+                            );
+                          })}
                         </div>
                       );
                     });
@@ -5614,7 +5638,10 @@ function App() {
               )}
               {zamTab==='reklamacje_zam'&&(
                 <div style={{padding:'12px 0'}}>
-                  <div style={{fontWeight:700,fontSize:15,color:'#df9a7a',marginBottom:12}}>⚠️ Reklamacje i dyskusje</div>
+                  <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
+                    <div style={{fontWeight:700,fontSize:15,color:'#df9a7a'}}>⚠️ Reklamacje i dyskusje</div>
+                    <button onClick={loadAllThreads} style={{padding:'3px 10px',fontSize:11,background:'#2a1a0a',border:'1px solid #6a3a1a',borderRadius:5,color:'#bf7a4a',cursor:'pointer'}}>🔄 Odśwież</button>
+                  </div>
                   {(()=>{
                     const disputes=(msgThreads||[]).filter(function(t){return t.hasDispute||t.isDispute;});
                     if(disputes.length===0) return <div style={{color:'#6a3a3a',textAlign:'center',padding:'30px 0',fontSize:14}}>Brak aktywnych reklamacji</div>;
@@ -5639,6 +5666,7 @@ function App() {
                 <div style={{padding:'12px 0'}}>
                   <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
                     <div style={{fontWeight:700,fontSize:15,color:'#7adfff'}}>👀 Porzucone zapytania</div>
+                    <button onClick={fetchLeads} disabled={leadsLoading} style={{padding:'3px 10px',fontSize:11,background:'#0a2a3a',border:'1px solid #2a6a8a',borderRadius:5,color:'#5abfdf',cursor:'pointer'}}>{leadsLoading?'⟳ ładuję...':'🔄 Odśwież'}</button>
                     <button onClick={fetchLeads} disabled={leadsLoading} style={{padding:'3px 12px',fontSize:12,background:'#0a2a3a',border:'1px solid #2a6a8a',borderRadius:5,color:'#5abfdf',cursor:'pointer'}}>
                       {leadsLoading?'⟳ ładuję...':'🔄 Odśwież'}
                     </button>
