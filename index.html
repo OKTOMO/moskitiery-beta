@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.44</title>
+<title>MosquitoApp v20260516.45</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -1729,8 +1729,7 @@ function App() {
       setAllegroImportResults(allResults);
       try{localStorage.setItem('allegro_import_results',JSON.stringify(allResults));}catch(e){console.warn('localStorage full:',e);}
       setAllegroImportShow(true);
-      // Auto-pobierz wiadomości i porzucone po załadowaniu zamówień
-      loadAllThreads().catch(function(){});
+      // Auto-pobierz porzucone po załadowaniu zamówień
       fetchLeads().catch(function(){});
       // Auto-aktualizuj statusy na podstawie fulfillmentStatus z Allegro
       setAppStatuses(prev=>{
@@ -5495,7 +5494,7 @@ function App() {
                         fetch(AUTORESPONDER_URL+'/message/send',{
                           method:'POST',
                           headers:{'Content-Type':'application/json','x-api-key':AUTORESPONDER_KEY},
-                          body:JSON.stringify({allegroOrderId:imp.allegroOrderId,kontoId:imp.kontoId,text:txt})
+                          body:JSON.stringify({allegroOrderId:imp.allegroOrderId,kontoId:imp.kontoId,text:txt,buyerLogin:imp.klientLogin||''})
                         }).then(function(r){return r.json();}).then(function(d){
                           if(d.ok){alert('✅ Wiadomość wysłana');if(_el)_el.value='';toggleBox(imp.allegroOrderId,'chat');setMsgThreads(function(prev){return prev.filter(function(t){return !(t.interlocutor&&t.interlocutor.login&&imp.klientLogin&&t.interlocutor.login.toLowerCase()===imp.klientLogin.toLowerCase());});});setMsgReplied(function(prev){var n=new Set(prev);(msgThreads||[]).forEach(function(t){if(t.interlocutor&&t.interlocutor.login&&imp.klientLogin&&t.interlocutor.login.toLowerCase()===imp.klientLogin.toLowerCase())n.add(t.id);});localStorage.setItem('msg_replied',JSON.stringify([...n]));return n;});}
                           else alert('❌ '+JSON.stringify(d));
