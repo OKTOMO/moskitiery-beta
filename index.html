@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.14</title>
+<title>MosquitoApp v20260516.16</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -7355,11 +7355,10 @@ function App() {
               const matyMalaSzt=countSzt(matyMala)+(parseInt(statMatyMalaExtra)||0);
               const matyDuzaWart=sumWart(matyDuza);
               const matyMalaWart=sumWart(matyMala);
-              // Średnia cena z Allegro do przeliczenia ręcznych sztuk
-              const avgDuza=matyDuza.length>0?matyDuzaWart/countSzt(matyDuza):0;
-              const avgMala=matyMala.length>0?matyMalaWart/countSzt(matyMala):0;
-              const matyDuzaWartRazem=matyDuzaWart+(parseInt(statMatyDuzaExtra)||0)*avgDuza;
-              const matyMalaWartRazem=matyMalaWart+(parseInt(statMatyMalaExtra)||0)*avgMala;
+              const AVG_DUZA=167.5;
+              const AVG_MALA=85.5;
+              const matyDuzaWartRazem=matyDuzaWart+(parseInt(statMatyDuzaExtra)||0)*AVG_DUZA;
+              const matyMalaWartRazem=matyMalaWart+(parseInt(statMatyMalaExtra)||0)*AVG_MALA;
               const matySzt=matyDuzaSzt+matyMalaSzt;
               const matyWart=matyDuzaWartRazem+matyMalaWartRazem;
               const matyFavo=zamMies.filter(function(i){return isMata(i)&&i.kontoId==='favo5';});
@@ -7420,12 +7419,13 @@ function App() {
                   var szt=parseInt(p.ilosc)||1;
                   var cenaB;
                   if(waluta!=='PLN'){
-                    // Zagraniczne — przelicz po kursie NBP
-                    var kurs=nbpRates[waluta]||0;
-                    if(!kurs) return;
-                    cenaB=parseFloat(p.cenaNetto||0)*1.23*szt*kurs;
-                    if(!cenaB&&poz.length===1) cenaB=parseFloat(imp.totalAmount||0)*kurs;
-                    if(cenaB<0.10) return;
+                    // Zagraniczne — stała cena PLN wg kategorii
+                    var isGr1=false,isGr2=false,isPom=false;
+                    KAT.forEach(function(k){if(k.match(n)){if(k.gr===1)isGr1=true;else if(k.gr===2)isGr2=true;else isPom=true;}});
+                    if(isGr1) cenaB=64.99*szt;
+                    else if(isGr2) cenaB=84.99*szt;
+                    else if(isPom) cenaB=7.99*szt;
+                    else return;
                   } else {
                     cenaB=parseFloat(p.cenaNetto||0)*1.23*szt;
                     if(!cenaB&&poz.length===1) cenaB=parseFloat(imp.totalAmount||0);
@@ -7512,7 +7512,7 @@ function App() {
                           <input type="number" min="0" value={statMatyDuzaExtra}
                             onChange={function(e){var v=parseInt(e.target.value)||0;setStatMatyDuzaExtra(v);localStorage.setItem('stat_maty_duza_extra',String(v));}}
                             style={{width:50,padding:'2px 4px',fontSize:12,background:'#0a1a0a',border:'1px solid #2a5a2a',borderRadius:4,color:'#afffaf',textAlign:'center'}}/>
-                          <span style={{fontSize:11,color:'#3a6a3a',marginLeft:'auto'}}>{matyDuzaWartRazem.toFixed(2)} zł{(parseInt(statMatyDuzaExtra)||0)>0&&avgDuza>0?<span style={{color:'#5a9a7a'}}> (+{((parseInt(statMatyDuzaExtra)||0)*avgDuza).toFixed(2)})</span>:null}</span>
+                          <span style={{fontSize:11,color:'#3a6a3a',marginLeft:'auto'}}>{matyDuzaWartRazem.toFixed(2)} zł{(parseInt(statMatyDuzaExtra)||0)>0&&AVG_DUZA>0?<span style={{color:'#5a9a7a'}}> (+{((parseInt(statMatyDuzaExtra)||0)*AVG_DUZA).toFixed(2)})</span>:null}</span>
                         </div>
                       </div>
                       {/* Mała 102x125 */}
@@ -7527,7 +7527,7 @@ function App() {
                           <input type="number" min="0" value={statMatyMalaExtra}
                             onChange={function(e){var v=parseInt(e.target.value)||0;setStatMatyMalaExtra(v);localStorage.setItem('stat_maty_mala_extra',String(v));}}
                             style={{width:50,padding:'2px 4px',fontSize:12,background:'#0a1a0a',border:'1px solid #2a5a2a',borderRadius:4,color:'#afffaf',textAlign:'center'}}/>
-                          <span style={{fontSize:11,color:'#3a6a3a',marginLeft:'auto'}}>{matyMalaWartRazem.toFixed(2)} zł{(parseInt(statMatyMalaExtra)||0)>0&&avgMala>0?<span style={{color:'#5a9a7a'}}> (+{((parseInt(statMatyMalaExtra)||0)*avgMala).toFixed(2)})</span>:null}</span>
+                          <span style={{fontSize:11,color:'#3a6a3a',marginLeft:'auto'}}>{matyMalaWartRazem.toFixed(2)} zł{(parseInt(statMatyMalaExtra)||0)>0&&AVG_MALA>0?<span style={{color:'#5a9a7a'}}> (+{((parseInt(statMatyMalaExtra)||0)*AVG_MALA).toFixed(2)})</span>:null}</span>
                         </div>
                       </div>
                       <div style={{fontSize:11,color:'#3a7a5a',borderTop:'1px solid #0f2a1a',paddingTop:6}}>
