@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.48</title>
+<title>MosquitoApp v20260516.49</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -1125,6 +1125,7 @@ function App() {
   const [wiadLoading,setWiadLoading]=useState(false);
   const [msgDisputes,setMsgDisputes]=useState([]);
   const [expandedLeads,setExpandedLeads]=useState(new Set());
+  const [expiredTokens,setExpiredTokens]=useState([]);
   const [msgReplied,setMsgReplied]=useState(function(){try{return new Set(JSON.parse(localStorage.getItem('msg_replied')||'[]'));}catch(e){return new Set();}});
   const [statMonth,setStatMonth]=useState(()=>new Date().getMonth()+1);
   const [statYear,setStatYear]=useState(()=>new Date().getFullYear());
@@ -1621,6 +1622,8 @@ function App() {
     setAutoRunning(false);
     fetchAutoStatus();
     fetchNbpRates();
+    checkTokens();
+    setInterval(checkTokens, 10*60*1000); // co 10 minut
   }
   async function resetAutoHistory(){
     if(!confirm("Resetować historię? Autoresponder wyśle ponownie do wszystkich wątków.")) return;
@@ -4258,6 +4261,18 @@ function App() {
     setMsgNewSending(false);
   }
 
+  async function checkTokens(){
+    const acc=JSON.parse(localStorage.getItem('allegro_tokens')||'{}');
+    const kontoIds=ALLEGRO_KONTA.map(function(k){return k.id;}).filter(function(id){return !!acc[id];});
+    if(kontoIds.length===0) return;
+    const expired=[];
+    await Promise.allSettled(kontoIds.map(function(k){
+      return fetch(AUTORESPONDER_URL+'/messaging/threads?kontoId='+k+'&limit=1',{headers:{'x-api-key':AUTORESPONDER_KEY}})
+        .then(function(r){if(r.status===422||r.status===401) expired.push(k);})
+        .catch(function(){});
+    }));
+    setExpiredTokens(expired);
+  }
   async function loadAllThreads(){
     const acc=JSON.parse(localStorage.getItem('allegro_tokens')||'{}');
     const kontoIds=ALLEGRO_KONTA.map(function(k){return k.id;}).filter(function(id){return !!acc[id];});
@@ -4545,6 +4560,14 @@ function App() {
       </div>
 
       <div style={{display:"flex",borderBottom:"1px solid #1e2a1e",paddingLeft:16,background:"#0e1420",flexWrap:"wrap"}}>
+        {expiredTokens.length>0&&(
+          <div style={{background:'#2a0a0a',border:'1px solid #7a2a2a',borderRadius:6,padding:'8px 16px',marginBottom:8,display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
+            <span style={{color:'#ff7a7a',fontWeight:700,fontSize:13}}>🔑⚠️ Wygasłe tokeny Allegro:</span>
+            {expiredTokens.map(function(k){return <span key={k} style={{background:'#3a0a0a',border:'1px solid #6a2a2a',borderRadius:4,padding:'2px 8px',fontSize:12,color:'#df7a7a',fontFamily:'monospace'}}>{k}</span>;})}
+            <span style={{fontSize:12,color:'#af5a5a'}}>— wejdź w Admin → Allegro i zaloguj ponownie</span>
+            <button onClick={checkTokens} style={{marginLeft:'auto',padding:'2px 10px',fontSize:11,background:'#3a0a0a',border:'1px solid #6a2a2a',borderRadius:4,color:'#df7a7a',cursor:'pointer'}}>🔄 Sprawdź ponownie</button>
+          </div>
+        )}
         {[["zamowienia","📦 Zamówienia"],["al_zam","🛒 Allegro"],["baza","📋 Zlecenia"],["zapytania","📨 KAL"],["stat","📊 Stat"],["produkcja","🏭 Produkcja"],["kalk","🧮 Kalkulator"]].map(([id,l])=>(
           <button key={id} className={`tab ${tab===id?"on":""}`} onClick={()=>setTab(id)}>{l}</button>
         ))}
@@ -4559,7 +4582,7 @@ function App() {
           const entered=prompt("PIN administratora:");
           if(entered===pin) setTab("allegro");
           else alert("Błędny PIN.");
-        }}>🔒 Admin</button>
+        }}>{expiredTokens.length>0?<span>🔒 Admin <span style={{background:'#7a2a2a',color:'#ffaaaa',borderRadius:10,padding:'1px 6px',fontSize:10,fontWeight:700}}>🔑⚠️{expiredTokens.length}</span></span>:'🔒 Admin'}</button>
       </div>
       {(tab==="allegro"||tab==="ustawienia"||tab==="historia"||tab==="importpdf"||tab==="produkty"||tab==="narzedzia"||tab==="airules"||tab==="fakturownia_cfg")&&(
         <div style={{background:"#080e08",borderBottom:"1px solid #1e2a1e",display:"flex",gap:0,paddingLeft:32,flexWrap:"wrap"}}>
