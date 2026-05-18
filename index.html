@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.50</title>
+<title>MosquitoApp v20260516.51</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -5844,8 +5844,10 @@ function App() {
                     const _zamEmails=new Set();
                     const _zamPhones=new Set();
                     allegroImportResults.forEach(function(imp){
-                      if(imp.klientEmail) _zamEmails.add(imp.klientEmail.toLowerCase().trim());
-                      if(imp.telefon) _zamPhones.add((imp.telefon||'').replace(/\s/g,'').replace(/^\+48/,''));
+                      const _e=(imp.klientEmail||'').toLowerCase().trim();
+                      const _t=(imp.telefon||'').replace(/\s/g,'').replace(/^\+48/,'');
+                      if(_e&&_e.length>4) _zamEmails.add(_e);
+                      if(_t&&_t.length>6) _zamPhones.add(_t);
                     });
                     // Scal duplikaty po telefonie/emailu - zachowaj najnowszy
                     const seen={};
@@ -5856,11 +5858,11 @@ function App() {
                       if(!seen[key]||l.savedAt>seen[key].savedAt) seen[key]=l;
                     });
                     Object.values(seen).forEach(function(l){
-                      // Pomiń jeśli email lub telefon pasuje do zamówienia Allegro
+                      // Pomiń jeśli email lub telefon pasuje do zamówienia Allegro (tylko gdy niepuste)
                       const _email=(l.email||'').toLowerCase().trim();
                       const _phone=(l.phone||'').replace(/\s/g,'').replace(/^\+48/,'');
-                      if(_email&&_zamEmails.has(_email)) return;
-                      if(_phone&&_zamPhones.has(_phone)) return;
+                      if(_email&&_email.length>4&&_zamEmails.has(_email)) return;
+                      if(_phone&&_phone.length>6&&_zamPhones.has(_phone)) return;
                       uniq.push(l);
                     });
                     uniq.sort(function(a,b){return (b.savedAt||'').localeCompare(a.savedAt||'');});
