@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.45</title>
+<title>MosquitoApp v20260516.46</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -5439,6 +5439,33 @@ function App() {
                       style={{padding:'4px 7px',fontSize:12,borderRadius:5,cursor:'pointer',background:'#1a1a2a',border:'1px solid #3a3a6a',color:'#9a9adf'}}>
                       🧾
                     </button>
+                    {(()=>{
+                      const _linkedOrd=orders.find(function(o){return o.allegroOrderId===imp.allegroOrderId||(imp._kalNum&&o.kalNumer===imp._kalNum);});
+                      if(!_linkedOrd) return null;
+                      return (
+                        <span style={{display:'inline-flex',gap:4,alignItems:'center'}}>
+                          <span style={{fontSize:11,color:'#cfaf5a',fontFamily:'monospace',padding:'4px 6px',background:'#1a1500',border:'1px solid #4a3a00',borderRadius:5}} title={'Zlecenie: '+_linkedOrd.numerZlecenia}>
+                            📋 {_linkedOrd.numerZlecenia}
+                          </span>
+                          <button title="Edytuj zlecenie" style={{padding:'4px 7px',fontSize:12,borderRadius:5,cursor:'pointer',background:'#1a2a1a',border:'1px solid #3a5a2a',color:'#9fcf9f'}}
+                            onClick={function(){setForm({data:_linkedOrd.data,firma:_linkedOrd.firma,klientImie:_linkedOrd.klientImie,klientUlica:_linkedOrd.klientUlica||'',klientKod:_linkedOrd.klientKod||'',klientMiasto:_linkedOrd.klientMiasto,telefon:_linkedOrd.telefon,uwagi:_linkedOrd.uwagi,pozycje:_linkedOrd.pozycje.map(function(p){return {...p};})});setNumerOverride(_linkedOrd.numerZlecenia);setEditingId(_linkedOrd.id);setAllegroOrderIdForForm(_linkedOrd.allegroOrderId||'');setTab('nowe');setSaved(false);}}>
+                            ✏️
+                          </button>
+                          <button title="Wyślij aktualizację zlecenia emailem" style={{padding:'4px 7px',fontSize:12,borderRadius:5,cursor:'pointer',background:'#1a1a3a',border:'1px solid #3a3a7a',color:'#9a9adf'}}
+                            onClick={function(){
+                              const emailCfg=JSON.parse(localStorage.getItem('email_produkcji_config')||'{}');
+                              const to=emailCfg.emailProdukcji||'';
+                              if(!to){alert('Brak adresu email produkcji. Ustaw w Admin → Ustawienia.');return;}
+                              const subject=(_linkedOrd.numerZlecenia||'')+' '+(_linkedOrd.klientImie||'')+' '+(_linkedOrd.klientMiasto||'');
+                              const sh=allegroShipments[imp.allegroOrderId||''];
+                              setMailPreview({imp:imp,order:_linkedOrd,to,subject:subject.trim(),hasEtykieta:!!sh});
+                              loadRecentEmails();
+                            }}>
+                            ✉️📋
+                          </button>
+                        </span>
+                      );
+                    })()}
                     <a href={`https://allegro.pl/transakcja/${imp.allegroOrderId}`} target="_blank" rel="noreferrer"
                       style={{padding:'4px 7px',fontSize:12,borderRadius:5,background:'#1a2a3a',border:'1px solid #2a5a7a',color:'#7abfdf',textDecoration:'none',display:'inline-block'}}>
                       🔗
