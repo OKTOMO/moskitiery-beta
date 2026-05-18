@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.55</title>
+<title>MosquitoApp v20260516.56</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -5837,15 +5837,6 @@ function App() {
                     <div style={{fontSize:12,color:'#3a6a7a',marginLeft:'auto'}}>{leads.length} zapytań</div>
                   </div>
                   {(()=>{
-                    // Zbuduj zbiór telefonów z zamówień Allegro
-                    const _zamPhones=new Set();
-                    const _zamEmails=new Set();
-                    allegroImportResults.forEach(function(imp){
-                      const t=(imp.telefon||'').replace(/\s/g,'').replace(/^\+48/,'');
-                      const e=(imp.klientEmail||'').toLowerCase().trim();
-                      if(t&&t.length>6) _zamPhones.add(t);
-                      if(e&&e.length>4) _zamEmails.add(e);
-                    });
                     // Scal duplikaty - tylko gdy identyczny telefon I email
                     const seen={};
                     const uniq=[];
@@ -5856,13 +5847,7 @@ function App() {
                       if(!key){uniq.push(l);return;}
                       if(!seen[key]||l.savedAt>seen[key].savedAt) seen[key]=l;
                     });
-                    Object.values(seen).forEach(function(l){
-                      // Pomiń tylko jeśli ma zamówienie na Allegro (telefon I email muszą pasować)
-                      const _t=(l.phone||'').replace(/\s/g,'').replace(/^\+48/,'');
-                      const _e=(l.email||'').toLowerCase().trim();
-                      if(_t&&_t.length>6&&_zamPhones.has(_t)&&_e&&_zamEmails.has(_e)) return;
-                      uniq.push(l);
-                    });
+                    Object.values(seen).forEach(function(l){uniq.push(l);});
                     uniq.sort(function(a,b){return (b.savedAt||'').localeCompare(a.savedAt||'');});
                     if(uniq.length===0&&!leadsLoading) return <div style={{color:'#3a5a6a',textAlign:'center',padding:'30px 0',fontSize:14}}>Brak porzuconych zapytań</div>;
                     return uniq.map(function(lead){return (
