@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.46</title>
+<title>MosquitoApp v20260516.48</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -1124,6 +1124,7 @@ function App() {
   const [wiadMessages,setWiadMessages]=useState([]);
   const [wiadLoading,setWiadLoading]=useState(false);
   const [msgDisputes,setMsgDisputes]=useState([]);
+  const [expandedLeads,setExpandedLeads]=useState(new Set());
   const [msgReplied,setMsgReplied]=useState(function(){try{return new Set(JSON.parse(localStorage.getItem('msg_replied')||'[]'));}catch(e){return new Set();}});
   const [statMonth,setStatMonth]=useState(()=>new Date().getMonth()+1);
   const [statYear,setStatYear]=useState(()=>new Date().getFullYear());
@@ -5816,6 +5817,13 @@ function App() {
                     <div style={{fontSize:12,color:'#3a6a7a',marginLeft:'auto'}}>{leads.length} zapytań</div>
                   </div>
                   {(()=>{
+                    // Zbuduj zbiór emaili i telefonów z zamówień Allegro
+                    const _zamEmails=new Set();
+                    const _zamPhones=new Set();
+                    allegroImportResults.forEach(function(imp){
+                      if(imp.klientEmail) _zamEmails.add(imp.klientEmail.toLowerCase().trim());
+                      if(imp.telefon) _zamPhones.add((imp.telefon||'').replace(/\s/g,'').replace(/^\+48/,''));
+                    });
                     // Scal duplikaty po telefonie/emailu - zachowaj najnowszy
                     const seen={};
                     const uniq=[];
@@ -5824,7 +5832,14 @@ function App() {
                       if(!key||key==='|'){uniq.push(l);return;}
                       if(!seen[key]||l.savedAt>seen[key].savedAt) seen[key]=l;
                     });
-                    Object.values(seen).forEach(function(l){uniq.push(l);});
+                    Object.values(seen).forEach(function(l){
+                      // Pomiń jeśli email lub telefon pasuje do zamówienia Allegro
+                      const _email=(l.email||'').toLowerCase().trim();
+                      const _phone=(l.phone||'').replace(/\s/g,'').replace(/^\+48/,'');
+                      if(_email&&_zamEmails.has(_email)) return;
+                      if(_phone&&_zamPhones.has(_phone)) return;
+                      uniq.push(l);
+                    });
                     uniq.sort(function(a,b){return (b.savedAt||'').localeCompare(a.savedAt||'');});
                     if(uniq.length===0&&!leadsLoading) return <div style={{color:'#3a5a6a',textAlign:'center',padding:'30px 0',fontSize:14}}>Brak porzuconych zapytań</div>;
                     return uniq.map(function(lead){return (
@@ -5838,8 +5853,12 @@ function App() {
                         </div>
                         {lead.pozycje&&lead.pozycje.length>0&&(
                           <div style={{fontSize:12,color:'#5a8a9a',marginBottom:3}}>
-                            {lead.pozycje.slice(0,3).map(function(p,i){return <span key={i} style={{marginRight:8}}>{p.szerokosc&&p.wysokosc?p.szerokosc+'x'+p.wysokosc+' cm':'—'}{p.kolorProfilu?' '+p.kolorProfilu:''}{p.ilosc>1?' x'+p.ilosc:''}</span>;})}
-                            {lead.pozycje.length>3&&<span style={{color:'#3a6a7a'}}>+{lead.pozycje.length-3} więcej</span>}
+                            {(expandedLeads.has(lead.id)?lead.pozycje:lead.pozycje.slice(0,3)).map(function(p,i){return <span key={i} style={{marginRight:8}}>{p.szerokosc&&p.wysokosc?p.szerokosc+'x'+p.wysokosc+' cm':'—'}{p.kolorProfilu?' '+p.kolorProfilu:''}{p.ilosc>1?' x'+p.ilosc:''}</span>;})}
+                            {lead.pozycje.length>3&&(
+                              expandedLeads.has(lead.id)
+                                ? <span onClick={function(){setExpandedLeads(function(prev){var n=new Set(prev);n.delete(lead.id);return n;});}} style={{color:'#5abfbf',cursor:'pointer',marginLeft:4}}>▲ zwiń</span>
+                                : <span onClick={function(){setExpandedLeads(function(prev){var n=new Set(prev);n.add(lead.id);return n;});}} style={{color:'#5abfbf',cursor:'pointer',marginLeft:4}}>+{lead.pozycje.length-3} więcej ▼</span>
+                            )}
                           </div>
                         )}
                         <div style={{display:'flex',gap:10,alignItems:'center'}}>
