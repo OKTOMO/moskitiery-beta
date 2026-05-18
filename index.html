@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.49</title>
+<title>MosquitoApp v20260516.50</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -1004,7 +1004,7 @@ function App() {
     const pozycje=items.length>0?items.map(function(item){
       const cena=item.price?parseFloat(item.price.amount):0;
       const ilosc=item.quantity||1;
-      return {nazwa:item.offer&&item.offer.name?item.offer.name:"Towar",ilosc:ilosc,jm:"szt",cena:cena*ilosc,vat:23};
+      return {nazwa:item.offer&&item.offer.name?item.offer.name:"Towar",ilosc:ilosc,jm:"szt",cena:cena,vat:23};
     }):[{nazwa:"Towar",ilosc:1,jm:"szt",cena:kwotaBrutto,vat:23}];
     // Dodaj koszt dostawy jako osobną pozycję jeśli > 0
     const delivery=d.delivery||{};
