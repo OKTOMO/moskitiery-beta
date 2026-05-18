@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.51</title>
+<title>MosquitoApp v20260516.52</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -5834,9 +5834,6 @@ function App() {
                   <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
                     <div style={{fontWeight:700,fontSize:15,color:'#7adfff'}}>👀 Porzucone zapytania</div>
                     <button onClick={fetchLeads} disabled={leadsLoading} style={{padding:'3px 10px',fontSize:11,background:'#0a2a3a',border:'1px solid #2a6a8a',borderRadius:5,color:'#5abfdf',cursor:'pointer'}}>{leadsLoading?'⟳ ładuję...':'🔄 Odśwież'}</button>
-                    <button onClick={fetchLeads} disabled={leadsLoading} style={{padding:'3px 12px',fontSize:12,background:'#0a2a3a',border:'1px solid #2a6a8a',borderRadius:5,color:'#5abfdf',cursor:'pointer'}}>
-                      {leadsLoading?'⟳ ładuję...':'🔄 Odśwież'}
-                    </button>
                     <div style={{fontSize:12,color:'#3a6a7a',marginLeft:'auto'}}>{leads.length} zapytań</div>
                   </div>
                   {(()=>{
@@ -5853,8 +5850,11 @@ function App() {
                     const seen={};
                     const uniq=[];
                     leads.forEach(function(l){
-                      const key=(l.phone||'')+'|'+(l.email||'');
-                      if(!key||key==='|'){uniq.push(l);return;}
+                      // Scal tylko gdy IDENTYCZNY telefon I email (oba muszą pasować)
+                      const phone=(l.phone||'').replace(/\s/g,'');
+                      const email=(l.email||'').toLowerCase().trim();
+                      const key=phone&&email?phone+'|'+email:'';
+                      if(!key){uniq.push(l);return;}
                       if(!seen[key]||l.savedAt>seen[key].savedAt) seen[key]=l;
                     });
                     Object.values(seen).forEach(function(l){
