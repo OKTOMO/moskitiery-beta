@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260516.56</title>
+<title>MosquitoApp v20260519.61</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='20260511.47';
+  window.__MOSK_VERSION='20260519.61';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -2919,8 +2919,8 @@ function App() {
         });
       }
       window.open(`https://${cfg.domain}/invoices/${inv.id}`,'_blank');
-      alert(`✅ Faktura ${inv.number} utworzona`);
-      setFakModal(null);
+      alert(`✅ Faktura ${inv.number} utworzona — teraz możesz ją wysłać do klienta przyciskiem "Dodaj do Allegro"`);
+      setFakModal(m=>({...m,sending:false}));
     }catch(e){
       setFakModal(m=>({...m,sending:false}));
       alert('❌ Błąd: '+e.message);
@@ -2950,6 +2950,7 @@ function App() {
       const d=await r.json().catch(()=>({}));
       if(d.ok){
         setFakModal(m=>m?({...m,allegroAttaching:false,allegroAttachStatus:'ok'}):m);
+        setTimeout(function(){setFakModal(null);},1200);
         // Zapisz w invoicesSent że powiązano z Allegro
         setInvoicesSent(prev=>{
           const next={...prev,[allegroOrderId]:{...prev[allegroOrderId],allegroAttached:true}};
@@ -3977,7 +3978,7 @@ function App() {
         pozycje:pozDrzwi.map(p=>({...p,kolorSiatki:p.kolorSiatki||"Czarna"}))};
       updateOrders([orderOkna,orderDrzwi,..._ordBase]);
       setSaved(true);setLastSavedOrder(orderOkna);
-      setTimeout(()=>setLastSavedOrder(null),60000);
+      setTimeout(()=>setLastSavedOrder(null),1800000);
       setWiadomosc(""); setAdres(""); setForm(pustyForm(form.firma)); setNumerOverride(""); setKalNumerForForm("");
       setWithDrzwi(false); setWiadomoscDrzwi(""); setParseTyp("okno");
       if(!allegroOrderIdForForm){
@@ -4065,7 +4066,7 @@ function App() {
     }
     setSaved(true);
     setLastSavedOrder(order);
-    setTimeout(()=>setLastSavedOrder(null), 60000);
+    setTimeout(()=>setLastSavedOrder(null), 1800000);
     // Dla zamówień Allegro NIE ustawiamy W realizacji przy samym zapisie —
     // zlecenie zostaje w Nowe dopóki nie ma etykiety lub maila na produkcję
     const savedAllegroId=allegroOrderIdForForm;
@@ -5841,16 +5842,28 @@ function App() {
                     const seen={};
                     const uniq=[];
                     leads.forEach(function(l){
-                      const phone=(l.phone||'').replace(/\s/g,'');
+                      const phone=(l.phone||'').replace(/[\s\-\+]/g,'');
                       const email=(l.email||'').toLowerCase().trim();
                       const key=phone&&email?phone+'|'+email:'';
                       if(!key){uniq.push(l);return;}
                       if(!seen[key]||l.savedAt>seen[key].savedAt) seen[key]=l;
                     });
                     Object.values(seen).forEach(function(l){uniq.push(l);});
-                    uniq.sort(function(a,b){return (b.savedAt||'').localeCompare(a.savedAt||'');});
-                    if(uniq.length===0&&!leadsLoading) return <div style={{color:'#3a5a6a',textAlign:'center',padding:'30px 0',fontSize:14}}>Brak porzuconych zapytań</div>;
-                    return uniq.map(function(lead){return (
+                    // Odfiltruj leady ktore zlozyli zamowienie Allegro (match po tel lub email)
+                    const filtered=uniq.filter(function(lead){
+                      const lPhone=(lead.phone||'').replace(/[\s\-\+]/g,'').replace(/^48/,'');
+                      const lEmail=(lead.email||'').toLowerCase().trim();
+                      return !allegroImportResults.some(function(imp){
+                        const iPhone=(imp.telefon||'').replace(/[\s\-\+]/g,'').replace(/^(\+48|48)/,'');
+                        const iEmail=(imp.email||imp.klientEmail||imp.buyerEmail||'').toLowerCase().trim();
+                        if(lPhone&&iPhone&&lPhone===iPhone) return true;
+                        if(lEmail&&iEmail&&lEmail===iEmail) return true;
+                        return false;
+                      });
+                    });
+                    filtered.sort(function(a,b){return (b.savedAt||'').localeCompare(a.savedAt||'');});
+                    if(filtered.length===0&&!leadsLoading) return <div style={{color:'#3a5a6a',textAlign:'center',padding:'30px 0',fontSize:14}}>Brak porzuconych zapytań</div>;
+                    return filtered.map(function(lead){return (
                     <div key={lead.id} style={{background:'#0a1a2a',border:'1px solid #1a3a4a',borderRadius:7,padding:'10px 14px',marginBottom:8,display:'flex',gap:12,alignItems:'flex-start'}}>
                       <div style={{flex:1,minWidth:0}}>
                         <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginBottom:4}}>
@@ -5870,7 +5883,7 @@ function App() {
                           </div>
                         )}
                         <div style={{display:'flex',gap:10,alignItems:'center'}}>
-                          {lead.totalCost>0&&<span style={{fontSize:12,color:'#cfaf5a',fontWeight:700}}>{lead.totalCost.toFixed(2)} zł</span>}
+                          {parseFloat(lead.totalCost)>0&&<span style={{fontSize:13,color:'#dfbf3a',fontWeight:700,background:'#1a1400',border:'1px solid #4a3a0a',borderRadius:5,padding:'1px 8px'}}>{parseFloat(lead.totalCost).toFixed(2)} zł</span>}
                           {lead.notes&&<span style={{fontSize:12,color:'#5a7a7a',fontStyle:'italic'}}>{lead.notes}</span>}
                           <span style={{fontSize:11,color:'#2a5a6a',marginLeft:'auto'}}>{lead.savedAt?new Date(lead.savedAt).toLocaleString('pl-PL'):''}</span>
                         </div>
@@ -5900,7 +5913,7 @@ function App() {
                         klientKod:v.klientKod||imp?.klientKod||'',
                       };
                     })
-                    .sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+                    .sort((a,b)=>{const da=b.createdAt||b.date||'';const db=a.createdAt||a.date||'';return da.localeCompare(db)||((b.id||0)-(a.id||0));});
 
                   // Otwórz modal faktury z danymi klienta (pusta kwota/opis do uzupełnienia)
                   const openFvFromClient=(fv)=>{
@@ -7334,7 +7347,35 @@ function App() {
                         <td style={{padding:"10px 10px",display:"flex",gap:4}}>
                           {o.pozycje.some(p=>!p.isDrzwi)&&<button className="btn-pdf" onClick={()=>drukujPDF(o)} title="Drukuj PDF — okna">🪟 PDF</button>}
                           {o.pozycje.some(p=>p.isDrzwi)&&<button className="btn-pdf" style={{background:"#1a2a4a"}} onClick={()=>drukujPDF_drzwi(o)} title="Drukuj PDF — drzwi">🚪 PDF</button>}
-                          <button className="btn-pdf" style={{background:o.dpdWaybill?"#0a2a1a":"#1a1a2a",borderColor:o.dpdWaybill?"#2a6a4a":"#3a3a5a",color:o.dpdWaybill?"#6acf9a":"#8a8abf",fontSize:12}} onClick={()=>{setDpdModal(o);setDpdWaga("5");}} title={o.dpdWaybill?"DPD: "+o.dpdWaybill:"Nadeślij DPD"}>{o.dpdWaybill?"📦 "+o.dpdWaybill.slice(-6):"📦 DPD"}</button>
+                          {(()=>{
+                            const [_dpdEdit,_setDpdEdit]=React.useState(false);
+                            const [_dpdVal,_setDpdVal]=React.useState(o.dpdWaybill||'');
+                            if(_dpdEdit) return (
+                              <span style={{display:'flex',gap:3,alignItems:'center'}}>
+                                <input autoFocus value={_dpdVal} onChange={e=>_setDpdVal(e.target.value)}
+                                  onKeyDown={e=>{
+                                    if(e.key==='Enter'){
+                                      updateOrders(orders.map(x=>x.id===o.id?{...x,dpdWaybill:_dpdVal.trim(),dpdAt:new Date().toLocaleDateString('pl-PL')}:x));
+                                      _setDpdEdit(false);
+                                    }
+                                    if(e.key==='Escape') _setDpdEdit(false);
+                                  }}
+                                  placeholder="Nr listu DPD"
+                                  style={{width:110,padding:'2px 5px',fontSize:11,background:'#0a1a0a',border:'1px solid #3a7a3a',borderRadius:4,color:'#7acf9a',fontFamily:'monospace'}}/>
+                                <button onClick={()=>{updateOrders(orders.map(x=>x.id===o.id?{...x,dpdWaybill:_dpdVal.trim(),dpdAt:new Date().toLocaleDateString('pl-PL')}:x));_setDpdEdit(false);}}
+                                  style={{background:'#1a4a2a',border:'1px solid #3a7a3a',color:'#7acf9a',borderRadius:4,padding:'2px 6px',fontSize:11,cursor:'pointer'}}>✓</button>
+                                <button onClick={()=>_setDpdEdit(false)}
+                                  style={{background:'none',border:'none',color:'#5a5a5a',cursor:'pointer',fontSize:12}}>✕</button>
+                              </span>
+                            );
+                            return (
+                              <span style={{display:'flex',gap:2,alignItems:'center'}}>
+                                <button className="btn-pdf" style={{background:o.dpdWaybill?'#0a2a1a':'#1a1a2a',borderColor:o.dpdWaybill?'#2a6a4a':'#3a3a5a',color:o.dpdWaybill?'#6acf9a':'#8a8abf',fontSize:12}} onClick={()=>{setDpdModal(o);setDpdWaga('5');}} title={o.dpdWaybill?'DPD: '+o.dpdWaybill:'Nadeślij DPD'}>{o.dpdWaybill?'📦 '+o.dpdWaybill.slice(-6):'📦 DPD'}</button>
+                                <button onClick={()=>{_setDpdVal(o.dpdWaybill||'');_setDpdEdit(true);}} title="Wpisz numer listu ręcznie"
+                                  style={{background:'none',border:'none',color:'#3a6a4a',cursor:'pointer',fontSize:12,padding:'0 2px'}}>✏️</button>
+                              </span>
+                            );
+                          })()}
                           <button className="btn-pdf" style={{background:"#1a1a3a",borderColor:"#3a3a7a",color:"#9a9adf"}} title="Wyślij na produkcję" onClick={async()=>{
                             let emailCfg=JSON.parse(localStorage.getItem('email_produkcji_config')||'{}');
                             let to=emailCfg.emailProdukcji||'';
@@ -9593,7 +9634,7 @@ setFvForm(f=>({...f,nabywcaNazwa:_keepName,nabywcaAdres:d.ulica||f.nabywcaAdres,
             </div>
             <div style={{marginBottom:14}}>
               <div style={{fontSize:13,color:"#4a7a5a",marginBottom:6}}>Waga paczki (kg)</div>
-              <input type="number" min="0.1" step="0.1" value={dpdWaga}
+              <input type="number" min="0.1" step="0.01" value={dpdWaga}
                 onChange={e=>setDpdWaga(e.target.value)}
                 style={{width:"100%",padding:"8px 10px",borderRadius:6,border:"1px solid #2a5a3a",background:"#0a140a",color:"#a0dfaf",fontSize:16,fontWeight:700}}/>
             </div>
