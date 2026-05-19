@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260519.62</title>
+<title>MosquitoApp v20260519.63</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='20260519.62';
+  window.__MOSK_VERSION='20260519.63';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -3813,7 +3813,9 @@ function App() {
         if(d.xml){
           const faultMatch=d.xml.match(/<faultstring>([^<]+)<\/faultstring>/)||d.xml.match(/<message>([^<]+)<\/message>/);
           if(faultMatch) errMsg+=': '+faultMatch[1];
+          errMsg+='\n\nXML: '+d.xml.substring(0,500);
         }
+        if(d.sent) errMsg+='\n\nSENT: '+d.sent.substring(0,800);
         alert('❌ '+errMsg);
         setDpdLoading(false);
         return;
