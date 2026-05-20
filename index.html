@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260520.78</title>
+<title>MosquitoApp v20260520.80</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='20260520.78';
+  window.__MOSK_VERSION='20260520.80';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -5645,7 +5645,7 @@ function App() {
                     const _seen={};const _uniq=[];
                     leads.forEach(function(l){const p=(l.phone||'').replace(/[\s\-\+]/g,'');const e=(l.email||'').toLowerCase().trim();const k=p&&e?p+'|'+e:'';if(!k){_uniq.push(l);return;}if(!_seen[k]||l.savedAt>_seen[k].savedAt)_seen[k]=l;});
                     Object.values(_seen).forEach(function(l){_uniq.push(l);});
-                    const _cnt=_uniq.filter(function(lead){const lp=(lead.phone||'').replace(/[\s\-\+]/g,'').replace(/^48/,'');if(!lp||lp.length<9) return true;return !allegroImportResults.some(function(imp){const ip=(imp.telefon||'').replace(/[\s\-\+]/g,'').replace(/^(\+48|48)/,'');if(!ip||ip.length<9) return false;return lp===ip;});}).length;
+                    const _cnt=_uniq.length;
                     return _cnt>0?<span style={{background:'#2a4a6a',borderRadius:10,padding:'1px 6px',fontSize:10,marginLeft:3}}>{_cnt}</span>:null;
                   })()}
                 </button>
@@ -5875,15 +5875,7 @@ function App() {
                     });
                     Object.values(seen).forEach(function(l){uniq.push(l);});
                     // Odfiltruj leady ktore zlozyli zamowienie Allegro (match po tel lub email)
-                    const filtered=uniq.filter(function(lead){
-                      const lPhone=(lead.phone||'').replace(/[\s\-\+]/g,'').replace(/^48/,'');
-                      if(!lPhone||lPhone.length<9) return true; // brak telefonu - zostaw
-                      return !allegroImportResults.some(function(imp){
-                        const iPhone=(imp.telefon||'').replace(/[\s\-\+]/g,'').replace(/^(\+48|48)/,'');
-                        if(!iPhone||iPhone.length<9) return false;
-                        return lPhone===iPhone;
-                      });
-                    });
+                    const filtered=uniq;
                     filtered.sort(function(a,b){return (b.savedAt||'').localeCompare(a.savedAt||'');});
                     if(filtered.length===0&&!leadsLoading) return <div style={{color:'#3a5a6a',textAlign:'center',padding:'30px 0',fontSize:14}}>Brak porzuconych zapytań</div>;
                     return filtered.map(function(lead){return (
@@ -5891,6 +5883,7 @@ function App() {
                       <div style={{flex:1,minWidth:0}}>
                         <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginBottom:4}}>
                           {lead.name&&<span style={{fontWeight:700,color:'#9fcfdf',fontSize:14}}>{lead.name}</span>}
+                          {(function(){const lp=(lead.phone||'').replace(/[\s\-\+]/g,'').replace(/^48/,'');if(!lp||lp.length<9) return null;const hasOrder=allegroImportResults.some(function(imp){const ip=(imp.telefon||'').replace(/[\s\-\+]/g,'').replace(/^(\+48|48)/,'');return ip&&ip.length>=9&&lp===ip;});return hasOrder?<span style={{fontSize:11,color:'#5acf9a',background:'#0a2a1a',border:'1px solid #2a6a4a',borderRadius:4,padding:'1px 6px'}}>✅ Allegro zamówienie</span>:null;})()}
                           {lead.phone&&<a href={'tel:'+lead.phone} style={{color:'#7acf9f',fontSize:13,textDecoration:'none'}}>📞 {lead.phone}</a>}
                           {lead.email&&<a href={'mailto:'+lead.email} style={{color:'#7aafcf',fontSize:13,textDecoration:'none'}}>✉️ {lead.email}</a>}
                           <span style={{fontSize:11,color:'#3a6a7a',marginLeft:'auto'}}>{lead.brandName||lead.brand||''}</span>
