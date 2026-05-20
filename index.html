@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260519.63</title>
+<title>MosquitoApp v20260520.64</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='20260519.63';
+  window.__MOSK_VERSION='20260520.64';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -3294,10 +3294,10 @@ function App() {
       const base = linkedOrders[0];
       const rest = linkedOrders.slice(1);
       const allPozycje = linkedOrders.flatMap(o=>o.pozycje||[]);
-      const mergedOrder = {...base, pozycje: allPozycje, _mergedFrom: linkedOrders.map(o=>o.id)};
+      const mergedOrder = {...base, pozycje: allPozycje, status:'W realizacji', _mergedFrom: linkedOrders.map(o=>o.id)};
       const updatedOrders = orders.map(o=>{
         if(o.id===base.id) return mergedOrder;
-        if(rest.find(r=>r.id===o.id)) return {...o, status:'Scalono', _mergedInto: base.id};
+        if(rest.find(r=>r.id===o.id)) return {...o, status:'W realizacji', _mergedInto: base.id};
         return o;
       });
       updateOrders(updatedOrders);
