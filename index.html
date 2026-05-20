@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260520.76</title>
+<title>MosquitoApp v20260520.77</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='20260520.76';
+  window.__MOSK_VERSION='20260520.77';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -5645,7 +5645,7 @@ function App() {
                     const _seen={};const _uniq=[];
                     leads.forEach(function(l){const p=(l.phone||'').replace(/[\s\-\+]/g,'');const e=(l.email||'').toLowerCase().trim();const k=p&&e?p+'|'+e:'';if(!k){_uniq.push(l);return;}if(!_seen[k]||l.savedAt>_seen[k].savedAt)_seen[k]=l;});
                     Object.values(_seen).forEach(function(l){_uniq.push(l);});
-                    const _cnt=_uniq.filter(function(lead){const lp=(lead.phone||'').replace(/[\s\-\+]/g,'').replace(/^48/,'');const le=(lead.email||'').toLowerCase().trim();return !allegroImportResults.some(function(imp){const ip=(imp.telefon||'').replace(/[\s\-\+]/g,'').replace(/^(\+48|48)/,'');const ie=(imp.email||imp.klientEmail||'').toLowerCase().trim();return (lp&&ip&&lp===ip)||(le&&ie&&le===ie);});}).length;
+                    const _cnt=_uniq.filter(function(lead){const lp=(lead.phone||'').replace(/[\s\-\+]/g,'').replace(/^48/,'');if(!lp||lp.length<9) return true;return !allegroImportResults.some(function(imp){const ip=(imp.telefon||'').replace(/[\s\-\+]/g,'').replace(/^(\+48|48)/,'');if(!ip||ip.length<9) return false;return lp===ip;});}).length;
                     return _cnt>0?<span style={{background:'#2a4a6a',borderRadius:10,padding:'1px 6px',fontSize:10,marginLeft:3}}>{_cnt}</span>:null;
                   })()}
                 </button>
@@ -5877,13 +5877,11 @@ function App() {
                     // Odfiltruj leady ktore zlozyli zamowienie Allegro (match po tel lub email)
                     const filtered=uniq.filter(function(lead){
                       const lPhone=(lead.phone||'').replace(/[\s\-\+]/g,'').replace(/^48/,'');
-                      const lEmail=(lead.email||'').toLowerCase().trim();
+                      if(!lPhone||lPhone.length<9) return true; // brak telefonu - zostaw
                       return !allegroImportResults.some(function(imp){
                         const iPhone=(imp.telefon||'').replace(/[\s\-\+]/g,'').replace(/^(\+48|48)/,'');
-                        const iEmail=(imp.email||imp.klientEmail||imp.buyerEmail||'').toLowerCase().trim();
-                        if(lPhone&&iPhone&&lPhone===iPhone) return true;
-                        if(lEmail&&iEmail&&lEmail===iEmail) return true;
-                        return false;
+                        if(!iPhone||iPhone.length<9) return false;
+                        return lPhone===iPhone;
                       });
                     });
                     filtered.sort(function(a,b){return (b.savedAt||'').localeCompare(a.savedAt||'');});
