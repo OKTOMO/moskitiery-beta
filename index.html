@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260520.65</title>
+<title>MosquitoApp v20260520.68</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='20260520.65';
+  window.__MOSK_VERSION='20260520.68';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -3285,7 +3285,7 @@ function App() {
     // Sprawdź czy są już zlecenia
     const linkedOrders = imps.map(imp=>orders.find(o=>o.allegroOrderId===imp.allegroOrderId)).filter(Boolean);
 
-    if(linkedOrders.length>=2){
+    if(linkedOrders.length>=1){
       // Scal istniejące zlecenia
       const klienci = [...new Set(imps.map(i=>i.klientImie||''))];
       if(klienci.length>1){
@@ -3334,6 +3334,14 @@ function App() {
         _mergedAllegroIds: imps.map(i=>i.allegroOrderId),
         _isMerge: true,
       };
+      // Ustaw W realizacji dla wszystkich scalonych nawet gdy brak zleceń
+      setAppStatuses(prev=>{
+        const next={...prev};
+        imps.forEach(imp=>{ if(imp.allegroOrderId) next[imp.allegroOrderId]='W realizacji'; });
+        localStorage.setItem('app_statuses',JSON.stringify(next));
+        syncAppStatusesToKV(next);
+        return next;
+      });
       setMergeSelected(new Set());
       // Otwórz modal importu
       importAllegroOrder(mergedImp);
@@ -5208,8 +5216,8 @@ function App() {
             const effStatus=getEffectiveStatus(imp);
             const as=appStatuses[imp.allegroOrderId]||'';
             const sh=allegroShipments[imp.allegroOrderId];
-            const hasZlecenie=!!orders.find(o=>o.allegroOrderId===imp.allegroOrderId||o._mergedFrom?.includes&&o._mergedFrom.some(id=>orders.find(x=>x.id===id&&x.allegroOrderId===imp.allegroOrderId)));
-            const _linkedOrd=orders.find(o=>o.allegroOrderId===imp.allegroOrderId)||orders.find(o=>o._mergedFrom?.some&&o._mergedFrom.some(id=>orders.find(x=>x.id===id&&x.allegroOrderId===imp.allegroOrderId)));
+            const hasZlecenie=!!orders.find(o=>o.allegroOrderId===imp.allegroOrderId);
+            const _linkedOrd=orders.find(o=>o.allegroOrderId===imp.allegroOrderId);
             const hasMailWyslany=!!sh?.mailWyslany;
             const isZapisaneBezetykiety=hasZlecenie&&!hasEtykieta&&!hasMailWyslany&&!isRealizacja&&!isWyslano;
             const hasEtykieta=!!sh;
@@ -5247,7 +5255,7 @@ function App() {
                   <div style={{minWidth:100,fontSize:11,color:'#5a8abf'}}>{imp.boughtAt?fmtDT(imp.boughtAt):imp.data||'—'}</div>
                   <div style={{flex:1,minWidth:110}}>
                     <div style={{fontWeight:600,color:isWyslano?'#3a7a3a':isRealizacja?'#7abf7a':'#a0cfdf',fontSize:13,cursor:hasZlecenie?'pointer':'default',textDecoration:hasZlecenie?'underline dotted':'none'}}
-                      onClick={()=>{if(hasZlecenie){setDocsModal({imp,order:_linkedOrd,sh});}}}
+                      onClick={()=>{if(hasZlecenie){const o=orders.find(ord=>ord.allegroOrderId===imp.allegroOrderId);setDocsModal({imp,order:o,sh});}}}
                       title={hasZlecenie?'📄 Dokumenty zamówienia':''}>
                       {isWyslano?'✅ ':isRealizacja?'⚙️ ':isZapisaneBezetykiety?'📋 ':''}{imp.klientImie||'—'}
                       {_alert&&<span title={_alert.msg} style={{marginLeft:5,fontSize:10,padding:'1px 5px',borderRadius:3,background:_alert.color==='red'?'#3a0a0a':'#2a2a0a',color:_alert.color==='red'?'#ff7a7a':'#ffdf5a',border:'1px solid '+(_alert.color==='red'?'#7a2a2a':'#6a6a2a'),cursor:'help',fontWeight:700}}>{_alert.color==='red'?'🔴':'🟡'}</span>}
