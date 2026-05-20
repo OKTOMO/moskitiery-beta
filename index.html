@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260520.68</title>
+<title>MosquitoApp v20260520.71</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='20260520.68';
+  window.__MOSK_VERSION='20260520.71';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -3478,7 +3478,9 @@ function App() {
       width:{value:usePresetSize?sz.width:customW,unit:"CENTIMETER"},
       height:{value:usePresetSize?sz.height:customH,unit:"CENTIMETER"},
       textOnLabel:(()=>{const nr=shipmentModal.imp._linkedOrder?.numerZlecenia||orders.find(o=>o.allegroOrderId===imp.allegroOrderId)?.numerZlecenia||'';const desc=shipmentDescription||'';if(nr&&desc.startsWith(nr)) return desc;return [nr,desc].filter(Boolean).join(' ');})()};
-    const packages=autoPkgs.length>0?autoPkgs:[manualPkg];
+    const isDHL=service?.carrierId?.toLowerCase().includes('dhl')||service?.name?.toLowerCase().includes('dhl');
+    const clampedAutoPkgs=isDHL?autoPkgs.map(p=>({...p,length:{value:Math.min(p.length?.value||130,119),unit:'CENTIMETER'}})):autoPkgs;
+    const packages=(clampedAutoPkgs.length>0&&shipmentSize!=='custom')?clampedAutoPkgs:[manualPkg];
     // DPD AD i podobne usługi mają limit 1 paczki — scal wszystkie w jedną
     const isDPD_AD = service?.name?.includes('AD') || service?.carrierId?.includes('DPD');
     const finalPackages = (packages.length > 1 && isDPD_AD)
@@ -5262,7 +5264,7 @@ function App() {
                     </div>
                     {imp.klientLogin&&<div style={{fontSize:10,color:'#3a6a8a',fontFamily:'monospace'}}>{imp.klientLogin}</div>}
                     {imp.klientMiasto&&<div style={{fontSize:10,color:'#4a7a6a'}}>{imp.klientMiasto}{imp.klientKraj&&imp.klientKraj!=='PL'&&<span style={{color:'#cf9a4a',marginLeft:4}}>🌍 {imp.klientKraj}</span>}</div>}
-                    {imp.telefon&&<div style={{fontSize:11,color:'#7acfaf',fontFamily:'monospace',marginTop:1}}>📞 {imp.telefon}</div>}
+                    {imp.telefon&&<div style={{fontSize:11,color:'#7acfaf',fontFamily:'monospace',marginTop:1}}>📞 {(imp.telefon||'').replace(/[^0-9]/g,'').replace(/(\d{3})(\d{3})(\d{3})/,'$1 $2 $3')}</div>}
                     {(()=>{const _ord=orders.find(o=>o.allegroOrderId===imp.allegroOrderId);const _nr=_ord?.numerZlecenia||imp.numerZlecenia;return _nr?<div style={{fontSize:10,color:'#9a9adf',marginTop:1}}>📋 {_nr}</div>:null;})()}
                   </div>
                   <div style={{flex:2,minWidth:130}}>
