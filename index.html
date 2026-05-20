@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260520.88</title>
+<title>MosquitoApp v20260520.89</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='20260520.88';
+  window.__MOSK_VERSION='20260520.89';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -5302,7 +5302,7 @@ function App() {
                     {imp.klientLogin&&<div style={{fontSize:10,color:'#3a6a8a',fontFamily:'monospace'}}>{imp.klientLogin}</div>}
                     {imp.klientMiasto&&<div style={{fontSize:10,color:'#4a7a6a'}}>{imp.klientMiasto}{imp.klientKraj&&imp.klientKraj!=='PL'&&<span style={{color:'#cf9a4a',marginLeft:4}}>🌍 {imp.klientKraj}</span>}</div>}
                     {imp.telefon&&<div style={{fontSize:11,color:'#7acfaf',fontFamily:'monospace',marginTop:1}}>📞 {(imp.telefon||'').replace(/[^0-9]/g,'').replace(/(\d{3})(\d{3})(\d{3})/,'$1 $2 $3')}</div>}
-                    {(()=>{const _ord=orders.find(o=>o.allegroOrderId===imp.allegroOrderId);const _nr=_ord?.numerZlecenia||imp.numerZlecenia;return _nr?<div style={{fontSize:10,color:'#9a9adf',marginTop:1}}>📋 {_nr}</div>:null;})()}
+                    {(()=>{const _ord=orders.find(o=>o.allegroOrderId===imp.allegroOrderId);const _nr=_ord?.numerZlecenia||imp.numerZlecenia;return _nr?<div style={{fontSize:10,color:'#9a9adf',marginTop:1,display:'flex',alignItems:'center',gap:5}}>📋 {_nr}{_ord&&<button onClick={function(e){e.stopPropagation();drukujPDF(_ord);}} style={{padding:'1px 6px',fontSize:10,background:'#1a2a4a',border:'1px solid #2a4a8a',borderRadius:3,color:'#7a9adf',cursor:'pointer',fontWeight:700}}>PDF</button>}</div>:null;})()}
                   </div>
                   <div style={{flex:2,minWidth:130}}>
                     <div style={{fontSize:12,color:'#5a8a9a',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{imp.offerNames||'—'}</div>
