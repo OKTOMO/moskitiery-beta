@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260520.86</title>
+<title>MosquitoApp v20260520.87</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='20260520.86';
+  window.__MOSK_VERSION='20260520.87';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -5805,7 +5805,7 @@ function App() {
                       <textarea id="wiad_reply_input" placeholder="Wpisz odpowiedź..." rows={3}
                         style={{width:'100%',padding:'6px 10px',borderRadius:5,border:'1px solid #1a5a5a',background:'#0a1a1a',color:'#9adfdf',fontSize:12,fontFamily:'monospace',resize:'vertical',boxSizing:'border-box'}}/>
                       <div style={{display:'flex',justifyContent:'flex-end',marginTop:6}}>
-                        <button onClick={function(){var txt=document.getElementById('wiad_reply_input').value.trim();if(!txt) return;fetch(AUTORESPONDER_URL+'/messaging/threads/'+wiadActiveThread.id+'/messages?kontoId='+wiadActiveThread._kontoId,{method:'POST',headers:{'Content-Type':'application/json','x-api-key':AUTORESPONDER_KEY},body:JSON.stringify({text:txt})}).then(function(){document.getElementById('wiad_reply_input').value='';setWiadMessages(function(prev){return [...prev,{text:txt,author:{role:'OPERATOR'},createdAt:new Date().toISOString()}];});setMsgThreads(function(prev){return prev.filter(function(t){return t.id!==wiadActiveThread.id;});});setMsgReplied(function(prev){var n=new Set(prev);n.add(wiadActiveThread.id);localStorage.setItem('msg_replied',JSON.stringify([...n]));return n;});setWiadActiveThread(null);setWiadMessages([]);}).catch(function(e){alert('Błąd: '+e.message);});}} style={{padding:'6px 18px',background:'#1a4a3a',border:'1px solid #2a7a5a',borderRadius:5,color:'#afffaf',cursor:'pointer',fontWeight:700,fontSize:12}}>
+                        <button onClick={function(){var txt=document.getElementById('wiad_reply_input').value.trim();if(!txt) return;fetch(AUTORESPONDER_URL+'/messaging/threads/'+wiadActiveThread.id+'/messages?kontoId='+wiadActiveThread._kontoId,{method:'POST',headers:{'Content-Type':'application/json','x-api-key':AUTORESPONDER_KEY},body:JSON.stringify({text:txt})}).then(function(r){return r.json();}).then(function(d){if(d&&d.id){document.getElementById('wiad_reply_input').value='';setWiadMessages(function(prev){return [...prev,{text:txt,author:{role:'OPERATOR'},createdAt:new Date().toISOString()}];});setMsgReplied(function(prev){var n=new Set(prev);n.add(wiadActiveThread.id);localStorage.setItem('msg_replied',JSON.stringify([...n]));return n;});}else{alert('❌ Błąd wysyłania: '+(d&&d.error||JSON.stringify(d)));}}).catch(function(e){alert('Błąd: '+e.message);});}} style={{padding:'6px 18px',background:'#1a4a3a',border:'1px solid #2a7a5a',borderRadius:5,color:'#afffaf',cursor:'pointer',fontWeight:700,fontSize:12}}>
                           ✉️ Wyślij
                         </button>
                       </div>
