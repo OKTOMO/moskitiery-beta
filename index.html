@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260520.74</title>
+<title>MosquitoApp v20260520.75</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='20260520.74';
+  window.__MOSK_VERSION='20260520.75';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -5082,13 +5082,16 @@ function App() {
               </div>}
               {/* ── Panel akcji — zawsze widoczny ── */}
               <div style={{display:'flex',flexDirection:'column',gap:6}}>
-                {/* Wiersz 1: Zapisz */}
-                <button className="btn" style={{width:'100%',padding:'12px',fontSize:14,background:editingId!==null?'#4a6a2a':'var(--accent)'}}
+                {/* Wiersz 1: Zapisz + Wyczyść */}
+                <div style={{display:'flex',gap:6}}>
+                <button className="btn" style={{flex:1,padding:'12px',fontSize:14,background:editingId!==null?'#4a6a2a':'var(--accent)'}}
                   onClick={handleSave} disabled={!form.klientImie&&!form.klientMiasto&&!form.pozycje[0].szerokosc}>
                   {saved&&lastSavedOrder
                     ? `✅ Zapisano: ${lastSavedOrder.numerZlecenia||''}`
                     : editingId!==null?'💾 Zapisz zmiany':'💾 Zapisz zamówienie'}
                 </button>
+                {!saved&&<button onClick={()=>{if(form.klientImie||form.klientMiasto||form.pozycje[0].szerokosc){if(!confirm('Wyczyścić formularz?')) return;} setForm(pustyForm(form.firma));setNumerOverride('');setKalNumerForForm('');setAllegroOrderIdForForm('');setEditingId(null);setWiadomosc('');}} style={{padding:'12px 14px',fontSize:16,background:'#2a1a1a',border:'1px solid #5a2a2a',color:'#cf7a7a',borderRadius:6,cursor:'pointer'}} title="Wyczyść formularz">🗑</button>}
+                </div>
                 {/* Podgląd zlecenia po zapisaniu */}
                 {saved&&lastSavedOrder&&(
                   <div style={{background:'#0a1a0a',border:'1px solid #1a4a2a',borderRadius:6,padding:'8px 12px',fontSize:12,color:'#6a9a6a'}}>
