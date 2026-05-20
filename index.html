@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260520.71</title>
+<title>MosquitoApp v20260520.72</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='20260520.71';
+  window.__MOSK_VERSION='20260520.72';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -5637,7 +5637,13 @@ function App() {
                   📋 Szablony ({fakSzablony.length})
                 </button>
                 <button onClick={()=>{setZamTab('porzucone');fetchLeads();}} style={{padding:'6px 12px',fontSize:12,fontWeight:700,cursor:'pointer',border:'none',borderRadius:'6px 6px 0 0',background:zamTab==='porzucone'?'#1a2a3a':'#0a1828',color:zamTab==='porzucone'?'#7adfff':'#4a8aaf',borderBottom:zamTab==='porzucone'?'2px solid #3aafd0':'2px solid transparent'}}>
-                  👀 Porzucone {leads.length>0&&<span style={{background:'#2a4a6a',borderRadius:10,padding:'1px 6px',fontSize:10,marginLeft:3}}>{leads.length}</span>}
+👀 Porzucone {(()=>{
+                    const _seen={};const _uniq=[];
+                    leads.forEach(function(l){const p=(l.phone||'').replace(/[\s\-\+]/g,'');const e=(l.email||'').toLowerCase().trim();const k=p&&e?p+'|'+e:'';if(!k){_uniq.push(l);return;}if(!_seen[k]||l.savedAt>_seen[k].savedAt)_seen[k]=l;});
+                    Object.values(_seen).forEach(function(l){_uniq.push(l);});
+                    const _cnt=_uniq.filter(function(lead){const lp=(lead.phone||'').replace(/[\s\-\+]/g,'').replace(/^48/,'');const le=(lead.email||'').toLowerCase().trim();return !allegroImportResults.some(function(imp){const ip=(imp.telefon||'').replace(/[\s\-\+]/g,'').replace(/^(\+48|48)/,'');const ie=(imp.email||imp.klientEmail||'').toLowerCase().trim();return (lp&&ip&&lp===ip)||(le&&ie&&le===ie);});}).length;
+                    return _cnt>0?<span style={{background:'#2a4a6a',borderRadius:10,padding:'1px 6px',fontSize:10,marginLeft:3}}>{_cnt}</span>:null;
+                  })()}
                 </button>
               </div>
               {allegroImportResults.length===0&&zamTab!=='szablony_fak'&&<div style={{textAlign:'center',color:'#2a5a3a',padding:'40px 0',fontSize:14}}>Kliknij "Pobierz zamówienia" żeby załadować listę</div>}
