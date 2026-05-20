@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260520.82</title>
+<title>MosquitoApp v20260520.83</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='20260520.82';
+  window.__MOSK_VERSION='20260520.83';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -5820,7 +5820,7 @@ function App() {
                       const lastMsg=t.messages&&t.messages[t.messages.length-1];
                       return (
                         <div key={t.id} style={{background:'#0a1a1a',border:'1px solid '+(unread?'#2a6a6a':'#1a3a3a'),borderRadius:7,padding:'8px 12px',marginBottom:5,cursor:'pointer'}}
-                          onClick={function(){setWiadActiveThread(t);setWiadMessages([]);setWiadLoading(true);fetch(AUTORESPONDER_URL+'/messaging/threads/'+t.id+'/messages?kontoId='+konto,{headers:{'x-api-key':AUTORESPONDER_KEY}}).then(function(r){return r.json();}).then(function(d){setWiadMessages((d.messages||[]).slice().reverse());setWiadLoading(false);}).catch(function(){setWiadLoading(false);});}}>
+                          onClick={function(){setWiadActiveThread({...t,_kontoId:t._kontoId||konto});setWiadMessages([]);setWiadLoading(true);fetch(AUTORESPONDER_URL+'/messaging/threads/'+t.id+'/messages?kontoId='+(t._kontoId||konto),{headers:{'x-api-key':AUTORESPONDER_KEY}}).then(function(r){return r.json();}).then(function(d){setWiadMessages((d.messages||[]).slice().reverse());setWiadLoading(false);}).catch(function(){setWiadLoading(false);});}}>
                           <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:3}}>
                             {unread>0&&<span style={{background:'#2a6a6a',color:'#afffff',borderRadius:10,padding:'1px 6px',fontSize:10,fontWeight:700}}>●</span>}
                             {(function(){const KCOL={favo5:['#4a8a5a','#7fcf7f'],staroleska_pl:['#4a7a4a','#5abf7a'],sinlook_pl:['#1a4a3a','#4abf9a'],arlis_pl:['#2a3a5a','#7abfdf'],everis_pl:['#3a2a5a','#af8fdf'],albama_eu:['#8a6a3a','#dfaf5a'],pedroshop_pl_365:['#3a2a1a','#cf8a4a']};const[bg,col]=KCOL[konto]||['#2a2a2a','#9a9a9a'];return <span style={{fontSize:10,padding:'1px 6px',borderRadius:4,background:bg,color:col,fontFamily:'monospace',fontWeight:700,marginRight:4}}>{konto}</span>;})()}
