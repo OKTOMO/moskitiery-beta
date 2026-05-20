@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260520.80</title>
+<title>MosquitoApp v20260520.82</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='20260520.80';
+  window.__MOSK_VERSION='20260520.82';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -5565,10 +5565,18 @@ function App() {
                         fetch(AUTORESPONDER_URL+'/message/send',{
                           method:'POST',
                           headers:{'Content-Type':'application/json','x-api-key':AUTORESPONDER_KEY},
-                          body:JSON.stringify({allegroOrderId:imp.allegroOrderId,kontoId:imp.kontoId,text:txt,buyerLogin:imp.klientLogin||''})
+                          body:JSON.stringify({allegroOrderId:imp.allegroOrderId,kontoId:(zamChatThreadId[imp.allegroOrderId]||{}).kontoId||imp.kontoId,text:txt,buyerLogin:imp.klientLogin||'',threadId:(zamChatThreadId[imp.allegroOrderId]||{}).threadId||''})
                         }).then(function(r){return r.json();}).then(function(d){
                           if(d.ok){alert('✅ Wiadomość wysłana');if(_el)_el.value='';toggleBox(imp.allegroOrderId,'chat');setMsgThreads(function(prev){return prev.filter(function(t){return !(t.interlocutor&&t.interlocutor.login&&imp.klientLogin&&t.interlocutor.login.toLowerCase()===imp.klientLogin.toLowerCase());});});setMsgReplied(function(prev){var n=new Set(prev);(msgThreads||[]).forEach(function(t){if(t.interlocutor&&t.interlocutor.login&&imp.klientLogin&&t.interlocutor.login.toLowerCase()===imp.klientLogin.toLowerCase())n.add(t.id);});localStorage.setItem('msg_replied',JSON.stringify([...n]));return n;});}
-                          else alert('❌ '+JSON.stringify(d));
+                          else {
+                            if(d.error&&d.error.includes('Nie znaleziono wątku')){
+                              if(confirm('Nie można wysłać przez API. Czy otworzyć wiadomości Allegro?')){
+                                window.open('https://allegro.pl/messaging','_blank');
+                              }
+                            } else {
+                              alert('❌ '+JSON.stringify(d));
+                            }
+                          }
                         }).catch(function(e){alert('❌ '+e.message);});
                       }}
                         style={{padding:'5px 18px',borderRadius:5,border:'1px solid #1a7a7a',background:'#0a3a3a',color:'#5adfdf',cursor:'pointer',fontSize:12,fontWeight:700}}>
