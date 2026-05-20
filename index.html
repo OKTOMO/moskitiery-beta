@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260520.72</title>
+<title>MosquitoApp v20260520.74</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='20260520.72';
+  window.__MOSK_VERSION='20260520.74';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -528,7 +528,7 @@ table.main td.wymiar{font-size:15px;font-weight:900}
 table.main td.kolor{font-size:11px;font-weight:700}
 table.main td.jedn{font-size:9px}
 table.main tr:nth-child(even) td{background:#f5f5f5}
-.uwagi-label{font-weight:700;font-size:11px;margin:4px 0 2px}
+.uwagi-label{font-weight:700;font-size:14px;margin:6px 0 3px}
 .uwagi-line{border-bottom:1px solid #aaa;min-height:14px;margin-bottom:3px}
 .bottom{margin-top:8px;display:flex;gap:20px;align-items:center;font-size:11px}
 .bottom-val{border:2px solid #000;padding:2px 14px;font-size:15px;font-weight:900;display:inline-block;min-width:52px;text-align:center}
@@ -608,7 +608,7 @@ function generateOrderHtml(order) {
   const rows=[...pozycjeRows,...emptyRows].join("");
   return `<!DOCTYPE html><html lang="pl"><head><meta charset="utf-8">
 <title>${order.numerZlecenia||""} ${order.klientImie||""} ${order.klientMiasto||""}</title>
-<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:11px;padding:10px 14px;color:#000;background:#fff;width:210mm}.header{display:flex;margin-bottom:8px;border:1px solid #000}.big-litera{font-size:60px;font-weight:900;line-height:1;color:#000;display:flex;align-items:center;justify-content:center;border-right:1px solid #000;padding:6px 12px;min-width:80px}.info-grid{display:grid;grid-template-columns:80px 1fr;flex:1}.info-grid .lbl{background:#f0e8c0;border-bottom:1px solid #ccc;border-right:1px solid #ccc;padding:3px 6px;font-weight:700;font-size:9px;color:#555;display:flex;align-items:center}.info-grid .val{border-bottom:1px solid #ccc;padding:3px 7px;font-size:12px;font-weight:700;display:flex;align-items:center}.info-grid .val.nr{font-size:20px;font-weight:900;color:#cc0000}table.main{width:100%;border-collapse:collapse;margin-bottom:6px}table.main th{background:#222;color:#fff;padding:5px 3px;text-align:center;border:1px solid #555;font-size:8px;line-height:1.3}table.main td{padding:1px 3px;text-align:center;border:1px solid #bbb;height:24px;font-size:11px}table.main td.wymiar{font-size:15px;font-weight:900}table.main td.kolor{font-size:11px;font-weight:700}table.main td.jedn{font-size:9px}table.main tr:nth-child(even) td{background:#f5f5f5}.uwagi-label{font-weight:700;font-size:11px;margin:4px 0 2px}.uwagi-line{border-bottom:1px solid #aaa;min-height:14px;margin-bottom:3px}.bottom{margin-top:8px;display:flex;gap:20px;align-items:center;font-size:11px}.bottom-val{border:2px solid #000;padding:2px 14px;font-size:15px;font-weight:900;display:inline-block;min-width:52px;text-align:center}.razem{font-size:11px;font-weight:700;margin-top:6px}@media print{body{padding:6px 10px}}</style></head><body>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:11px;padding:10px 14px;color:#000;background:#fff;width:210mm}.header{display:flex;margin-bottom:8px;border:1px solid #000}.big-litera{font-size:60px;font-weight:900;line-height:1;color:#000;display:flex;align-items:center;justify-content:center;border-right:1px solid #000;padding:6px 12px;min-width:80px}.info-grid{display:grid;grid-template-columns:80px 1fr;flex:1}.info-grid .lbl{background:#f0e8c0;border-bottom:1px solid #ccc;border-right:1px solid #ccc;padding:3px 6px;font-weight:700;font-size:9px;color:#555;display:flex;align-items:center}.info-grid .val{border-bottom:1px solid #ccc;padding:3px 7px;font-size:12px;font-weight:700;display:flex;align-items:center}.info-grid .val.nr{font-size:20px;font-weight:900;color:#cc0000}table.main{width:100%;border-collapse:collapse;margin-bottom:6px}table.main th{background:#222;color:#fff;padding:5px 3px;text-align:center;border:1px solid #555;font-size:8px;line-height:1.3}table.main td{padding:1px 3px;text-align:center;border:1px solid #bbb;height:24px;font-size:11px}table.main td.wymiar{font-size:15px;font-weight:900}table.main td.kolor{font-size:11px;font-weight:700}table.main td.jedn{font-size:9px}table.main tr:nth-child(even) td{background:#f5f5f5}.uwagi-label{font-weight:700;font-size:14px;margin:6px 0 3px}.uwagi-line{border-bottom:1px solid #aaa;min-height:14px;margin-bottom:3px}.bottom{margin-top:8px;display:flex;gap:20px;align-items:center;font-size:11px}.bottom-val{border:2px solid #000;padding:2px 14px;font-size:15px;font-weight:900;display:inline-block;min-width:52px;text-align:center}.razem{font-size:11px;font-weight:700;margin-top:6px}@media print{body{padding:6px 10px}}</style></head><body>
 <div class="header"><div class="big-litera">${firma}</div><div class="info-grid"><div class="lbl">KLIENT</div><div class="val">${order.klientImie||"—"}</div><div class="lbl">ADRES</div><div class="val">${order.klientUlica||""} ${order.klientKod?"· "+order.klientKod:""} ${order.klientMiasto||"—"}</div><div class="lbl">TEL</div><div class="val">${order.telefon||"—"}</div><div class="lbl">DATA</div><div class="val">${formatDate(order.data)}</div><div class="lbl">NR ZAM.</div><div class="val nr">${order.numerZlecenia||"—"}</div></div></div>
 <table class="main"><thead><tr><th style="width:26px">LP</th><th>SYSTEM</th><th style="width:44px">JEDN (mb)</th><th style="width:64px">SZEROKOŚĆ (cm)</th><th style="width:64px">WYSOKOŚĆ (cm)</th><th>KOLOR RAMKI</th><th>KOLOR SIATKI</th><th style="width:54px">BLASZKA (mm)</th><th style="width:34px">SZT.</th></tr></thead><tbody>${rows}</tbody></table>
 <div class="uwagi-label">UWAGI${order.uwagi?" — "+order.uwagi:""}</div><div class="uwagi-line"></div><div class="uwagi-line"></div>
@@ -677,7 +677,7 @@ table.main td.kolor{font-size:14px;font-weight:700}
 .sklad table th{background:#2a3a1a;color:#fff;padding:4px;text-align:left;font-size:9px}
 .sklad table td{padding:3px 6px;border-bottom:1px solid #ddd}
 .sklad table td.val{text-align:right;font-weight:900;font-size:13px}
-.uwagi-label{font-weight:700;font-size:11px;margin:4px 0 2px}
+.uwagi-label{font-weight:700;font-size:14px;margin:6px 0 3px}
 .uwagi-line{border-bottom:1px solid #aaa;min-height:14px;margin-bottom:3px}
 </style></head><body>
 
@@ -4892,7 +4892,7 @@ function App() {
                 </div>
                 <div>
                   <span className="lbl">Uwagi</span>
-                  <input value={form.uwagi} onChange={e=>setForm(f=>({...f,uwagi:e.target.value}))} placeholder="Dodatkowe uwagi..." style={{fontSize:16,padding:"6px 10px"}}/>
+                  <input value={form.uwagi} onChange={e=>setForm(f=>({...f,uwagi:e.target.value}))} placeholder="Dodatkowe uwagi..." style={{fontSize:18,padding:"8px 10px",color:'#e0e0e0',fontWeight:500}}/>
                 </div>
               </div>
             </div>
