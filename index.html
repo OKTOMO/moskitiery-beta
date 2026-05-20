@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260520.87</title>
+<title>MosquitoApp v20260520.88</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='20260520.87';
+  window.__MOSK_VERSION='20260520.88';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -3797,6 +3797,38 @@ function App() {
       }
     }
   },[]);
+
+  // Historia przeglądarki — Back cofa zakładkę lub zamyka modal
+  useEffect(()=>{
+    function onPopState(e){
+      const state=e.state||{};
+      if(state.modal){
+        // zamknij modal
+        setDocsModal(null);setFakModal(null);setDpdModal(null);setImportModal(null);
+      } else if(state.tab){
+        setTab(state.tab);
+        if(state.zamTab) setZamTab(state.zamTab);
+      }
+    }
+    window.addEventListener('popstate',onPopState);
+    // Ustaw stan początkowy
+    window.history.replaceState({tab:'zamowienia'},'');
+    return ()=>window.removeEventListener('popstate',onPopState);
+  },[]);
+
+  // Pushuj stan przy zmianie zakładki
+  useEffect(()=>{
+    const cur=window.history.state||{};
+    if(cur.tab!==tab) window.history.pushState({tab},'');
+  },[tab]);
+
+  // Pushuj stan przy otwarciu modalu
+  useEffect(()=>{
+    if(docsModal||fakModal||dpdModal||importModal){
+      window.history.pushState({modal:true,tab},'');
+    }
+  },[docsModal,fakModal,dpdModal,importModal]);
+
   function updateOrders(next){setOrders(next);cloudSave(next);}
   async function freshOrders(){try{const r=await window.storage.get(STORAGE_KEY,true);return r?JSON.parse(r.value):[];}catch{return orders;}}
 
