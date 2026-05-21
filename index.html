@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.98</title>
+<title>MosquitoApp v20260521.99</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='20260521.98';
+  window.__MOSK_VERSION='20260521.99';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -8681,11 +8681,7 @@ function App() {
                   );})}
                 </div>
                 <button onClick={function(){
-                  if(!confirm('Zaktualizować opis w '+edWyniki.length+' ofertach?
-
-Zamieniam: "'+edStary.substring(0,50)+(edStary.length>50?'...':'')+'"'+(edNowy?'
-Na: "'+edNowy.substring(0,50)+(edNowy.length>50?'...':''):'
-(USUWAM fragment)')+'"')) return;
+                  if(!confirm('Zaktualizować opis w '+edWyniki.length+' ofertach? — Zamieniam: '+edStary.substring(0,50)+(edStary.length>50?'...':'')+(edNowy?' — Na: '+edNowy.substring(0,50)+(edNowy.length>50?'...':''):' — (USUWAM fragment)'))) return;
                   setEdSaving(true);setEdSaveLog([]);
                   var kolejka=[...edWyniki];
                   var log=[];
