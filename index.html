@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.95</title>
+<title>MosquitoApp v20260521.96</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='20260521.95';
+  window.__MOSK_VERSION='20260521.96';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -1132,6 +1132,9 @@ function App() {
   const [mRyczalt,setMRyczalt]=useState('0.03');
   const [mMarzaDocelowa,setMMarzaDocelowa]=useState('0.15');
   const [mTryb,setMTryb]=useState('analiza');
+  const [mNazwa,setMNazwa]=useState('');
+  const [mHistoria,setMHistoria]=useState(function(){try{return JSON.parse(localStorage.getItem('marza_historia')||'[]');}catch{return [];}});
+  const [mSelectedId,setMSelectedId]=useState(null);
   const [wiadActiveThread,setWiadActiveThread]=useState(null);
   const [wiadMessages,setWiadMessages]=useState([]);
   const [wiadLoading,setWiadLoading]=useState(false);
@@ -8429,6 +8432,42 @@ function App() {
             {/* KALKULATOR MARŻOWOŚCI */}
             <div style={{background:'#0a150a',borderRadius:8,padding:'14px',border:'1px solid #2a4a2a',marginBottom:12}}>
               <div style={{color:'#7acf7a',fontWeight:'bold',marginBottom:12,fontSize:13}}>💰 KALKULATOR MARŻOWOŚCI</div>
+              {/* Nazwa produktu + zapis */}
+              <div style={{display:'flex',gap:6,marginBottom:10,alignItems:'center'}}>
+                <input value={mNazwa} onChange={function(e){setMNazwa(e.target.value);}} placeholder="Nazwa produktu (np. Mata 50x100)" style={{flex:1,padding:'6px 10px',fontSize:13,background:'#0a1a0a',border:'1px solid #3a6a3a',borderRadius:5,color:'#cfdfcf'}}/>
+                <button onClick={function(){
+                  if(!mNazwa.trim()){alert('Wpisz nazwę produktu');return;}
+                  var zakupNetto=parseFloat(mCenaZakupuNetto)||0;
+                  if(!zakupNetto){alert('Wpisz cenę zakupu');return;}
+                  var wpis={id:Date.now(),nazwa:mNazwa.trim(),data:new Date().toLocaleDateString('pl-PL'),tryb:mTryb,zakupNetto:mCenaZakupuNetto,rabat:mRabat,sprzedazBrutto:mCenaSprzedazyBrutto,vat:mVat,wysylka:mWysylka,karton:mKarton,prowizja:mProwizja,ads:mAds,ryczalt:mRyczalt,marzaDocelowa:mMarzaDocelowa};
+                  var next=[wpis,...mHistoria].slice(0,50);
+                  setMHistoria(next);
+                  localStorage.setItem('marza_historia',JSON.stringify(next));
+                  setMSelectedId(wpis.id);
+                  alert('✅ Zapisano: '+mNazwa.trim());
+                }} style={{padding:'6px 12px',fontSize:12,background:'#1a4a1a',border:'1px solid #4a8a4a',borderRadius:5,color:'#7acf7a',cursor:'pointer',fontWeight:700,whiteSpace:'nowrap'}}>💾 Zapisz</button>
+              </div>
+
+              {/* Historia kalkulacji */}
+              {mHistoria.length>0&&<div style={{marginBottom:10}}>
+                <div style={{fontSize:11,color:'#3a6a3a',fontWeight:700,marginBottom:4}}>📋 Historia kalkulacji</div>
+                <div style={{display:'flex',flexWrap:'wrap',gap:4}}>
+                  {mHistoria.map(function(h){return(
+                    <div key={h.id} style={{display:'flex',alignItems:'center',gap:2}}>
+                      <button onClick={function(){
+                        setMNazwa(h.nazwa);setMTryb(h.tryb);setMCenaZakupuNetto(h.zakupNetto);setMRabat(h.rabat);
+                        setMCenaSprzedazyBrutto(h.sprzedazBrutto);setMVat(h.vat);setMWysylka(h.wysylka);
+                        setMKarton(h.karton);setMProwizja(h.prowizja);setMAds(h.ads);setMRyczalt(h.ryczalt);
+                        setMMarzaDocelowa(h.marzaDocelowa);setMSelectedId(h.id);
+                      }} style={{padding:'3px 8px',fontSize:11,borderRadius:4,cursor:'pointer',background:mSelectedId===h.id?'#1a4a1a':'#0a1a0a',border:'1px solid '+(mSelectedId===h.id?'#4a8a4a':'#2a4a2a'),color:mSelectedId===h.id?'#7acf7a':'#5a8a5a'}} title={h.data}>
+                        {h.nazwa}
+                      </button>
+                      <button onClick={function(){if(confirm('Usuń '+h.nazwa+'?')){var next=mHistoria.filter(function(x){return x.id!==h.id;});setMHistoria(next);localStorage.setItem('marza_historia',JSON.stringify(next));if(mSelectedId===h.id)setMSelectedId(null);}}} style={{padding:'2px 5px',fontSize:10,background:'none',border:'none',color:'#4a2a2a',cursor:'pointer'}}>✕</button>
+                    </div>
+                  );})}
+                </div>
+              </div>}
+
               <div style={{display:'flex',gap:8,marginBottom:10}}>
                 <button onClick={function(){setMTryb('analiza');}} style={{flex:1,padding:'6px',fontSize:12,borderRadius:5,cursor:'pointer',background:mTryb==='analiza'?'#1a4a1a':'#0a1a0a',border:'1px solid '+(mTryb==='analiza'?'#5a9a5a':'#2a4a2a'),color:mTryb==='analiza'?'#7acf7a':'#4a7a4a',fontWeight:700}}>📊 Analiza rentowności</button>
                 <button onClick={function(){setMTryb('cena');}} style={{flex:1,padding:'6px',fontSize:12,borderRadius:5,cursor:'pointer',background:mTryb==='cena'?'#1a3a4a':'#0a1a0a',border:'1px solid '+(mTryb==='cena'?'#4a7a9a':'#2a4a2a'),color:mTryb==='cena'?'#7abfdf':'#4a6a7a',fontWeight:700}}>🏷️ Oblicz cenę sprzedaży</button>
