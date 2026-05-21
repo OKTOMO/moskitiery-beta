@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.97</title>
+<title>MosquitoApp v20260521.98</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='20260521.97';
+  window.__MOSK_VERSION='20260521.98';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -1137,6 +1137,14 @@ function App() {
   const [mSelectedId,setMSelectedId]=useState(null);
   const [mSztukiZakup,setMSztukiZakup]=useState('');
   const [mSztukiSprzedaz,setMSztukiSprzedaz]=useState('');
+  const [edKonto,setEdKonto]=useState('favo5');
+  const [edOferty,setEdOferty]=useState([]);
+  const [edLoading,setEdLoading]=useState(false);
+  const [edStary,setEdStary]=useState('');
+  const [edNowy,setEdNowy]=useState('');
+  const [edWyniki,setEdWyniki]=useState([]);
+  const [edSaving,setEdSaving]=useState(false);
+  const [edSaveLog,setEdSaveLog]=useState([]);
   const [wiadActiveThread,setWiadActiveThread]=useState(null);
   const [wiadMessages,setWiadMessages]=useState([]);
   const [wiadLoading,setWiadLoading]=useState(false);
@@ -8605,7 +8613,120 @@ function App() {
               })()}
             </div>
 
-            <div style={{color:'#3a5a3a',fontSize:12,textAlign:'center',padding:'20px 0'}}>🔜 Wystawianie produktów na Allegro — wkrótce</div>
+            {/* EDYTOR MASOWY OPISÓW */}
+            <div style={{background:'#0f0a1a',borderRadius:8,padding:'14px',border:'1px solid #3a2a5a',marginBottom:12}}>
+              <div style={{color:'#af8fdf',fontWeight:'bold',marginBottom:12,fontSize:13}}>✏️ MASOWA EDYCJA OPISÓW OFERT</div>
+
+              {/* Wybór konta */}
+              <div style={{display:'flex',gap:8,marginBottom:10,alignItems:'center'}}>
+                <div style={{fontSize:11,color:'#7a6a9a',minWidth:60}}>Konto:</div>
+                <select value={edKonto} onChange={function(e){setEdKonto(e.target.value);setEdOferty([]);setEdWyniki([]);setEdSaveLog([]);}}
+                  style={{padding:'5px 8px',fontSize:13,background:'#0a0a1a',border:'1px solid #3a2a5a',borderRadius:5,color:'#cfcfdf',flex:1}}>
+                  {ALLEGRO_KONTA.map(function(k){return <option key={k.id} value={k.id}>{k.nazwa||k.id}</option>;})}
+                </select>
+                <button onClick={function(){
+                  setEdLoading(true);setEdOferty([]);setEdWyniki([]);setEdSaveLog([]);
+                  fetch(AUTORESPONDER_URL+'/allegro/offers?kontoId='+edKonto+'&limit=100',{headers:{'x-api-key':AUTORESPONDER_KEY}})
+                  .then(function(r){return r.json();})
+                  .then(function(d){setEdOferty(d.offers||[]);setEdLoading(false);})
+                  .catch(function(){setEdLoading(false);alert('Błąd pobierania ofert');});
+                }} style={{padding:'5px 12px',fontSize:12,background:'#1a1a3a',border:'1px solid #3a3a7a',borderRadius:5,color:'#9a9adf',cursor:'pointer',fontWeight:700}}>
+                  {edLoading?'⟳ Ładuję...':'📥 Pobierz oferty'}
+                </button>
+              </div>
+
+              {edOferty.length>0&&<div style={{fontSize:11,color:'#5a5a7a',marginBottom:10}}>Pobrano {edOferty.length} ofert</div>}
+
+              {/* Stary i nowy tekst */}
+              <div style={{marginBottom:8}}>
+                <div style={{fontSize:11,color:'#7a5a9a',marginBottom:4,fontWeight:700}}>🔍 Stary fragment (do znalezienia)</div>
+                <textarea value={edStary} onChange={function(e){setEdStary(e.target.value);setEdWyniki([]);}}
+                  placeholder="Wklej fragment tekstu który chcesz zmienić lub usunąć..."
+                  style={{width:'100%',height:80,padding:'6px 8px',fontSize:12,background:'#0a0a1a',border:'1px solid #4a2a5a',borderRadius:5,color:'#cfcfdf',resize:'vertical',boxSizing:'border-box'}}/>
+              </div>
+              <div style={{marginBottom:10}}>
+                <div style={{fontSize:11,color:'#4a7a4a',marginBottom:4,fontWeight:700}}>✏️ Nowy fragment (zostaw puste żeby usunąć)</div>
+                <textarea value={edNowy} onChange={function(e){setEdNowy(e.target.value);setEdWyniki([]);}}
+                  placeholder="Wklej nowy tekst (lub zostaw puste żeby usunąć stary fragment)..."
+                  style={{width:'100%',height:80,padding:'6px 8px',fontSize:12,background:'#0a0a1a',border:'1px solid #2a4a2a',borderRadius:5,color:'#cfdfcf',resize:'vertical',boxSizing:'border-box'}}/>
+              </div>
+
+              {/* Przycisk szukania */}
+              <button onClick={function(){
+                if(!edStary.trim()){alert('Wpisz fragment do znalezienia');return;}
+                if(edOferty.length===0){alert('Najpierw pobierz oferty');return;}
+                var wyniki=edOferty.filter(function(o){
+                  var opis=(o.description&&o.description.sections?
+                    o.description.sections.map(function(s){return s.items?s.items.map(function(i){return i.content||'';}).join(' '):'' ;}).join(' ')
+                    :o.description||'');
+                  return opis.includes(edStary);
+                });
+                setEdWyniki(wyniki);
+                if(wyniki.length===0) alert('Nie znaleziono ofert z tym fragmentem tekstu');
+              }} style={{width:'100%',padding:'8px',fontSize:13,background:'#1a1a3a',border:'1px solid #4a4a8a',borderRadius:5,color:'#9a9adf',cursor:'pointer',fontWeight:700,marginBottom:10}}>
+                🔍 Znajdź oferty ({edOferty.length} pobrane)
+              </button>
+
+              {/* Wyniki */}
+              {edWyniki.length>0&&(
+              <div>
+                <div style={{fontSize:12,color:'#7a6a9a',marginBottom:6,fontWeight:700}}>
+                  Znaleziono {edWyniki.length} ofert z tym fragmentem:
+                </div>
+                <div style={{maxHeight:150,overflowY:'auto',marginBottom:10,background:'#080814',borderRadius:5,border:'1px solid #2a2a4a',padding:'6px 8px'}}>
+                  {edWyniki.map(function(o){return(
+                    <div key={o.id} style={{fontSize:11,color:'#8a8abf',padding:'2px 0',borderBottom:'1px solid #1a1a2a'}}>
+                      {o.name||o.id}
+                    </div>
+                  );})}
+                </div>
+                <button onClick={function(){
+                  if(!confirm('Zaktualizować opis w '+edWyniki.length+' ofertach?
+
+Zamieniam: "'+edStary.substring(0,50)+(edStary.length>50?'...':'')+'"'+(edNowy?'
+Na: "'+edNowy.substring(0,50)+(edNowy.length>50?'...':''):'
+(USUWAM fragment)')+'"')) return;
+                  setEdSaving(true);setEdSaveLog([]);
+                  var kolejka=[...edWyniki];
+                  var log=[];
+                  function nastepna(){
+                    if(kolejka.length===0){setEdSaving(false);setEdSaveLog(log);return;}
+                    var oferta=kolejka.shift();
+                    var opis=oferta.description||{sections:[]};
+                    var opisStr=JSON.stringify(opis);
+                    var nowyOpisStr=opisStr.split(edStary).join(edNowy);
+                    var nowyOpis=JSON.parse(nowyOpisStr);
+                    fetch(AUTORESPONDER_URL+'/allegro/offer/'+oferta.id+'/description',{
+                      method:'PUT',
+                      headers:{'x-api-key':AUTORESPONDER_KEY,'Content-Type':'application/json'},
+                      body:JSON.stringify({kontoId:edKonto,description:nowyOpis})
+                    }).then(function(r){return r.json();}).then(function(d){
+                      log=[...log,{nazwa:oferta.name||oferta.id,ok:d.ok!==false,err:d.error||''}];
+                      setEdSaveLog([...log]);
+                      setTimeout(nastepna,300);
+                    }).catch(function(e){
+                      log=[...log,{nazwa:oferta.name||oferta.id,ok:false,err:e.message}];
+                      setEdSaveLog([...log]);
+                      setTimeout(nastepna,300);
+                    });
+                  }
+                  nastepna();
+                }} disabled={edSaving} style={{width:'100%',padding:'9px',fontSize:13,background:edSaving?'#1a1a1a':'#1a3a1a',border:'1px solid '+(edSaving?'#3a3a3a':'#4a8a4a'),borderRadius:5,color:edSaving?'#4a4a4a':'#7acf7a',cursor:edSaving?'not-allowed':'pointer',fontWeight:700}}>
+                  {edSaving?'⟳ Aktualizuję...':'✅ Zastosuj zmiany w '+edWyniki.length+' ofertach'}
+                </button>
+              </div>)}
+
+              {/* Log zapisów */}
+              {edSaveLog.length>0&&(
+              <div style={{marginTop:10,maxHeight:150,overflowY:'auto',background:'#080f08',borderRadius:5,border:'1px solid #1a3a1a',padding:'6px 8px'}}>
+                {edSaveLog.map(function(l,i){return(
+                  <div key={i} style={{fontSize:11,color:l.ok?'#5acf5a':'#cf5a5a',padding:'1px 0'}}>{l.ok?'✅':'❌'} {l.nazwa}{l.err?' — '+l.err:''}</div>
+                );})}
+                {!edSaving&&<div style={{fontSize:11,color:'#5a7a5a',marginTop:4,fontWeight:700}}>Gotowe — zaktualizowano {edSaveLog.filter(function(l){return l.ok;}).length}/{edSaveLog.length}</div>}
+              </div>)}
+            </div>
+
+            <div style={{color:'#3a5a3a',fontSize:12,textAlign:'center',padding:'20px 0'}}>🔜 Wystawianie nowych produktów na Allegro — wkrótce</div>
           </div>
             )}
 
