@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260520.89</title>
+<title>MosquitoApp v20260521.90</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='20260520.89';
+  window.__MOSK_VERSION='20260521.90';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -5431,34 +5431,7 @@ function App() {
                       style={{padding:'4px 8px',fontSize:12,borderRadius:5,cursor:'pointer',background:'#1a2a1a',border:'1px solid #3a5a2a',color:'#9aef9a'}}>
                       🖨️
                     </button>}
-                    {hasEtykieta&&sh&&(sh.pickupOrdered
-                      ? <button title={`Odbiór zamówiony ${sh.pickupOrderedAt?new Date(sh.pickupOrderedAt).toLocaleDateString('pl-PL'):''}`}
-                          disabled style={{padding:'4px 8px',fontSize:12,borderRadius:5,cursor:'not-allowed',background:'#0a1a0a',border:'1px solid #2a4a2a',color:'#3a6a3a',opacity:0.6}}>
-                          ✅📞
-                        </button>
-                      : <button title="Zamów odbiór kuriera"
-                      onClick={()=>{
-                        const firma=FIRMY_DANE[imp.firma]||FIRMY_DANE["F"];
-                        const pickupAddr={
-        name:firma.nazwa,
-        street:(firma.adres||'').replace(/^ul\.\s*/i,'').replace(/^ul\s+/i,'')
-          .replace(/ą/g,'a').replace(/ć/g,'c').replace(/ę/g,'e').replace(/ł/g,'l')
-          .replace(/ń/g,'n').replace(/ó/g,'o').replace(/ś/g,'s').replace(/ź/g,'z').replace(/ż/g,'z')
-          .replace(/Ą/g,'A').replace(/Ć/g,'C').replace(/Ę/g,'E').replace(/Ł/g,'L')
-          .replace(/Ń/g,'N').replace(/Ó/g,'O').replace(/Ś/g,'S').replace(/Ź/g,'Z').replace(/Ż/g,'Z'),
-        postalCode:firma.kod,
-        city:firma.miasto,
-        countryCode:'PL',
-        email:firma.email||'',
-        phone:(firma.telefon||'+48605361191').replace(/^\+48/,'')
-      };
-                        setPickupProposals([]);setPickupDate('');setPickupTime(null);setPickupResult(null);
-                        setPickupAddress(pickupAddr);
-                        setShipmentModal({imp,services:[],createdShipmentId:sh.shipmentId,createdCarrierId:sh.carrierId||null});
-                        fetchPickupProposals(sh.shipmentId,sh.kontoId,pickupAddr);
-                      }}
-                      style={{padding:'4px 8px',fontSize:12,borderRadius:5,cursor:'pointer',background:'#1a2a3a',border:'1px solid #3a5a7a',color:'#7abfdf'}}>                      📞
-                    </button>)}
+
                     <button onClick={async()=>{
                         let emailCfg=JSON.parse(localStorage.getItem('email_produkcji_config')||'{}');
                         let to=emailCfg.emailProdukcji||'';
@@ -5491,18 +5464,7 @@ function App() {
                         color:invSent?'#7acf7a':imp.invoiceRequired?'#dfaf5a':'#8a8acf'}}>
                       {invSent?'🧾✅':imp.invoiceRequired?'🧾❗':'🧾'}
                     </button>);})()}
-                    {isRealizacja&&<button
-                      title={_batchSel.includes(imp.allegroOrderId)?"✅ Dodano do wysyłki zbiorczej":"Dodaj do wysyłki zbiorczej"}
-                      onClick={()=>{
-                        const id=imp.allegroOrderId;
-                        _setBatchSel(prev=>prev.includes(id)?prev.filter(x=>x!==id):[...prev,id]);
-                      }}
-                      style={{padding:'4px 8px',fontSize:12,borderRadius:5,cursor:'pointer',
-                        background:_batchSel.includes(imp.allegroOrderId)?'#1a1a5a':'#0a0a2a',
-                        border:`1px solid ${_batchSel.includes(imp.allegroOrderId)?'#5a5acf':'#2a2a5a'}`,
-                        color:_batchSel.includes(imp.allegroOrderId)?'#9a9aff':'#4a4a9a'}}>
-                      📦{_batchSel.includes(imp.allegroOrderId)?'✓':''}
-                    </button>}
+
                     <button onClick={function(){var _oid=imp.allegroOrderId;toggleBox(_oid,'chat');if(zamOpenBox[_oid]==='chat') return;fetch(AUTORESPONDER_URL+'/messaging/threads?kontoId='+imp.kontoId+'&orderId='+_oid+'&limit=10',{headers:{'x-api-key':AUTORESPONDER_KEY}}).then(function(r){return r.json();}).then(function(d){var threads=d.threads||[];var _login=(imp.klientLogin||'').toLowerCase();var thread=threads.find(function(t){return t.interlocutor&&t.interlocutor.login&&t.interlocutor.login.toLowerCase()===_login;});if(!thread&&threads.length===1) thread=threads[0];if(thread&&thread.id){fetch(AUTORESPONDER_URL+'/messaging/threads/'+thread.id+'/messages?kontoId='+imp.kontoId,{headers:{'x-api-key':AUTORESPONDER_KEY}}).then(function(r2){return r2.json();}).then(function(md){setZamChatHistory(function(prev){var n={};Object.keys(prev).forEach(function(k){n[k]=prev[k];});n[_oid]=md.messages||[];return n;});});}}).catch(function(e){console.warn('chat history error',e);});}} title="Napisz wiadomość do klienta"
                       style={{padding:'4px 7px',fontSize:12,borderRadius:5,cursor:'pointer',
                         background:openBox==='chat'?'#1a3a3a':'#1a2a2a',
@@ -5544,10 +5506,7 @@ function App() {
                         </span>
                       );
                     })()}
-                    <a href={`https://allegro.pl/transakcja/${imp.allegroOrderId}`} target="_blank" rel="noreferrer"
-                      style={{padding:'4px 7px',fontSize:12,borderRadius:5,background:'#1a2a3a',border:'1px solid #2a5a7a',color:'#7abfdf',textDecoration:'none',display:'inline-block'}}>
-                      🔗
-                    </a>
+
                   </div>
                 </div>
 
