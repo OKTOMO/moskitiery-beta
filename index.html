@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.93</title>
+<title>MosquitoApp v20260521.94</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='20260521.93';
+  window.__MOSK_VERSION='20260521.94';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -8413,6 +8413,142 @@ function App() {
 
             {tab==="kalk" && (
           <div style={{padding:'16px'}}>
+
+            {/* KALKULATOR MARŻOWOŚCI */}
+            {(()=>{
+              const [mCenaZakupuNetto,setMCenaZakupuNetto]=React.useState('');
+              const [mRabat,setMRabat]=React.useState('0');
+              const [mCenaSprzedazyBrutto,setMCenaSprzedazyBrutto]=React.useState('');
+              const [mVat,setMVat]=React.useState('0.23');
+              const [mWysylka,setMWysylka]=React.useState('7.5');
+              const [mKarton,setMKarton]=React.useState('0');
+              const [mProwizja,setMProwizja]=React.useState('0.11');
+              const [mAds,setMAds]=React.useState('0.1');
+              const [mRyczalt,setMRyczalt]=React.useState('0.03');
+              const [mMarzaDocelowa,setMMarzaDocelowa]=React.useState('0.15');
+              const [mTryb,setMTryb]=React.useState('analiza'); // analiza | cena
+
+              const zakupNetto=parseFloat(mCenaZakupuNetto)||0;
+              const rabat=parseFloat(mRabat)||0;
+              const vat=parseFloat(mVat)||0.23;
+              const wysylka=parseFloat(mWysylka)||0;
+              const karton=parseFloat(mKarton)||0;
+              const prowizja=parseFloat(mProwizja)||0;
+              const ads=parseFloat(mAds)||0;
+              const ryczalt=parseFloat(mRyczalt)||0;
+
+              const zakupPoRabacie=zakupNetto*(1-rabat);
+              const zakupBrutto=zakupPoRabacie*(1+vat);
+
+              // Tryb analizy - wpisujesz cenę sprzedaży, wychodzi marża
+              const sprzedazBrutto=parseFloat(mCenaSprzedazyBrutto)||0;
+              const sprzedazNetto=sprzedazBrutto/(1+vat);
+              const prowizjaZl=sprzedazBrutto*prowizja;
+              const adsZl=sprzedazBrutto*ads;
+              const ryczaltZl=sprzedazNetto*ryczalt;
+              const kosztyCal=zakupPoRabacie+wysylka+karton+prowizjaZl+adsZl+ryczaltZl;
+              const zyskNetto=sprzedazNetto-kosztyCal;
+              const marzaNetto=sprzedazNetto>0?zyskNetto/sprzedazNetto:0;
+              const roas=adsZl>0?sprzedazBrutto/adsZl:0;
+
+              // Tryb obliczania ceny - wpisujesz docelową marżę, wychodzi cena
+              const marzaDoel=parseFloat(mMarzaDocelowa)||0;
+              // sprzedazNetto2 = (zakupPoRabacie + wysylka + karton) / (1 - prowizja*(1+vat) - ads*(1+vat) - ryczalt - marzaDoel)
+              const mianownik=1-prowizja*(1+vat)-ads*(1+vat)-ryczalt-marzaDoel;
+              const sprzedazNetto2=mianownik>0?(zakupPoRabacie+wysylka+karton)/mianownik:0;
+              const sprzedazBrutto2=sprzedazNetto2*(1+vat);
+
+              const statusColor=marzaNetto>=marzaDoel?'#7acf7a':marzaNetto>=marzaDoel*0.7?'#dfaf5a':'#cf7a7a';
+              const statusText=marzaNetto>=marzaDoel?'OK ✓ '+Math.round(marzaNetto*100*100)/100+'%':'Za niska ✗ '+Math.round(marzaNetto*100*100)/100+'%';
+
+              const inp={padding:'5px 8px',fontSize:13,background:'#0a1a0a',border:'1px solid #2a4a2a',borderRadius:5,color:'#cfdfcf',width:'100%',boxSizing:'border-box'};
+
+              return (
+              <div style={{background:'#0a150a',borderRadius:8,padding:'14px',border:'1px solid #2a4a2a',marginBottom:12}}>
+                <div style={{color:'#7acf7a',fontWeight:'bold',marginBottom:12,fontSize:13}}>💰 KALKULATOR MARŻOWOŚCI</div>
+                <div style={{display:'flex',gap:8,marginBottom:10}}>
+                  <button onClick={()=>setMTryb('analiza')} style={{flex:1,padding:'6px',fontSize:12,borderRadius:5,cursor:'pointer',background:mTryb==='analiza'?'#1a4a1a':'#0a1a0a',border:'1px solid '+(mTryb==='analiza'?'#5a9a5a':'#2a4a2a'),color:mTryb==='analiza'?'#7acf7a':'#4a7a4a',fontWeight:700}}>📊 Analiza rentowności</button>
+                  <button onClick={()=>setMTryb('cena')} style={{flex:1,padding:'6px',fontSize:12,borderRadius:5,cursor:'pointer',background:mTryb==='cena'?'#1a3a4a':'#0a1a0a',border:'1px solid '+(mTryb==='cena'?'#4a7a9a':'#2a4a2a'),color:mTryb==='cena'?'#7abfdf':'#4a6a7a',fontWeight:700}}>🏷️ Oblicz cenę sprzedaży</button>
+                </div>
+
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:10}}>
+                  <div>
+                    <div style={{fontSize:11,color:'#4a7a4a',marginBottom:3}}>Cena zakupu NETTO (zł)</div>
+                    <input style={inp} type="number" value={mCenaZakupuNetto} onChange={e=>setMCenaZakupuNetto(e.target.value)} placeholder="np. 390"/>
+                  </div>
+                  <div>
+                    <div style={{fontSize:11,color:'#4a7a4a',marginBottom:3}}>Rabat dostawcy (%)</div>
+                    <input style={inp} type="number" value={mRabat} onChange={e=>setMRabat(e.target.value)} placeholder="0.35 = 35%"/>
+                  </div>
+                  {mTryb==='analiza'&&<div>
+                    <div style={{fontSize:11,color:'#4a7a4a',marginBottom:3}}>Cena sprzedaży BRUTTO (zł)</div>
+                    <input style={inp} type="number" value={mCenaSprzedazyBrutto} onChange={e=>setMCenaSprzedazyBrutto(e.target.value)} placeholder="np. 660"/>
+                  </div>}
+                  {mTryb==='cena'&&<div>
+                    <div style={{fontSize:11,color:'#5a8a9a',marginBottom:3}}>Docelowa marża NETTO (%)</div>
+                    <input style={{...inp,border:'1px solid #3a6a8a',color:'#9acfdf'}} type="number" value={mMarzaDocelowa} onChange={e=>setMMarzaDocelowa(e.target.value)} placeholder="0.15 = 15%"/>
+                  </div>}
+                  <div>
+                    <div style={{fontSize:11,color:'#4a7a4a',marginBottom:3}}>VAT sprzedaży</div>
+                    <input style={inp} type="number" value={mVat} onChange={e=>setMVat(e.target.value)} placeholder="0.23"/>
+                  </div>
+                </div>
+
+                <div style={{fontSize:11,color:'#3a6a3a',marginBottom:4,fontWeight:700}}>KOSZTY STAŁE</div>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',gap:6,marginBottom:12}}>
+                  {[['Wysyłka (zł)',mWysylka,setMWysylka],['Karton (zł)',mKarton,setMKarton],['Prowizja Allegro',mProwizja,setMProwizja],['Reklama ADS',mAds,setMAds],['Ryczałt',mRyczalt,setMRyczalt]].map(function([label,val,setter]){return(
+                    <div key={label}>
+                      <div style={{fontSize:10,color:'#3a6a3a',marginBottom:2}}>{label}</div>
+                      <input style={{...inp,fontSize:12}} type="number" value={val} onChange={function(e){setter(e.target.value);}}/>
+                    </div>
+                  );})}
+                </div>
+
+                {mTryb==='analiza'&&sprzedazBrutto>0&&zakupNetto>0&&(
+                <div style={{background:'#050f05',borderRadius:6,padding:'10px 12px',border:'1px solid #1a3a1a'}}>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:4,fontSize:12,marginBottom:8}}>
+                    {[
+                      ['Zakup po rabacie NETTO',zakupPoRabacie.toFixed(2)+' zł'],
+                      ['Zakup po rabacie BRUTTO',zakupBrutto.toFixed(2)+' zł'],
+                      ['Sprzedaż NETTO',sprzedazNetto.toFixed(2)+' zł'],
+                      ['Prowizja Allegro',prowizjaZl.toFixed(2)+' zł'],
+                      ['Koszt ADS',adsZl.toFixed(2)+' zł'],
+                      ['Ryczałt',ryczaltZl.toFixed(2)+' zł'],
+                      ['Wysyłka + karton',(wysylka+karton).toFixed(2)+' zł'],
+                      ['ROAS',roas.toFixed(1)+'x'],
+                    ].map(function([l,v]){return(<React.Fragment key={l}><span style={{color:'#4a7a4a'}}>{l}</span><span style={{color:'#9acf9a',textAlign:'right',fontFamily:'monospace'}}>{v}</span></React.Fragment>);})}
+                  </div>
+                  <div style={{borderTop:'1px solid #1a3a1a',paddingTop:8,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                    <span style={{fontSize:13,color:'#4a7a4a',fontWeight:700}}>Zysk NETTO</span>
+                    <span style={{fontSize:15,fontWeight:800,color:statusColor,fontFamily:'monospace'}}>{zyskNetto.toFixed(2)} zł</span>
+                  </div>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:4}}>
+                    <span style={{fontSize:13,color:'#4a7a4a',fontWeight:700}}>Marża NETTO</span>
+                    <span style={{fontSize:15,fontWeight:800,color:statusColor,fontFamily:'monospace'}}>{statusText}</span>
+                  </div>
+                </div>)}
+
+                {mTryb==='cena'&&zakupNetto>0&&(
+                <div style={{background:'#050a0f',borderRadius:6,padding:'10px 12px',border:'1px solid #1a2a3a'}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
+                    <span style={{fontSize:13,color:'#5a8a9a',fontWeight:700}}>Cena sprzedaży BRUTTO</span>
+                    <span style={{fontSize:20,fontWeight:800,color:'#7acfdf',fontFamily:'monospace'}}>{sprzedazBrutto2.toFixed(2)} zł</span>
+                  </div>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:4,fontSize:12}}>
+                    {[
+                      ['Zakup po rabacie',zakupPoRabacie.toFixed(2)+' zł'],
+                      ['Sprzedaż NETTO',sprzedazNetto2.toFixed(2)+' zł'],
+                      ['Prowizja',(sprzedazBrutto2*prowizja).toFixed(2)+' zł'],
+                      ['ADS',(sprzedazBrutto2*ads).toFixed(2)+' zł'],
+                      ['Ryczałt',(sprzedazNetto2*ryczalt).toFixed(2)+' zł'],
+                      ['Zysk NETTO',(sprzedazNetto2-zakupPoRabacie-wysylka-karton-sprzedazBrutto2*prowizja-sprzedazBrutto2*ads-sprzedazNetto2*ryczalt).toFixed(2)+' zł'],
+                    ].map(function([l,v]){return(<React.Fragment key={l}><span style={{color:'#3a6a7a'}}>{l}</span><span style={{color:'#7abfdf',textAlign:'right',fontFamily:'monospace'}}>{v}</span></React.Fragment>);})}
+                  </div>
+                </div>)}
+              </div>
+              );
+            })()}
+
             <div style={{background:'var(--surface)',borderRadius:8,padding:'14px',border:'1px solid var(--border)',marginBottom:'12px'}}>
               <div style={{color:'var(--accent)',fontWeight:'bold',marginBottom:'10px',fontSize:'13px'}}>KALKULATORY — LINKI DO AUKCJI</div>
               <div style={{fontSize:'12px',color:'var(--text3)',marginBottom:'10px'}}>Wklej do opisu aukcji jako tekst (Allegro blokuje aktywne linki):</div>
