@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.96</title>
+<title>MosquitoApp v20260521.97</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='20260521.96';
+  window.__MOSK_VERSION='20260521.97';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -1135,6 +1135,8 @@ function App() {
   const [mNazwa,setMNazwa]=useState('');
   const [mHistoria,setMHistoria]=useState(function(){try{return JSON.parse(localStorage.getItem('marza_historia')||'[]');}catch{return [];}});
   const [mSelectedId,setMSelectedId]=useState(null);
+  const [mSztukiZakup,setMSztukiZakup]=useState('');
+  const [mSztukiSprzedaz,setMSztukiSprzedaz]=useState('');
   const [wiadActiveThread,setWiadActiveThread]=useState(null);
   const [wiadMessages,setWiadMessages]=useState([]);
   const [wiadLoading,setWiadLoading]=useState(false);
@@ -8439,7 +8441,7 @@ function App() {
                   if(!mNazwa.trim()){alert('Wpisz nazwę produktu');return;}
                   var zakupNetto=parseFloat(mCenaZakupuNetto)||0;
                   if(!zakupNetto){alert('Wpisz cenę zakupu');return;}
-                  var wpis={id:Date.now(),nazwa:mNazwa.trim(),data:new Date().toLocaleDateString('pl-PL'),tryb:mTryb,zakupNetto:mCenaZakupuNetto,rabat:mRabat,sprzedazBrutto:mCenaSprzedazyBrutto,vat:mVat,wysylka:mWysylka,karton:mKarton,prowizja:mProwizja,ads:mAds,ryczalt:mRyczalt,marzaDocelowa:mMarzaDocelowa};
+                  var wpis={id:Date.now(),nazwa:mNazwa.trim(),data:new Date().toLocaleDateString('pl-PL'),tryb:mTryb,zakupNetto:mCenaZakupuNetto,rabat:mRabat,sprzedazBrutto:mCenaSprzedazyBrutto,vat:mVat,wysylka:mWysylka,karton:mKarton,prowizja:mProwizja,ads:mAds,ryczalt:mRyczalt,marzaDocelowa:mMarzaDocelowa,sztukiZakup:mSztukiZakup,sztukiSprzedaz:mSztukiSprzedaz};
                   var next=[wpis,...mHistoria].slice(0,50);
                   setMHistoria(next);
                   localStorage.setItem('marza_historia',JSON.stringify(next));
@@ -8458,7 +8460,7 @@ function App() {
                         setMNazwa(h.nazwa);setMTryb(h.tryb);setMCenaZakupuNetto(h.zakupNetto);setMRabat(h.rabat);
                         setMCenaSprzedazyBrutto(h.sprzedazBrutto);setMVat(h.vat);setMWysylka(h.wysylka);
                         setMKarton(h.karton);setMProwizja(h.prowizja);setMAds(h.ads);setMRyczalt(h.ryczalt);
-                        setMMarzaDocelowa(h.marzaDocelowa);setMSelectedId(h.id);
+                        setMMarzaDocelowa(h.marzaDocelowa);setMSztukiZakup(h.sztukiZakup||'');setMSztukiSprzedaz(h.sztukiSprzedaz||'');setMSelectedId(h.id);
                       }} style={{padding:'3px 8px',fontSize:11,borderRadius:4,cursor:'pointer',background:mSelectedId===h.id?'#1a4a1a':'#0a1a0a',border:'1px solid '+(mSelectedId===h.id?'#4a8a4a':'#2a4a2a'),color:mSelectedId===h.id?'#7acf7a':'#5a8a5a'}} title={h.data}>
                         {h.nazwa}
                       </button>
@@ -8485,6 +8487,12 @@ function App() {
                   <div key={label}><div style={{fontSize:10,color:'#3a6a3a',marginBottom:2}}>{label}</div><input style={{padding:'4px 6px',fontSize:12,background:'#0a1a0a',border:'1px solid #2a4a2a',borderRadius:4,color:'#cfdfcf',width:'100%'}} type="number" value={val} onChange={function(e){setter(e.target.value);}}/></div>
                 );})}
               </div>
+              {/* Sztuki */}
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:12}}>
+                <div><div style={{fontSize:11,color:'#4a7a4a',marginBottom:3}}>📦 Zakup — ilość sztuk</div><input style={{padding:'5px 8px',fontSize:13,background:'#0a1a0a',border:'1px solid #2a4a2a',borderRadius:5,color:'#cfdfcf',width:'100%'}} type="number" value={mSztukiZakup} onChange={function(e){setMSztukiZakup(e.target.value);}} placeholder="np. 100"/></div>
+                <div><div style={{fontSize:11,color:'#4a7a4a',marginBottom:3}}>🛒 Sprzedaż — ilość sztuk</div><input style={{padding:'5px 8px',fontSize:13,background:'#0a1a0a',border:'1px solid #2a4a2a',borderRadius:5,color:'#cfdfcf',width:'100%'}} type="number" value={mSztukiSprzedaz} onChange={function(e){setMSztukiSprzedaz(e.target.value);}} placeholder="np. 80"/></div>
+              </div>
+
               {(()=>{
                 var zakupNetto=parseFloat(mCenaZakupuNetto)||0;
                 var rabat=parseFloat(mRabat)||0;
@@ -8530,6 +8538,70 @@ function App() {
                     </div>
                   </div>);
                 }
+              })()}
+
+              {/* Zestawienie zbiorcze */}
+              {(()=>{
+                var zakupNetto=parseFloat(mCenaZakupuNetto)||0;
+                if(!zakupNetto) return null;
+                var sztZakup=parseFloat(mSztukiZakup)||0;
+                var sztSprzedaz=parseFloat(mSztukiSprzedaz)||0;
+                if(!sztZakup&&!sztSprzedaz) return null;
+                var rabat=parseFloat(mRabat)||0;
+                var vat=parseFloat(mVat)||0.23;
+                var wysylka=parseFloat(mWysylka)||0;
+                var karton=parseFloat(mKarton)||0;
+                var prowizja=parseFloat(mProwizja)||0;
+                var ads=parseFloat(mAds)||0;
+                var ryczalt=parseFloat(mRyczalt)||0;
+                // Koszty są BRUTTO — przelicz na netto
+                var wysylkaN=wysylka/(1+vat);
+                var kartonN=karton/(1+vat);
+                var zakupPoRabacie=zakupNetto*(1-rabat);
+                var marzaDoel=parseFloat(mMarzaDocelowa)||0;
+
+                var sprzedazBrutto=0;
+                if(mTryb==='analiza'){
+                  sprzedazBrutto=parseFloat(mCenaSprzedazyBrutto)||0;
+                } else {
+                  var mian=1-prowizja*(1+vat)-ads*(1+vat)-ryczalt-marzaDoel;
+                  if(mian>0) sprzedazBrutto=((zakupPoRabacie+wysylkaN+kartonN)/mian)*(1+vat);
+                }
+                if(!sprzedazBrutto) return null;
+
+                var sprzNetto=sprzedazBrutto/(1+vat);
+                var prowZl=sprzedazBrutto*prowizja;
+                var adsZl=sprzedazBrutto*ads;
+                var ryczZl=sprzNetto*ryczalt;
+                var zyskJednostkowy=sprzNetto-zakupPoRabacie-wysylkaN-kartonN-prowZl-adsZl-ryczZl;
+
+                var kosztZakupuLaczny=zakupPoRabacie*(1+vat)*sztZakup;
+                var przychodBrutto=sprzedazBrutto*sztSprzedaz;
+                var zyskLacznyNetto=zyskJednostkowy*sztSprzedaz;
+                var zwrotInwestycji=kosztZakupuLaczny>0?(zyskLacznyNetto/kosztZakupuLaczny*100):0;
+
+                return(
+                <div style={{background:'#0a0f1a',borderRadius:6,padding:'12px',border:'1px solid #1a2a4a',marginTop:10}}>
+                  <div style={{fontSize:12,color:'#5a8a9a',fontWeight:700,marginBottom:8}}>📊 ZESTAWIENIE ZBIORCZE</div>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6,fontSize:12}}>
+                    {sztZakup>0&&<React.Fragment>
+                      <span style={{color:'#3a6a7a'}}>Koszt zakupu łącznie ({sztZakup} szt.)</span>
+                      <span style={{color:'#cf9a7a',textAlign:'right',fontFamily:'monospace',fontWeight:700}}>{kosztZakupuLaczny.toFixed(2)} zł</span>
+                    </React.Fragment>}
+                    {sztSprzedaz>0&&<React.Fragment>
+                      <span style={{color:'#3a6a7a'}}>Przychód BRUTTO ({sztSprzedaz} szt.)</span>
+                      <span style={{color:'#7abfdf',textAlign:'right',fontFamily:'monospace',fontWeight:700}}>{przychodBrutto.toFixed(2)} zł</span>
+                    </React.Fragment>}
+                    {sztSprzedaz>0&&<React.Fragment>
+                      <span style={{color:'#3a6a7a'}}>Zysk NETTO łącznie ({sztSprzedaz} szt.)</span>
+                      <span style={{color:zyskLacznyNetto>=0?'#7acf7a':'#cf7a7a',textAlign:'right',fontFamily:'monospace',fontWeight:800,fontSize:14}}>{zyskLacznyNetto.toFixed(2)} zł</span>
+                    </React.Fragment>}
+                    {sztZakup>0&&sztSprzedaz>0&&<React.Fragment>
+                      <span style={{color:'#3a6a7a'}}>Zwrot z inwestycji</span>
+                      <span style={{color:zwrotInwestycji>=0?'#7acf7a':'#cf7a7a',textAlign:'right',fontFamily:'monospace',fontWeight:700}}>{zwrotInwestycji.toFixed(1)}%</span>
+                    </React.Fragment>}
+                  </div>
+                </div>);
               })()}
             </div>
 
