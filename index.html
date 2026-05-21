@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.92</title>
+<title>MosquitoApp v20260521.93</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='20260521.92';
+  window.__MOSK_VERSION='20260521.93';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -5476,7 +5476,7 @@ function App() {
                       if(!_linkedOrd) return null;
                       return (
                         <span style={{display:'inline-flex',gap:4,alignItems:'center'}}>
-                          <span style={{fontSize:11,color:'#cfaf5a',fontFamily:'monospace',padding:'4px 6px',background:'#1a1500',border:'1px solid #4a3a00',borderRadius:5}} title={'Zlecenie: '+_linkedOrd.numerZlecenia}>
+                          <span onClick={function(){drukujPDF(_linkedOrd);}} style={{fontSize:11,color:'#cfaf5a',fontFamily:'monospace',padding:'4px 6px',background:'#1a1500',border:'1px solid #4a3a00',borderRadius:5,cursor:'pointer'}} title={'Kliknij aby otworzyć PDF: '+_linkedOrd.numerZlecenia}>
                             📋 {_linkedOrd.numerZlecenia}
                           </span>
                           <button title="Edytuj zlecenie" style={{padding:'4px 7px',fontSize:12,borderRadius:5,cursor:'pointer',background:'#1a2a1a',border:'1px solid #3a5a2a',color:'#9fcf9f'}}
