@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.99</title>
+<title>MosquitoApp v20260521.100</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='20260521.99';
+  window.__MOSK_VERSION='20260521.100';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -1145,6 +1145,7 @@ function App() {
   const [edWyniki,setEdWyniki]=useState([]);
   const [edSaving,setEdSaving]=useState(false);
   const [edSaveLog,setEdSaveLog]=useState([]);
+  const [edSelected,setEdSelected]=useState(new Set());
   const [wiadActiveThread,setWiadActiveThread]=useState(null);
   const [wiadMessages,setWiadMessages]=useState([]);
   const [wiadLoading,setWiadLoading]=useState(false);
@@ -8635,7 +8636,25 @@ function App() {
                 </button>
               </div>
 
-              {edOferty.length>0&&<div style={{fontSize:11,color:'#5a5a7a',marginBottom:10}}>Pobrano {edOferty.length} ofert</div>}
+              {edOferty.length>0&&(
+              <div style={{marginBottom:10}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+                  <div style={{fontSize:11,color:'#5a5a7a'}}>Pobrano {edOferty.length} ofert</div>
+                  <div style={{display:'flex',gap:6}}>
+                    <button onClick={function(){setEdSelected(new Set(edOferty.map(function(o){return o.id;})));}} style={{padding:'2px 8px',fontSize:11,background:'#1a1a3a',border:'1px solid #3a3a6a',borderRadius:4,color:'#9a9adf',cursor:'pointer'}}>Zaznacz wszystkie</button>
+                    <button onClick={function(){setEdSelected(new Set());}} style={{padding:'2px 8px',fontSize:11,background:'#1a0a0a',border:'1px solid #4a2a2a',borderRadius:4,color:'#9a5a5a',cursor:'pointer'}}>Odznacz</button>
+                  </div>
+                </div>
+                <div style={{maxHeight:200,overflowY:'auto',background:'#080814',borderRadius:5,border:'1px solid #2a2a4a',padding:'4px'}}>
+                  {edOferty.map(function(o){return(
+                    <div key={o.id} onClick={function(){setEdSelected(function(prev){var n=new Set(prev);n.has(o.id)?n.delete(o.id):n.add(o.id);return n;});}} style={{display:'flex',alignItems:'center',gap:6,padding:'4px 6px',cursor:'pointer',borderRadius:3,background:edSelected.has(o.id)?'#1a1a3a':'transparent'}}>
+                      <input type="checkbox" checked={edSelected.has(o.id)} onChange={function(){}} style={{cursor:'pointer'}}/>
+                      <span style={{fontSize:11,color:edSelected.has(o.id)?'#9a9adf':'#6a6a8a'}}>{o.name||o.id}</span>
+                    </div>
+                  );})}
+                </div>
+                <div style={{fontSize:10,color:'#4a4a6a',marginTop:4}}>Zaznaczono: {edSelected.size} / {edOferty.length}</div>
+              </div>)}
 
               {/* Stary i nowy tekst */}
               <div style={{marginBottom:8}}>
@@ -8655,7 +8674,8 @@ function App() {
               <button onClick={function(){
                 if(!edStary.trim()){alert('Wpisz fragment do znalezienia');return;}
                 if(edOferty.length===0){alert('Najpierw pobierz oferty');return;}
-                var wyniki=edOferty.filter(function(o){
+                var pula=edSelected.size>0?edOferty.filter(function(o){return edSelected.has(o.id);}):edOferty;
+                var wyniki=pula.filter(function(o){
                   var opis=(o.description&&o.description.sections?
                     o.description.sections.map(function(s){return s.items?s.items.map(function(i){return i.content||'';}).join(' '):'' ;}).join(' ')
                     :o.description||'');
