@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.118</title>
+<title>MosquitoApp v20260521.119</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='v20260521.118';
+  window.__MOSK_VERSION='v20260521.119';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -1990,10 +1990,37 @@ function decodeHtmlEntities(str){
                   539:{poprzeczka:false,samo:true},589:{poprzeczka:true,samo:true}};
       return CENY[c]||null;
     }
-    // Wykryj czy to moskitiera drzwiowa z offerNames lub buyerMsg
+    // Wykryj typ każdej pozycji Allegro osobno (okno vs drzwi)
+    const isDrzwiNazwa=(n)=>{const l=(n||'').toLowerCase();return l.includes('drzwi')||l.includes('taras')||l.includes('balkon');};
     const isDrzwiowa=(imp.offerNames||'').toLowerCase().includes('drzwi')||(imp.buyerMsg||'').toLowerCase().includes('drzwi');
-    if(isDrzwiowa && imp.pozycje && imp.pozycje.length>0){
-      // Przypisz opcje do parsedPozycje na podstawie ceny
+    const hasMixPozycje=imp.pozycje&&imp.pozycje.length>1&&imp.pozycje.some(p=>isDrzwiNazwa(p.nazwa))&&imp.pozycje.some(p=>!isDrzwiNazwa(p.nazwa));
+    if(hasMixPozycje && imp.pozycje){
+      // Koszyk mix — każda pozycja Allegro to osobny produkt (okno lub drzwi)
+      // Buduj parsedPozycje z podziałem na typy
+      let mixPoz=[];
+      imp.pozycje.forEach(p=>{
+        const pIsDrzwi=isDrzwiNazwa(p.nazwa);
+        const ilosc=parseInt(p.ilosc)||1;
+        const cenaJedn=p.cena&&p.ilosc?p.cena/p.ilosc:p.cena||0;
+        const opcje=pIsDrzwi?dedukujOpcjeDrzwi(cenaJedn):null;
+        for(let i=0;i<ilosc;i++){
+          if(pIsDrzwi){
+            const poz=pustaPozDrzwi();
+            if(detectedKolorRamki) poz.kolorRamki=detectedKolorRamki;
+            if(detectedKolorSiatki) poz.kolorSiatki=detectedKolorSiatki;
+            if(opcje){poz.poprzeczka=opcje.poprzeczka;poz.samodomykajacyL=opcje.samo?1:0;poz.samodomykajacyP=0;}
+            mixPoz.push(poz);
+          } else {
+            const poz=pustaPoz();
+            if(detectedKolorRamki) poz.kolorRamki=detectedKolorRamki;
+            if(detectedKolorSiatki) poz.kolorSiatki=detectedKolorSiatki;
+            mixPoz.push(poz);
+          }
+        }
+      });
+      parsedPozycje=mixPoz;
+    } else if(isDrzwiowa && imp.pozycje && imp.pozycje.length>0){
+      // Całe zamówienie drzwiowe
       imp.pozycje.forEach(p=>{
         const cenaJedn=p.cena&&p.ilosc?p.cena/p.ilosc:p.cena||0;
         const opcje=dedukujOpcjeDrzwi(cenaJedn);
@@ -2060,8 +2087,10 @@ function decodeHtmlEntities(str){
     }
     setWiadomosc(imp.buyerMsg||"");  // zawsze czyść przy nowym imporcie
     setWiadomoscDrzwi('');
+    const _hasMixImport=imp.pozycje&&imp.pozycje.length>1&&imp.pozycje.some(p=>{const l=(p.nazwa||'').toLowerCase();return l.includes('drzwi')||l.includes('taras')||l.includes('balkon');})&&imp.pozycje.some(p=>{const l=(p.nazwa||'').toLowerCase();return !l.includes('drzwi')&&!l.includes('taras')&&!l.includes('balkon');});
     setImportModal({
       imp,
+      isMix:_hasMixImport,
       mode:kalNum?"kal":(parsedPozycje?"parse":"manual"),
       kalNum,
       kalLoading:!!kalNum,
