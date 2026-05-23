@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.132</title>
+<title>MosquitoApp v20260521.133</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='v20260521.132';
+  window.__MOSK_VERSION='v20260521.133';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -10472,17 +10472,18 @@ setFvForm(f=>({...f,nabywcaNazwa:_keepName,nabywcaAdres:d.ulica||f.nabywcaAdres,
                         try{
                           const imp=shipmentModal.imp;
                           const firma2=FIRMY_DANE[imp.firma]||FIRMY_DANE['F'];
+                          const svc2=(shipmentModal.services||[]).find(s=>s.id===shipmentServiceId)||(shipmentModal.services||[])[0]||{};
                           const epPkg=ep.size==='custom'
-                            ?{type:'PACKAGE',weight:{value:ep.customSize?.weight||5,unit:'KILOGRAMS'},length:{value:ep.customSize?.length||64,unit:'CENTIMETER'},width:{value:ep.customSize?.width||38,unit:'CENTIMETER'},height:{value:ep.customSize?.height||15,unit:'CENTIMETER'},textOnLabel:ep.description||''}
-                            :{type:'PACKAGE',weight:{value:shipmentSize==='A'?5:shipmentSize==='B'?10:15,unit:'KILOGRAMS'},length:{value:64,unit:'CENTIMETER'},width:{value:38,unit:'CENTIMETER'},height:{value:15,unit:'CENTIMETER'},textOnLabel:ep.description||''};
+                            ?{type:'PACKAGE',weight:{value:parseFloat(ep.customSize?.weight)||5,unit:'KILOGRAMS'},length:{value:parseFloat(ep.customSize?.length)||64,unit:'CENTIMETER'},width:{value:parseFloat(ep.customSize?.width)||38,unit:'CENTIMETER'},height:{value:parseFloat(ep.customSize?.height)||15,unit:'CENTIMETER'},textOnLabel:ep.description||''}
+                            :{type:'PACKAGE',weight:{value:5,unit:'KILOGRAMS'},length:{value:64,unit:'CENTIMETER'},width:{value:38,unit:'CENTIMETER'},height:{value:15,unit:'CENTIMETER'},textOnLabel:ep.description||''};
                           const body={
                             commandId:crypto.randomUUID(),
                             input:{
                               orders:[{orderId:imp.allegroOrderId}],
-                              deliveryMethodId:shipmentServiceId,
-                              ...(shipmentModal.service?.credentialsId?{credentialsId:shipmentModal.service.credentialsId}:{}),
+                              deliveryMethodId:svc2.id||shipmentServiceId,
+                              ...(svc2.credentialsId?{credentialsId:svc2.credentialsId}:{}),
                               sender:{name:firma2.nazwa,street:firma2.adres,postalCode:firma2.kod,city:firma2.miasto,countryCode:'PL',phone:'+48605361191',email:firma2.email},
-                              receiver:{name:imp.klientImie||'',street:imp.klientUlica||'',postalCode:imp.klientKod||'',city:imp.klientMiasto||'',countryCode:'PL',phone:imp.telefon||'',email:imp.email||''},
+                              receiver:{name:imp.klientImie||'',street:(imp.klientUlica||'').trim(),postalCode:imp.klientKod||'',city:imp.klientMiasto||'',countryCode:'PL',phone:imp.telefon||'',email:imp.email||''},
                               packages:[epPkg]
                             }
                           };
