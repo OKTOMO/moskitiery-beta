@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.115</title>
+<title>MosquitoApp v20260521.116</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='v20260521.115';
+  window.__MOSK_VERSION='v20260521.116';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -1289,6 +1289,15 @@ function App() {
 
   function escXml(str){
     return String(str||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&apos;");
+}
+function decodeHtmlEntities(str){
+  if(!str) return '';
+  return String(str)
+    .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')
+    .replace(/&quot;/g,'"').replace(/&apos;/g,"'")
+    .replace(/&times;/g,'×').replace(/&ndash;/g,'–').replace(/&mdash;/g,'—')
+    .replace(/&#(\d+);/g,function(_,n){return String.fromCharCode(Number(n));})
+    .replace(/&#x([0-9a-f]+);/gi,function(_,h){return String.fromCharCode(parseInt(h,16));});
   }
 
   function drukujFakture(fv){
@@ -4035,7 +4044,7 @@ function App() {
         let pozDrzwi=existingDrzwi;
         // Parsuj okna tylko gdy jest wiadomość główna
         if(wiadomosc.trim()){
-          const r=await parseAI(wiadomosc,adres,"okno",_offerNames,aiRules);
+          const r=await parseAI(decodeHtmlEntities(wiadomosc),decodeHtmlEntities(adres),"okno",_offerNames,aiRules);
           pozOkna=mapPozycje(r.pozycje,false,true).filter(p=>!p.isDrzwi);
           setForm(f=>({...f,
             klientImie:r.klientImie||f.klientImie,klientUlica:r.klientUlica||f.klientUlica,
@@ -4046,7 +4055,7 @@ function App() {
         // Parsuj drzwi tylko gdy jest osobna wiadomość o drzwiach
         if(wiadomoscDrzwi.trim()){
           setParsingDrzwi(true);
-          try{const rd=await parseAI(wiadomoscDrzwi.trim(),adres,"drzwi",_offerNames,aiRules);pozDrzwi=mapPozycje(rd.pozycje,true,false).filter(p=>p.isDrzwi);}catch(e2){}
+          try{const rd=await parseAI(decodeHtmlEntities(wiadomoscDrzwi.trim()),decodeHtmlEntities(adres),"drzwi",_offerNames,aiRules);pozDrzwi=mapPozycje(rd.pozycje,true,false).filter(p=>p.isDrzwi);}catch(e2){}
           setParsingDrzwi(false);
         }
         const finalPoz=[...pozOkna,...pozDrzwi];
@@ -4056,7 +4065,7 @@ function App() {
         }));
       } else {
         const isDrzwiMode=parseTyp==="drzwi";
-        const r=await parseAI(wiadomosc,adres,isDrzwiMode?"drzwi":"okno",_offerNames,aiRules);
+        const r=await parseAI(decodeHtmlEntities(wiadomosc),decodeHtmlEntities(adres),isDrzwiMode?"drzwi":"okno",_offerNames,aiRules);
         const pozycje=mapPozycje(r.pozycje,isDrzwiMode,!isDrzwiMode);
         setForm(f=>({...f,
           klientImie:r.klientImie||f.klientImie,klientUlica:r.klientUlica||f.klientUlica,
