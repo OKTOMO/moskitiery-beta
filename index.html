@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.133</title>
+<title>MosquitoApp v20260521.135</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='v20260521.133';
+  window.__MOSK_VERSION='v20260521.135';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -3621,15 +3621,20 @@ function decodeHtmlEntities(str){
     const isDHL=service?.carrierId?.toLowerCase().includes('dhl')||service?.name?.toLowerCase().includes('dhl');
     const clampedAutoPkgs=isDHL?autoPkgs.map(p=>({...p,length:{value:Math.min(p.length?.value||130,119),unit:'CENTIMETER'}})):autoPkgs;
     const packages=(clampedAutoPkgs.length>0&&shipmentSize!=='custom')?clampedAutoPkgs:[manualPkg];
+    // Dodaj extraParcels do tej samej przesyłki
+    const extraPkgs=extraParcels.map(ep=>ep.size==='custom'
+      ?{type:'PACKAGE',weight:{value:parseFloat(ep.customSize?.weight)||5,unit:'KILOGRAMS'},length:{value:parseFloat(ep.customSize?.length)||64,unit:'CENTIMETER'},width:{value:parseFloat(ep.customSize?.width)||38,unit:'CENTIMETER'},height:{value:parseFloat(ep.customSize?.height)||15,unit:'CENTIMETER'},textOnLabel:ep.description||''}
+      :{type:'PACKAGE',weight:{value:5,unit:'KILOGRAMS'},length:{value:64,unit:'CENTIMETER'},width:{value:38,unit:'CENTIMETER'},height:{value:15,unit:'CENTIMETER'},textOnLabel:ep.description||''});
+    const allPackages=[...packages,...extraPkgs];
     // DPD AD i podobne usługi mają limit 1 paczki — scal wszystkie w jedną
     const isDPD_AD = service?.name?.includes('AD') || service?.carrierId?.includes('DPD');
-    const finalPackages = (packages.length > 1 && isDPD_AD)
+    const finalPackages = (allPackages.length > 1 && isDPD_AD)
       ? [{
-          ...packages[0],
-          weight: {value: packages.reduce((s,p)=>s+(p.weight?.value||0),0), unit:"KILOGRAMS"},
-          textOnLabel: packages.map(p=>p.textOnLabel||'').filter(Boolean).join(' ')
+          ...allPackages[0],
+          weight: {value: allPackages.reduce((s,p)=>s+(p.weight?.value||0),0), unit:"KILOGRAMS"},
+          textOnLabel: allPackages.map(p=>p.textOnLabel||'').filter(Boolean).join(' ')
         }]
-      : packages;
+      : allPackages;
     if(!service){setShipmentError("❌ Brak dostępnych usług dostawy dla tego zamówienia");setShipmentCreating(false);return;}
     try{
       // Krok 1: utwórz przesyłkę
@@ -10462,12 +10467,12 @@ setFvForm(f=>({...f,nabywcaNazwa:_keepName,nabywcaAdres:d.ulica||f.nabywcaAdres,
             {/* ── Sekcja dodatkowych paczek ── */}
             {shipmentModal.createdShipmentId&&(
               <div style={{marginTop:12,padding:12,background:'#0a0f1a',border:'1px solid #2a3a5a',borderRadius:8}}>
-                <div style={{fontWeight:700,fontSize:13,color:'#9fbfdf',marginBottom:8}}>📦 Dodatkowe paczki ({extraParcels.length})</div>
+                <div style={{fontWeight:700,fontSize:13,color:'#9fbfdf',marginBottom:8}}>📦 Dodatkowe paczki ({extraParcels.length}) — zostaną dodane do tej samej przesyłki</div>
                 {extraParcels.map((ep,ei)=>(
                   <div key={ei} style={{background:'#0c1a0c',border:'1px solid #2a5a2a',borderRadius:6,padding:8,marginBottom:6,fontSize:12}}>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                       <span style={{color:'#9aef9a',fontWeight:700}}>Paczka {ei+2}: {ep.shipmentId?'✅ Gotowa':'⏳ Niezapisana'}</span>
-                      {!ep.shipmentId&&<button onClick={async()=>{
+                      {false&&<button onClick={async()=>{
                         // Utwórz dodatkowy shipment
                         try{
                           const imp=shipmentModal.imp;
