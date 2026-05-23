@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.125</title>
+<title>MosquitoApp v20260521.126</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='v20260521.125';
+  window.__MOSK_VERSION='v20260521.126';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -10478,7 +10478,7 @@ setFvForm(f=>({...f,nabywcaNazwa:_keepName,nabywcaAdres:d.ulica||f.nabywcaAdres,
                             parcels:[ep.size==='custom'?{weight:ep.customSize.weight,width:ep.customSize.width,height:ep.customSize.height,length:ep.customSize.length}:{size:ep.size}],
                             shipmentDescription:ep.description||shipmentDescription
                           };
-                          const r=await fetch(AUTORESPONDER_URL+'/shipment/create',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':AUTORESPONDER_KEY},body:JSON.stringify(body)});
+                          const r=await fetch(AUTORESPONDER_URL+'/shipment/create?kontoId='+(imp.kontoId||''),{method:'POST',headers:{'Content-Type':'application/json','x-api-key':AUTORESPONDER_KEY},body:JSON.stringify(body)});
                           const d=await r.json();
                           if(!d.ok) throw new Error(d.error||JSON.stringify(d));
                           const newId=d.data?.shipmentId||d.shipmentId;
