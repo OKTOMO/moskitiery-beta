@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.116</title>
+<title>MosquitoApp v20260521.117</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='v20260521.116';
+  window.__MOSK_VERSION='v20260521.117';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -5411,7 +5411,22 @@ function decodeHtmlEntities(str){
                     {(()=>{const _ord=orders.find(o=>o.allegroOrderId===imp.allegroOrderId);const _nr=_ord?.numerZlecenia||imp.numerZlecenia;return _nr?<div style={{fontSize:10,color:'#9a9adf',marginTop:1,display:'flex',alignItems:'center',gap:5}}>📋 {_nr}{_ord&&<button onClick={function(e){e.stopPropagation();drukujPDF(_ord);}} style={{padding:'1px 6px',fontSize:10,background:'#1a2a4a',border:'1px solid #2a4a8a',borderRadius:3,color:'#7a9adf',cursor:'pointer',fontWeight:700}}>PDF</button>}</div>:null;})()}
                   </div>
                   <div style={{flex:2,minWidth:130}}>
-                    <div style={{fontSize:12,color:'#5a8a9a',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{imp.offerNames||'—'}</div>
+                    <div style={{fontSize:12,color:'#5a8a9a',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',display:'flex',alignItems:'center',gap:6}}>
+                      <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{imp.offerNames||'—'}</span>
+                      {(function(){
+                        const ol=(imp.offerNames||'').toLowerCase();
+                        const hasDrzwi=ol.includes('drzwi')||ol.includes('taras')||ol.includes('balkon');
+                        const hasOkno=ol.includes('okno')||ol.includes('ramk')||ol.includes('siatk')||ol.includes('moskitier');
+                        const msgLower=(imp.buyerMsg||'').toLowerCase();
+                        const msgHasDrzwi=msgLower.includes('drzwi')||msgLower.includes('taras')||msgLower.includes('balkon');
+                        const msgHasOkno=msgLower.includes('okno')||msgLower.includes('ramk')||msgLower.includes('moskitier');
+                        const mixOffer=hasDrzwi&&hasOkno;
+                        const mixMsg=!mixOffer&&msgHasDrzwi&&msgHasOkno;
+                        if(mixOffer||mixMsg) return <span style={{fontSize:10,color:'#dfcf5a',background:'#1a1a0a',border:'1px solid #5a5a1a',borderRadius:4,padding:'1px 5px',whiteSpace:'nowrap',flexShrink:0}}>🪟+🚪 mix</span>;
+                        if(hasDrzwi||msgHasDrzwi) return <span style={{fontSize:10,color:'#cf9a5a',background:'#1a0f0a',border:'1px solid #5a3a1a',borderRadius:4,padding:'1px 5px',whiteSpace:'nowrap',flexShrink:0}}>🚪 drzwi</span>;
+                        return null;
+                      })()}
+                    </div>
                     {imp.buyerMsg&&<div
                       onClick={()=>toggleBox(imp.allegroOrderId,'msg')}
                       style={{fontSize:10,color:'#cfaf6f',fontStyle:'italic',cursor:'pointer',
