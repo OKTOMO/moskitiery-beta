@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.117</title>
+<title>MosquitoApp v20260521.118</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='v20260521.117';
+  window.__MOSK_VERSION='v20260521.118';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -2286,6 +2286,7 @@ function decodeHtmlEntities(str){
     const {imp,pozycje,kalData}=modal;
     if(!imp){console.error('doImportOrder: imp is undefined',modal);return;}
     const forceDrzwi=modal._forceDrzwi||false;
+    const forceMix=modal.isMix||false;
     console.log("doImportOrder imp:", JSON.stringify({klientImie:imp.klientImie,klientUlica:imp.klientUlica,klientKod:imp.klientKod,klientMiasto:imp.klientMiasto,telefon:imp.telefon}));
     // Kalkulator zapisuje wymiary w mm. Aplikacja zleceń oczekuje cm — konwertuj na wejściu.
     const mm2cm = v => {
@@ -2325,6 +2326,8 @@ function decodeHtmlEntities(str){
     setSaved(false);
     setImportModal(null);
     setAllegroImportShow(false);
+    setWiadomosc(imp.buyerMsg||"");
+    if(forceMix){setWithDrzwi(true);}else{setWithDrzwi(false);}
     setTab("nowe");
     // Zmień status na W REALIZACJI — lokalnie od razu, API w tle
     if(imp.allegroOrderId){
@@ -6972,14 +6975,18 @@ function decodeHtmlEntities(str){
                   })()}
                   <div style={{marginTop:16,display:"flex",gap:8,justifyContent:"flex-end",alignItems:"center",flexWrap:"wrap"}}>
                     <label style={{display:"flex",alignItems:"center",gap:6,cursor:"pointer",fontSize:13,color:"#7a9abf",userSelect:"none",marginRight:"auto"}}>
-                      <input type="checkbox" checked={importModal.isDrzwi||false} onChange={e=>setIM({isDrzwi:e.target.checked})} style={{width:15,height:15,cursor:"pointer"}}/>
+                      <input type="checkbox" checked={importModal.isDrzwi||false} onChange={e=>setIM({isDrzwi:e.target.checked,isMix:false})} style={{width:15,height:15,cursor:"pointer"}}/>
                       🚪 Drzwi
+                    </label>
+                    <label style={{display:'flex',alignItems:'center',gap:6,cursor:'pointer',fontSize:13,color:importModal.isMix?'#dfcf5a':'#6a7a5a'}}>
+                      <input type="checkbox" checked={importModal.isMix||false} onChange={e=>setIM({isMix:e.target.checked,isDrzwi:false})} style={{width:15,height:15,cursor:"pointer"}}/>
+                      🪟+🚪 Mix (okna + drzwi)
                     </label>
                     <button onClick={()=>setImportModal(null)}
                       style={{padding:"8px 18px",borderRadius:6,border:"1px solid #2a3a2a",background:"none",color:"#5a7a5a",cursor:"pointer"}}>
                       Anuluj
                     </button>
-                    <button onClick={()=>doImportOrder({...importModal,_forceDrzwi:importModal.isDrzwi})}
+                    <button onClick={()=>doImportOrder({...importModal,_forceDrzwi:importModal.isDrzwi,isMix:importModal.isMix})}
                       disabled={mode==="kal"&&!kalData}
                       style={{padding:"8px 22px",borderRadius:6,border:"1px solid #4a9a5a",
                         background:(mode==="kal"&&!kalData)?"#1a2a1a":"#1a5a2a",
