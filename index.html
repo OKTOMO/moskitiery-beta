@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.137</title>
+<title>MosquitoApp v20260521.138</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='v20260521.137';
+  window.__MOSK_VERSION='v20260521.138';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -3626,15 +3626,8 @@ function decodeHtmlEntities(str){
       ?{type:'PACKAGE',weight:{value:parseFloat(ep.customSize?.weight)||5,unit:'KILOGRAMS'},length:{value:parseFloat(ep.customSize?.length)||64,unit:'CENTIMETER'},width:{value:parseFloat(ep.customSize?.width)||38,unit:'CENTIMETER'},height:{value:parseFloat(ep.customSize?.height)||15,unit:'CENTIMETER'},textOnLabel:ep.description||''}
       :{type:'PACKAGE',weight:{value:5,unit:'KILOGRAMS'},length:{value:64,unit:'CENTIMETER'},width:{value:38,unit:'CENTIMETER'},height:{value:15,unit:'CENTIMETER'},textOnLabel:ep.description||''});
     const allPackages=[...packages,...extraPkgs];
-    // DPD AD i podobne usługi mają limit 1 paczki — scal wszystkie w jedną
-    const isDPD_AD = service?.name?.includes('AD') || service?.carrierId?.includes('DPD');
-    const finalPackages = (allPackages.length > 1 && isDPD_AD)
-      ? [{
-          ...allPackages[0],
-          weight: {value: allPackages.reduce((s,p)=>s+(p.weight?.value||0),0), unit:"KILOGRAMS"},
-          textOnLabel: allPackages.map(p=>p.textOnLabel||'').filter(Boolean).join(' ')
-        }]
-      : allPackages;
+    // Allegro Kurier obsługuje multi-package — nie scalaj
+    const finalPackages = allPackages;
     if(!service){setShipmentError("❌ Brak dostępnych usług dostawy dla tego zamówienia");setShipmentCreating(false);return;}
     try{
       // Krok 1: utwórz przesyłkę
