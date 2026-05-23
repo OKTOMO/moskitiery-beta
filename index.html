@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.131</title>
+<title>MosquitoApp v20260521.132</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='v20260521.131';
+  window.__MOSK_VERSION='v20260521.132';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -10471,12 +10471,20 @@ setFvForm(f=>({...f,nabywcaNazwa:_keepName,nabywcaAdres:d.ulica||f.nabywcaAdres,
                         // Utwórz dodatkowy shipment
                         try{
                           const imp=shipmentModal.imp;
+                          const firma2=FIRMY_DANE[imp.firma]||FIRMY_DANE['F'];
+                          const epPkg=ep.size==='custom'
+                            ?{type:'PACKAGE',weight:{value:ep.customSize?.weight||5,unit:'KILOGRAMS'},length:{value:ep.customSize?.length||64,unit:'CENTIMETER'},width:{value:ep.customSize?.width||38,unit:'CENTIMETER'},height:{value:ep.customSize?.height||15,unit:'CENTIMETER'},textOnLabel:ep.description||''}
+                            :{type:'PACKAGE',weight:{value:shipmentSize==='A'?5:shipmentSize==='B'?10:15,unit:'KILOGRAMS'},length:{value:64,unit:'CENTIMETER'},width:{value:38,unit:'CENTIMETER'},height:{value:15,unit:'CENTIMETER'},textOnLabel:ep.description||''};
                           const body={
-                            allegroOrderId:imp.allegroOrderId,kontoId:imp.kontoId,
-                            recipient:{name:imp.klientImie,street:imp.klientUlica,city:imp.klientMiasto,zipCode:imp.klientKod||'',countryCode:'PL',phone:imp.telefon||'',email:imp.email||''},
-                            serviceId:shipmentServiceId,
-                            parcels:[ep.size==='custom'?{weight:ep.customSize.weight,width:ep.customSize.width,height:ep.customSize.height,length:ep.customSize.length}:{size:ep.size}],
-                            shipmentDescription:ep.description||shipmentDescription
+                            commandId:crypto.randomUUID(),
+                            input:{
+                              orders:[{orderId:imp.allegroOrderId}],
+                              deliveryMethodId:shipmentServiceId,
+                              ...(shipmentModal.service?.credentialsId?{credentialsId:shipmentModal.service.credentialsId}:{}),
+                              sender:{name:firma2.nazwa,street:firma2.adres,postalCode:firma2.kod,city:firma2.miasto,countryCode:'PL',phone:'+48605361191',email:firma2.email},
+                              receiver:{name:imp.klientImie||'',street:imp.klientUlica||'',postalCode:imp.klientKod||'',city:imp.klientMiasto||'',countryCode:'PL',phone:imp.telefon||'',email:imp.email||''},
+                              packages:[epPkg]
+                            }
                           };
                           const r=await fetch(AUTORESPONDER_URL+'/shipment/create?kontoId='+(imp.kontoId||''),{method:'POST',headers:{'Content-Type':'application/json','x-api-key':AUTORESPONDER_KEY},body:JSON.stringify(body)});
                           const d=await r.json();
