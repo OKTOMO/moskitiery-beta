@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.121</title>
+<title>MosquitoApp v20260521.123</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='v20260521.121';
+  window.__MOSK_VERSION='v20260521.123';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -215,7 +215,7 @@ async function cloudSave(o){
 async function parseAI(msg, adres, typ, offerNames, rules) {
   const offerLower=(offerNames||'').toLowerCase();
   const isDrzwiOffer=offerLower.includes('drzwi')||offerLower.includes('balkon')||offerLower.includes('taras');
-  const autoTyp=isDrzwiOffer?'drzwi':typ;
+  const autoTyp=typ==='mix'?'mix':(isDrzwiOffer?'drzwi':typ);
 
   // Buduj sekcję reguł AI z bazy użytkownika
   let rulesSection='';
@@ -322,7 +322,16 @@ Pozostałe pola:
 - glebokosc = null
 - zawias = "L" lub "P" — jeśli nie podano = "L"
 - poprzeczka = true/false — jeśli nie podano = true
-- samodomykajacy = liczba zawiasów samodomykających (0 jeśli nie podano)
+- samodomykajacyL = liczba zawiasów samodomykających lewych (0 jeśli nie podano)
+- samodomykajacyP = liczba zawiasów samodomykających prawych (0 jeśli nie podano)
+
+CENY DRZWI (gdy znasz cenę jednostkową, użyj do ustalenia opcji):
+- 499 zł → poprzeczka=false, samodomykajacyL=0, samodomykajacyP=0
+- 539 zł → poprzeczka=false, samodomykajacyL=2, samodomykajacyP=0
+- 549 zł → poprzeczka=true, samodomykajacyL=0, samodomykajacyP=0
+- 589 zł → poprzeczka=true, samodomykajacyL=2, samodomykajacyP=0
+Jeśli klient pisze "z poprzeczką" → poprzeczka=true; "bez poprzeczki" → poprzeczka=false
+Jeśli klient pisze "samodomykacz", "samo", "zawiasy samodomykające" → samodomykajacyL=2
 
 KOLORY RAMKI (tylko z tej listy):
 Biały, Czarny, Antracyt, Brąz, Złoty Dąb, Winchester, Orzech, Ciemny Dąb, Mahoń, Turner Oak
