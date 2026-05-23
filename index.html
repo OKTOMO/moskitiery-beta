@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.127</title>
+<title>MosquitoApp v20260521.131</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='v20260521.127';
+  window.__MOSK_VERSION='v20260521.131';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -376,7 +376,7 @@ WAŻNE:
   * NIE wpisuj oryginalnego wymiaru nigdzie — ani do szer2, wys2, ani do uwagi
   * Ustaw isDrzwi:true
   * TYLKO przy tych konkretnych zwrotach — bez nich NIE odejmuj nic
-- ROZPOZNAWANIE DRZWI bez słowa "drzwi": jeśli wysokość >180cm lub klient pisze "balkon", "taras", "wejście", "na gotowo", "nie powiększać" → ustaw isDrzwi:true nawet bez słowa "drzwi"
+- ROZPOZNAWANIE DRZWI: tylko gdy klient wyraźnie pisze "drzwi", "drzwiowa", "balkonowe", "tarasowe", "wejściowe" — NIE na podstawie wymiarów. Duże okno to nadal okno.
 - IGNORUJ NOTATKI CENOWE: frazy w nawiasach zawierające słowa "jednostek", "wg kalkulatora", "kalkulator", "jedn." itp. to adnotacje wewnętrzne sprzedawcy — CAŁKOWICIE IGNORUJ zawarte w nich liczby przy parsowaniu ilosc. Przykład: "(Ilosc jednostek wg kalkulatora 45)" → ilosc=1 (lub wg rzeczywistej ilości sztuk z reszty tekstu), NIE 45.
 
 IGNORUJ OBLICZENIA JEDNOSTEK:
@@ -2678,12 +2678,11 @@ function decodeHtmlEntities(str){
         let pdfHtmls = [];
         if(hasOkna) pdfHtmls.push({html: generateOrderHtml(order), name: subject+'.pdf'});
         if(hasDrzwi) pdfHtmls.push({html: drukujPDF_drzwi(order, true), name: subject+' DRZWI.pdf'});
-        // Zamówienie mieszane — osobne zlecenia okien i drzwi
+        // Zamówienie mieszane — osobne pliki z własnymi numerami
         if(order._mixedDrzwi){
-          if(hasOkna) {} // już dodane wyżej
-          pdfHtmls=pdfHtmls.filter(p=>!p.name.includes('DRZWI')); // usuń drzwi z okien
-          pdfHtmls.push({html: generateOrderHtml(order), name: subject+' OKNA.pdf'});
-          pdfHtmls.push({html: drukujPDF_drzwi(order._mixedDrzwi, true), name: subject+' DRZWI.pdf'});
+          pdfHtmls=[];
+          pdfHtmls.push({html: generateOrderHtml(order), name: (order.numerZlecenia||subject)+' '+order.klientImie+'.pdf'});
+          pdfHtmls.push({html: drukujPDF_drzwi(order._mixedDrzwi, true), name: (order._mixedDrzwi.numerZlecenia||subject)+' '+order.klientImie+'.pdf'});
         }
         if(pdfHtmls.length === 0) pdfHtmls.push({html: generateOrderHtml(order), name: subject+'.pdf'});
         for(const {html, name} of pdfHtmls){
@@ -5295,7 +5294,7 @@ function decodeHtmlEntities(str){
                 <button className="btn" style={{flex:1,padding:'12px',fontSize:14,background:editingId!==null?'#4a6a2a':'var(--accent)'}}
                   onClick={handleSave} disabled={!form.klientImie&&!form.klientMiasto&&!form.pozycje[0].szerokosc}>
                   {saved&&lastSavedOrder
-                    ? `✅ Zapisano: ${lastSavedOrder.numerZlecenia||''}`
+                    ? `✅ Zapisano: ${lastSavedOrder.numerZlecenia||''}${lastSavedOrder._mixedDrzwi?' + '+lastSavedOrder._mixedDrzwi.numerZlecenia:''}`
                     : editingId!==null?'💾 Zapisz zmiany':'💾 Zapisz zamówienie'}
                 </button>
                 {!saved&&<button onClick={()=>{if(form.klientImie||form.klientMiasto||form.pozycje[0].szerokosc){if(!confirm('Wyczyścić formularz?')) return;} setForm(pustyForm(form.firma));setNumerOverride('');setKalNumerForForm('');setAllegroOrderIdForForm('');setEditingId(null);setWiadomosc('');localStorage.removeItem('form_draft');setHasDraft(false);}} style={{padding:'12px 14px',fontSize:16,background:'#2a1a1a',border:'1px solid #5a2a2a',color:'#cf7a7a',borderRadius:6,cursor:'pointer'}} title="Wyczyść formularz">🗑</button>}
@@ -5304,7 +5303,7 @@ function decodeHtmlEntities(str){
                 {saved&&lastSavedOrder&&(
                   <div style={{background:'#0a1a0a',border:'1px solid #1a4a2a',borderRadius:6,padding:'8px 12px',fontSize:12,color:'#6a9a6a'}}>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
-                      <span style={{fontWeight:700,color:'#9acf9a',fontSize:13}}>📋 {lastSavedOrder.numerZlecenia}</span>
+                      <span style={{fontWeight:700,color:'#9acf9a',fontSize:13}}>📋 {lastSavedOrder.numerZlecenia}{lastSavedOrder._mixedDrzwi?' + '+lastSavedOrder._mixedDrzwi.numerZlecenia:''}</span>
                       <span style={{color:'#4a7a4a'}}>{lastSavedOrder.klientImie} · {lastSavedOrder.klientMiasto}</span>
                     </div>
                     {lastSavedOrder.pozycje&&lastSavedOrder.pozycje.length>0&&(
@@ -5356,7 +5355,7 @@ function decodeHtmlEntities(str){
                       const emailCfg=JSON.parse(localStorage.getItem('email_produkcji_config')||'{}');
                       const to=emailCfg.emailProdukcji||'biuro@superis.pl';
                       const allegroImp2=allegroImportResults.find(i=>i.allegroOrderId===allegroOrderIdForForm);
-                      const subject=`${lastSavedOrder.numerZlecenia||''} ${lastSavedOrder.klientImie||allegroImp2?.klientImie||''} ${lastSavedOrder.klientMiasto||allegroImp2?.klientMiasto||''}`.trim();
+                      const _mixNr=lastSavedOrder._mixedDrzwi?` + ${lastSavedOrder._mixedDrzwi.numerZlecenia||''}`:''; const subject=`${lastSavedOrder.numerZlecenia||''}${_mixNr} ${lastSavedOrder.klientImie||allegroImp2?.klientImie||''} ${lastSavedOrder.klientMiasto||allegroImp2?.klientMiasto||''}`.trim();
                       setMailPreview({imp:{...lastSavedOrder,allegroOrderId:allegroOrderIdForForm},order:lastSavedOrder,to,subject,hasEtykieta:false});fetchMailThread(allegroOrderIdForForm).then(tid=>{if(tid)setMailPreview(p=>p?({...p,threadMessageId:tid}):p);});
                       loadRecentEmails();
                     }}
@@ -5623,7 +5622,7 @@ function decodeHtmlEntities(str){
                         const to=emailCfg.emailProdukcji||'';
                         if(!to){alert('Brak adresu email produkcji. Ustaw w Admin → Ustawienia.');return;}
                         const order=orders.find(function(o){return o.allegroOrderId===imp.allegroOrderId;})||imp;
-                        const subject=(order.numerZlecenia||imp.allegroOrderId||'')+' '+(order.klientImie||imp.klientImie||'')+' '+(order.klientMiasto||imp.klientMiasto||'');
+                        const _mixNr2=order._mixedDrzwi?` + ${order._mixedDrzwi.numerZlecenia||''}`:''; const subject=(order.numerZlecenia||imp.allegroOrderId||'')+_mixNr2+' '+(order.klientImie||imp.klientImie||'')+' '+(order.klientMiasto||imp.klientMiasto||'');
                         setMailPreview({imp,order,to,subject:subject.trim(),hasEtykieta:!!sh});
                         loadRecentEmails();
                         fetchMailThread(imp.allegroOrderId).then(function(tid){if(tid)setMailPreview(function(p){return p?({...p,threadMessageId:tid}):p;});});
