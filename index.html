@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.138</title>
+<title>MosquitoApp v20260521.140</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='v20260521.138';
+  window.__MOSK_VERSION='v20260521.140';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -2703,14 +2703,16 @@ function decodeHtmlEntities(str){
       const sh = allegroId ? allegroShipments[allegroId] : null;
       if(sh && extraFiles.length===0 && !removedFiles.includes('etykieta')){
         try{
+          const allShipmentIds=[sh.shipmentId,...(sh.extraShipmentIds||[])].filter(Boolean);
           const lr=await fetch(AUTORESPONDER_URL+"/shipment/label?kontoId="+sh.kontoId,{
             method:"POST",headers:{"x-api-key":AUTORESPONDER_KEY,"Content-Type":"application/json"},
-            body:JSON.stringify({shipmentIds:[sh.shipmentId],pageSize:"A6"})
+            body:JSON.stringify({shipmentIds:allShipmentIds,pageSize:"A6"})
           });
           const ld=await lr.json();
           if(ld.pdf){
-            attachments.push({name:`${subject} etykieta.pdf`,content:ld.pdf,mimeType:'application/pdf'});
-            console.log('[LABEL] base64 length:',ld.pdf.length);
+            const labelName=allShipmentIds.length>1?`${subject} etykiety.pdf`:`${subject} etykieta.pdf`;
+            attachments.push({name:labelName,content:ld.pdf,mimeType:'application/pdf'});
+            console.log('[LABEL] base64 length:',ld.pdf.length,'paczek:',allShipmentIds.length);
           } else {
             console.warn('[LABEL] brak pdf w response:',ld);
           }
@@ -10458,7 +10460,7 @@ setFvForm(f=>({...f,nabywcaNazwa:_keepName,nabywcaAdres:d.ulica||f.nabywcaAdres,
               </button>
             </div>
             {/* ── Sekcja dodatkowych paczek ── */}
-            {!shipmentModal.createdShipmentId&&(
+            {shipmentModal.createdShipmentId&&(
               <div style={{marginTop:12,padding:12,background:'#0a0f1a',border:'1px solid #2a3a5a',borderRadius:8}}>
                 <div style={{fontWeight:700,fontSize:13,color:'#9fbfdf',marginBottom:8}}>📦 Dodatkowe paczki ({extraParcels.length}) — zostaną dodane do etykiety</div>
                 {extraParcels.map((ep,ei)=>(
@@ -10466,7 +10468,7 @@ setFvForm(f=>({...f,nabywcaNazwa:_keepName,nabywcaAdres:d.ulica||f.nabywcaAdres,
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                       <span style={{color:'#9aef9a',fontWeight:700}}>Paczka {ei+2}</span>
                       <button onClick={()=>setExtraParcels(prev=>prev.filter((_,i)=>i!==ei))} style={{fontSize:11,padding:'2px 8px',background:'#2a1a1a',border:'1px solid #5a2a2a',color:'#cf7a7a',borderRadius:4,cursor:'pointer'}}>✕ usuń</button>
-                      {false&&<button onClick={async()=>{
+                      {!ep.shipmentId&&<button onClick={async()=>{
                         // Utwórz dodatkowy shipment
                         try{
                           const imp=shipmentModal.imp;
