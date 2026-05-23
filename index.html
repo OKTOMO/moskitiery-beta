@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.111</title>
+<title>MosquitoApp v20260521.112</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='v20260521.111';
+  window.__MOSK_VERSION='v20260521.112';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -5961,7 +5961,19 @@ function App() {
                       <div style={{flex:1,minWidth:0}}>
                         <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginBottom:4}}>
                           {lead.name&&<span style={{fontWeight:700,color:'#9fcfdf',fontSize:14}}>{lead.name}</span>}
-                          {(function(){const lp=(lead.phone||'').replace(/[\s\-\+]/g,'').replace(/^48/,'');if(!lp||lp.length<9) return null;const hasOrder=allegroImportResults.some(function(imp){const ip=(imp.telefon||'').replace(/[\s\-\+]/g,'').replace(/^(\+48|48)/,'');return ip&&ip.length>=9&&lp===ip;});return hasOrder?<span style={{fontSize:11,color:'#5acf9a',background:'#0a2a1a',border:'1px solid #2a6a4a',borderRadius:4,padding:'1px 6px'}}>✅ Allegro zamówienie</span>:null;})()}
+                          {(function(){
+  const lp=(lead.phone||'').replace(/[\s\-\+]/g,'').replace(/^48/,'');
+  const phoneMatch=lp&&lp.length>=9&&allegroImportResults.some(function(imp){const ip=(imp.telefon||'').replace(/[\s\-\+]/g,'').replace(/^(\+48|48)/,'');return ip&&ip.length>=9&&lp===ip;});
+  if(phoneMatch) return <span style={{fontSize:11,color:'#5acf9a',background:'#0a2a1a',border:'1px solid #2a6a4a',borderRadius:4,padding:'1px 6px'}}>✅ Allegro zamówienie</span>;
+  const leadWords=(lead.name||'').toLowerCase().split(/\s+/).filter(function(w){return w.length>2;});
+  if(leadWords.length===0) return null;
+  const nameMatch=allegroImportResults.find(function(imp){
+    const impWords=(imp.klientImie||'').toLowerCase().split(/\s+/).filter(function(w){return w.length>2;});
+    return leadWords.length>0&&impWords.length>0&&leadWords.every(function(w){return impWords.some(function(iw){return iw.startsWith(w)||w.startsWith(iw);});});
+  });
+  if(nameMatch) return <span style={{fontSize:11,color:'#cfcf5a',background:'#1a1a0a',border:'1px solid #5a5a2a',borderRadius:4,padding:'1px 6px'}} title={'Allegro: '+(nameMatch.klientImie||'')}>⚠️ możliwe zamówienie</span>;
+  return null;
+})()}
                           {lead.phone&&<a href={'tel:'+lead.phone} style={{color:'#7acf9f',fontSize:13,textDecoration:'none'}}>📞 {lead.phone}</a>}
                           {lead.email&&<a href={'mailto:'+lead.email} style={{color:'#7aafcf',fontSize:13,textDecoration:'none'}}>✉️ {lead.email}</a>}
                           <span style={{fontSize:11,color:'#3a6a7a',marginLeft:'auto'}}>{lead.brandName||lead.brand||''}</span>
