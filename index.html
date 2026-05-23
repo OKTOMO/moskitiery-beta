@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.124</title>
+<title>MosquitoApp v20260521.125</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='v20260521.124';
+  window.__MOSK_VERSION='v20260521.125';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -4097,11 +4097,16 @@ function decodeHtmlEntities(str){
           console.log('[MIX] wynik:', JSON.stringify({okna:mixed.okna.length,drzwi:mixed.drzwi.length}));
           if(mixed.okna.length>0) pozOkna=mapPozycje(mixed.okna,false,true).filter(p=>!p.isDrzwi);
           if(mixed.drzwi.length>0) pozDrzwi=mapPozycje(mixed.drzwi,true,false).filter(p=>p.isDrzwi);
+          const finalMixPoz=[...pozOkna,...pozDrzwi];
+          console.log('[MIX] finalPoz:', finalMixPoz.length, 'okna:', pozOkna.length, 'drzwi:', pozDrzwi.length);
           setForm(f=>({...f,
             klientImie:mixed.klientImie||f.klientImie,klientUlica:mixed.klientUlica||f.klientUlica,
             klientKod:mixed.klientKod||f.klientKod,klientMiasto:mixed.klientMiasto||f.klientMiasto,
-            telefon:mixed.telefon||f.telefon
+            telefon:mixed.telefon||f.telefon,
+            pozycje:finalMixPoz.length?finalMixPoz:f.pozycje
           }));
+          setParsing(false);setSaved(false);
+          return;
 
         } else {
           // Osobne pola — parsuj każde z osobna
