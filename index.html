@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.140</title>
+<title>MosquitoApp v20260521.142</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='v20260521.140';
+  window.__MOSK_VERSION='v20260521.142';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -2687,15 +2687,24 @@ function decodeHtmlEntities(str){
         if(pdfHtmls.length === 0) pdfHtmls.push({html: generateOrderHtml(order), name: subject+'.pdf'});
         for(const {html, name} of pdfHtmls){
           console.log('[PDF] wysyłam HTML do workera:',name,'długość:',html.length);
-          const pr=await fetch(AUTORESPONDER_URL+'/pdf/render',{
-            method:'POST',
-            headers:{'Content-Type':'application/json','x-api-key':AUTORESPONDER_KEY},
-            body:JSON.stringify({html})
-          });
-          const pd=await pr.json();
-          if(!pd.ok) throw new Error('PDF render fail: '+JSON.stringify(pd));
+          let pd=null;
+          for(let attempt=0;attempt<4;attempt++){
+            if(attempt>0) await new Promise(r=>setTimeout(r,2000*attempt));
+            const pr=await fetch(AUTORESPONDER_URL+'/pdf/render',{
+              method:'POST',
+              headers:{'Content-Type':'application/json','x-api-key':AUTORESPONDER_KEY},
+              body:JSON.stringify({html})
+            });
+            pd=await pr.json();
+            if(pd.ok) break;
+            if(pd.status===429||pd.error?.includes('Rate limit')){console.warn('[PDF] rate limit, retry',attempt+1);continue;}
+            throw new Error('PDF render fail: '+JSON.stringify(pd));
+          }
+          if(!pd?.ok) throw new Error('PDF render fail po retries: '+JSON.stringify(pd));
           console.log('[PDF] rozmiar:',pd.size,'bytes');
           attachments.push({name,content:pd.pdf,mimeType:'application/pdf'});
+          // Pauza między plikami aby uniknąć rate limit
+          if(pdfHtmls.length>1) await new Promise(r=>setTimeout(r,1500));
         }
       }
       // Etykieta PDF — tylko dla prawdziwych zamówień Allegro i jeśli nie usunięta
@@ -2704,17 +2713,20 @@ function decodeHtmlEntities(str){
       if(sh && extraFiles.length===0 && !removedFiles.includes('etykieta')){
         try{
           const allShipmentIds=[sh.shipmentId,...(sh.extraShipmentIds||[])].filter(Boolean);
-          const lr=await fetch(AUTORESPONDER_URL+"/shipment/label?kontoId="+sh.kontoId,{
-            method:"POST",headers:{"x-api-key":AUTORESPONDER_KEY,"Content-Type":"application/json"},
-            body:JSON.stringify({shipmentIds:allShipmentIds,pageSize:"A6"})
-          });
-          const ld=await lr.json();
-          if(ld.pdf){
-            const labelName=allShipmentIds.length>1?`${subject} etykiety.pdf`:`${subject} etykieta.pdf`;
-            attachments.push({name:labelName,content:ld.pdf,mimeType:'application/pdf'});
-            console.log('[LABEL] base64 length:',ld.pdf.length,'paczek:',allShipmentIds.length);
-          } else {
-            console.warn('[LABEL] brak pdf w response:',ld);
+          for(let li=0;li<allShipmentIds.length;li++){
+            const sid=allShipmentIds[li];
+            const lr=await fetch(AUTORESPONDER_URL+"/shipment/label?kontoId="+sh.kontoId,{
+              method:"POST",headers:{"x-api-key":AUTORESPONDER_KEY,"Content-Type":"application/json"},
+              body:JSON.stringify({shipmentIds:[sid],pageSize:"A6"})
+            });
+            const ld=await lr.json();
+            if(ld.pdf){
+              const labelName=allShipmentIds.length>1?`${subject} etykieta ${li+1}.pdf`:`${subject} etykieta.pdf`;
+              attachments.push({name:labelName,content:ld.pdf,mimeType:'application/pdf'});
+              console.log('[LABEL] paczka '+(li+1)+' base64 length:',ld.pdf.length);
+            } else {
+              console.warn('[LABEL] brak pdf dla',sid,ld);
+            }
           }
         }catch(e){ console.warn('[LABEL] błąd pobrania:',e); }
       }
@@ -10485,7 +10497,8 @@ setFvForm(f=>({...f,nabywcaNazwa:_keepName,nabywcaAdres:d.ulica||f.nabywcaAdres,
                               ...(svc2.credentialsId?{credentialsId:svc2.credentialsId}:{}),
                               sender:{name:firma2.nazwa,street:firma2.adres,postalCode:firma2.kod,city:firma2.miasto,countryCode:'PL',phone:'+48605361191',email:firma2.email},
                               receiver:{name:imp.klientImie||'',street:(imp.klientUlica||'').trim(),postalCode:imp.klientKod||'',city:imp.klientMiasto||'',countryCode:'PL',phone:imp.telefon||'',email:imp.email||''},
-                              packages:[epPkg]
+                              packages:[epPkg],
+                              insurance:{amount:'0.01',currency:'PLN'}
                             }
                           };
                           const r=await fetch(AUTORESPONDER_URL+'/shipment/create?kontoId='+(imp.kontoId||''),{method:'POST',headers:{'Content-Type':'application/json','x-api-key':AUTORESPONDER_KEY},body:JSON.stringify(body)});
