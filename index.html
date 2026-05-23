@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.119</title>
+<title>MosquitoApp v20260521.121</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='v20260521.119';
+  window.__MOSK_VERSION='v20260521.121';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -1929,6 +1929,13 @@ function decodeHtmlEntities(str){
       }
     }
     return pozycje.length>0?pozycje:null;
+  }
+
+  async function parseAIMix(msg, adres, offerNames, aiRules){
+    const r = await parseAI(msg, adres, 'mix', offerNames, aiRules);
+    const okna = (r.pozycje||[]).filter(p=>!p.isDrzwi);
+    const drzwi = (r.pozycje||[]).filter(p=>p.isDrzwi);
+    return {okna, drzwi, klientImie:r.klientImie, klientUlica:r.klientUlica, klientKod:r.klientKod, klientMiasto:r.klientMiasto, telefon:r.telefon};
   }
 
   function importAllegroOrder(imp){
@@ -4069,26 +4076,37 @@ function decodeHtmlEntities(str){
     const _offerNames=(allegroImportResults.find(i=>i.allegroOrderId===allegroOrderIdForForm)||{}).offerNames||'';
     try{
       if(withDrzwi){
-        // Zapamiętaj istniejące pozycje PRZED parsowaniem (synchronicznie)
         const existingOkna=form.pozycje.filter(p=>!p.isDrzwi);
         const existingDrzwi=form.pozycje.filter(p=>p.isDrzwi);
         let pozOkna=existingOkna;
         let pozDrzwi=existingDrzwi;
-        // Parsuj okna tylko gdy jest wiadomość główna
-        if(wiadomosc.trim()){
-          const r=await parseAI(decodeHtmlEntities(wiadomosc),decodeHtmlEntities(adres),"okno",_offerNames,aiRules);
-          pozOkna=mapPozycje(r.pozycje,false,true).filter(p=>!p.isDrzwi);
+        if(wiadomosc.trim() && !wiadomoscDrzwi.trim()){
+          // Jedna wiadomość z miksem — parsuj AI jako mix (jeden request)
+          const mixed=await parseAIMix(decodeHtmlEntities(wiadomosc),decodeHtmlEntities(adres),_offerNames,aiRules);
+          if(mixed.okna.length>0) pozOkna=mapPozycje(mixed.okna,false,true).filter(p=>!p.isDrzwi);
+          if(mixed.drzwi.length>0) pozDrzwi=mapPozycje(mixed.drzwi,true,false).filter(p=>p.isDrzwi);
           setForm(f=>({...f,
-            klientImie:r.klientImie||f.klientImie,klientUlica:r.klientUlica||f.klientUlica,
-            klientKod:r.klientKod||f.klientKod,klientMiasto:r.klientMiasto||f.klientMiasto,
-            telefon:r.telefon||f.telefon
+            klientImie:mixed.klientImie||f.klientImie,klientUlica:mixed.klientUlica||f.klientUlica,
+            klientKod:mixed.klientKod||f.klientKod,klientMiasto:mixed.klientMiasto||f.klientMiasto,
+            telefon:mixed.telefon||f.telefon
           }));
-        }
-        // Parsuj drzwi tylko gdy jest osobna wiadomość o drzwiach
-        if(wiadomoscDrzwi.trim()){
-          setParsingDrzwi(true);
-          try{const rd=await parseAI(decodeHtmlEntities(wiadomoscDrzwi.trim()),decodeHtmlEntities(adres),"drzwi",_offerNames,aiRules);pozDrzwi=mapPozycje(rd.pozycje,true,false).filter(p=>p.isDrzwi);}catch(e2){}
-          setParsingDrzwi(false);
+
+        } else {
+          // Osobne pola — parsuj każde z osobna
+          if(wiadomosc.trim()){
+            const r=await parseAI(decodeHtmlEntities(wiadomosc),decodeHtmlEntities(adres),"okno",_offerNames,aiRules);
+            pozOkna=mapPozycje(r.pozycje,false,true).filter(p=>!p.isDrzwi);
+            setForm(f=>({...f,
+              klientImie:r.klientImie||f.klientImie,klientUlica:r.klientUlica||f.klientUlica,
+              klientKod:r.klientKod||f.klientKod,klientMiasto:r.klientMiasto||f.klientMiasto,
+              telefon:r.telefon||f.telefon
+            }));
+          }
+          if(wiadomoscDrzwi.trim()){
+            setParsingDrzwi(true);
+            try{const rd=await parseAI(decodeHtmlEntities(wiadomoscDrzwi.trim()),decodeHtmlEntities(adres),"drzwi",_offerNames,aiRules);pozDrzwi=mapPozycje(rd.pozycje,true,false).filter(p=>p.isDrzwi);}catch(e2){}
+            setParsingDrzwi(false);
+          }
         }
         const finalPoz=[...pozOkna,...pozDrzwi];
         setForm(f=>({...f,
