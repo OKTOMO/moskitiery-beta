@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.136</title>
+<title>MosquitoApp v20260521.137</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='v20260521.136';
+  window.__MOSK_VERSION='v20260521.137';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -10465,9 +10465,9 @@ setFvForm(f=>({...f,nabywcaNazwa:_keepName,nabywcaAdres:d.ulica||f.nabywcaAdres,
               </button>
             </div>
             {/* ── Sekcja dodatkowych paczek ── */}
-            {shipmentModal.createdShipmentId&&(
+            {!shipmentModal.createdShipmentId&&(
               <div style={{marginTop:12,padding:12,background:'#0a0f1a',border:'1px solid #2a3a5a',borderRadius:8}}>
-                <div style={{fontWeight:700,fontSize:13,color:'#9fbfdf',marginBottom:8}}>📦 Dodatkowe paczki ({extraParcels.length}) — zostaną dodane do tej samej przesyłki</div>
+                <div style={{fontWeight:700,fontSize:13,color:'#9fbfdf',marginBottom:8}}>📦 Dodatkowe paczki ({extraParcels.length}) — zostaną dodane do etykiety</div>
                 {extraParcels.map((ep,ei)=>(
                   <div key={ei} style={{background:'#0c1a0c',border:'1px solid #2a5a2a',borderRadius:6,padding:8,marginBottom:6,fontSize:12}}>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
