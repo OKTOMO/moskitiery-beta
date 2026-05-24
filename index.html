@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.152</title>
+<title>MosquitoApp v20260521.154</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='v20260521.152';
+  window.__MOSK_VERSION='v20260521.154';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -2065,67 +2065,41 @@ function decodeHtmlEntities(str){
     const defaultPoz=()=>{const p=pustaPoz();if(detectedKolorRamki)p.kolorRamki=detectedKolorRamki;if(detectedKolorSiatki)p.kolorSiatki=detectedKolorSiatki;return p;};
     // Otwórz modal importu — użytkownik wybiera metodę (kalkulator/oferta/ręcznie/AI)
     // Sprawdź czy wątek jest już w msgThreads
-    const buyerLoginForMsg=(imp.klientLogin||'').toLowerCase();
-    console.log('[MSG THREAD SEARCH] buyerLogin:', buyerLoginForMsg, 'msgThreads count:', (msgThreads||[]).length, 'logins:', (msgThreads||[]).slice(0,5).map(t=>t.interlocutor?.login||t.interlocutor||'?').join(','));
-    const existingThread=buyerLoginForMsg?(msgThreads||[]).find(function(t){
-      const tl=(t.interlocutor?.login||t.interlocutor||'').toLowerCase();
-      return tl===buyerLoginForMsg||tl.includes(buyerLoginForMsg)||buyerLoginForMsg.includes(tl);
-    }):null;
-    const threadKontoId=existingThread?._kontoId||imp.kontoId;
     setWiadomosc(imp.buyerMsg||"");
-    // Jeśli brak buyerMsg — pobierz wiadomości z wątku (z msgThreads lub z API)
     const thisOrderId = imp.allegroOrderId;
-    if(!imp.buyerMsg && imp.allegroOrderId){
-      if(existingThread){
-        // Mamy wątek w msgThreads — pobierz jego wiadomości
-        fetch(AUTORESPONDER_URL+'/messaging/threads/'+existingThread.id+'/messages?kontoId='+threadKontoId,{headers:{'x-api-key':AUTORESPONDER_KEY}})
-          .then(r=>r.json()).then(d=>{
-            const msgs=(d.messages||[]).sort((a,b)=>new Date(a.createdAt)-new Date(b.createdAt));
-            const buyerMsgs=msgs.filter(m=>(m.author?.role||'BUYER')!=='SELLER'&&m.text).map(m=>m.text);
-            if(buyerMsgs.length>0) setWiadomosc(buyerMsgs.join('\n\n---\n\n'));
-          }).catch(()=>{});
-      }
-    }
-    if(!imp.buyerMsg && !existingThread && imp.allegroOrderId && imp.kontoId){
+    if(!imp.buyerMsg && imp.allegroOrderId && imp.kontoId){
       fetch(AUTORESPONDER_URL+'/order/details?allegroOrderId='+imp.allegroOrderId+'&kontoId='+imp.kontoId,{
         headers:{'x-api-key':AUTORESPONDER_KEY}
       }).then(r=>r.json()).then(d=>{
-        console.log('[ORDER/DETAILS RESPONSE]', JSON.stringify(d).slice(0,200));
         if(d.ok){
           const msg=d.messageToSeller||'';
-          // Jeśli brak messageToSeller, weź ostatnią wiadomość od kupującego z wątku
-          const threadMsgs=(d.threadHistory||[]).filter(m=>(m.author?.role||m.type||'')!=='SELLER'&&m.text);
-          const lastBuyerMsg=threadMsgs.length>0?threadMsgs[threadMsgs.length-1].text:'';
-          const effectiveMsg=msg||lastBuyerMsg;
-          if(effectiveMsg) setWiadomosc(effectiveMsg);
-          const km2=effectiveMsg.match(/(?:FAV|STR|ARL|ALB|EVR|KAL)-\d{6}-\d{4}/i);
-          const kn2=km2?km2[0].toUpperCase():'';
-          if(kn2){
-            fetch(AUTORESPONDER_URL+'/kalkulator/order/'+encodeURIComponent(kn2.toLowerCase()))
-              .then(r=>r.json())
-              .then(d2=>{
-                if(d2.error||!d2.orderNumber){
-                  setImportModal(p=>p?.imp?.allegroOrderId===thisOrderId?{...p,kalLoading:false,kalError:'Nie znaleziono: '+kn2}:p);
-                } else {
-                  setImportModal(p=>p?.imp?.allegroOrderId===thisOrderId?{...p,kalLoading:false,kalData:d2,kalError:''}:p);
-                }
-              }).catch(e=>setImportModal(p=>p?.imp?.allegroOrderId===thisOrderId?{...p,kalLoading:false,kalError:e.message}:p));
-          }
           setImportModal(prev=>{
             if(!prev || prev.imp?.allegroOrderId !== thisOrderId) return prev;
+            if(msg) setWiadomosc(msg);
+            const km=msg.match(/(?:FAV|STR|ARL|ALB|EVR|KAL)-\d{6}-\d{4}/i);
+            const kn=km?km[0].toUpperCase():'';
+            if(kn){
+              fetch(AUTORESPONDER_URL+'/kalkulator/order/'+encodeURIComponent(kn.toLowerCase()))
+                .then(r=>r.json())
+                .then(d2=>{
+                  if(d2.error||!d2.orderNumber){
+                    setImportModal(p=>p?.imp?.allegroOrderId===thisOrderId?{...p,kalLoading:false,kalError:'Nie znaleziono: '+kn}:p);
+                  } else {
+                    setImportModal(p=>p?.imp?.allegroOrderId===thisOrderId?{...p,kalLoading:false,kalData:d2,kalError:''}:p);
+                  }
+                }).catch(e=>setImportModal(p=>p?.imp?.allegroOrderId===thisOrderId?{...p,kalLoading:false,kalError:e.message}:p));
+            }
             return {...prev,
-              imp:{...prev.imp,buyerMsg:effectiveMsg},
+              imp:{...prev.imp,buyerMsg:msg},
               checkoutMsg:d.checkoutMsg||'',
               threadHistory:d.threadHistory||[],
-              kalNum:kn2||prev.kalNum,
-              kalLoading:!!kn2,
-              mode:kn2?'kal':prev.mode
+              kalNum:kn||prev.kalNum,
+              kalLoading:!!kn,
+              mode:kn?'kal':prev.mode
             };
           });
         }
       }).catch(()=>{});
-    } else {
-      setWiadomosc(imp.buyerMsg||"");  // czyść tylko gdy nie czekamy na fetch
     }
     setWiadomoscDrzwi('');
     const _hasMixImport=imp.pozycje&&imp.pozycje.length>1&&imp.pozycje.some(p=>{const l=(p.nazwa||'').toLowerCase();return l.includes('drzwi')||l.includes('taras')||l.includes('balkon');})&&imp.pozycje.some(p=>{const l=(p.nazwa||'').toLowerCase();return !l.includes('drzwi')&&!l.includes('taras')&&!l.includes('balkon');});
