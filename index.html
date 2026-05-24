@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.143</title>
+<title>MosquitoApp v20260521.144</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='v20260521.143';
+  window.__MOSK_VERSION='v20260521.144';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -2093,13 +2093,15 @@ function decodeHtmlEntities(str){
                   }
                 }).catch(e=>setImportModal(p=>p?.imp?.allegroOrderId===thisOrderId?{...p,kalLoading:false,kalError:e.message}:p));
             }
+            const km2=effectiveMsg.match(/(?:FAV|STR|ARL|ALB|EVR|KAL)-\d{6}-\d{4}/i);
+            const kn2=km2?km2[0].toUpperCase():'';
             return {...prev,
-              imp:{...prev.imp,buyerMsg:msg},
+              imp:{...prev.imp,buyerMsg:effectiveMsg},
               checkoutMsg:d.checkoutMsg||'',
               threadHistory:d.threadHistory||[],
-              kalNum:kn||prev.kalNum,
-              kalLoading:!!kn,
-              mode:kn?'kal':prev.mode
+              kalNum:kn2||kn||prev.kalNum,
+              kalLoading:!!(kn2||kn),
+              mode:(kn2||kn)?'kal':prev.mode
             };
           });
         }
