@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.148</title>
+<title>MosquitoApp v20260521.149</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='v20260521.148';
+  window.__MOSK_VERSION='v20260521.149';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -2064,12 +2064,17 @@ function decodeHtmlEntities(str){
     // Jeśli brak wymiarów — użyj pustaPoz() ale z wykrytymi kolorami
     const defaultPoz=()=>{const p=pustaPoz();if(detectedKolorRamki)p.kolorRamki=detectedKolorRamki;if(detectedKolorSiatki)p.kolorSiatki=detectedKolorSiatki;return p;};
     // Otwórz modal importu — użytkownik wybiera metodę (kalkulator/oferta/ręcznie/AI)
-    setWiadomosc(imp.buyerMsg||"");  // zawsze czyść, nie tylko gdy jest buyerMsg
-    // Jeśli brak buyerMsg — pobierz szczegóły zamówienia z Allegro w tle
+    // Sprawdź czy wątek jest już w msgThreads
+    const buyerLoginForMsg=(imp.klientLogin||'').toLowerCase();
+    const existingThread=buyerLoginForMsg?(msgThreads||[]).find(function(t){
+      const tl=(t.interlocutor?.login||t.interlocutor||'').toLowerCase();
+      return tl===buyerLoginForMsg||tl.includes(buyerLoginForMsg)||buyerLoginForMsg.includes(tl);
+    }):null;
+    const msgFromThread=existingThread?.lastMessage||'';
+    setWiadomosc(imp.buyerMsg||msgFromThread||"");
+    // Jeśli brak buyerMsg i brak w msgThreads — pobierz szczegóły z Allegro w tle
     const thisOrderId = imp.allegroOrderId;
-    console.log('[ORDER/DETAILS CHECK] buyerMsg:', JSON.stringify(imp.buyerMsg), 'allegroOrderId:', imp.allegroOrderId, 'kontoId:', imp.kontoId);
-    if(!imp.buyerMsg && imp.allegroOrderId && imp.kontoId){
-      console.log('[ORDER/DETAILS] wysyłam request');
+    if(!imp.buyerMsg && !msgFromThread && imp.allegroOrderId && imp.kontoId){
       fetch(AUTORESPONDER_URL+'/order/details?allegroOrderId='+imp.allegroOrderId+'&kontoId='+imp.kontoId,{
         headers:{'x-api-key':AUTORESPONDER_KEY}
       }).then(r=>r.json()).then(d=>{
