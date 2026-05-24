@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.151</title>
+<title>MosquitoApp v20260521.152</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='v20260521.151';
+  window.__MOSK_VERSION='v20260521.152';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -4541,7 +4541,19 @@ function decodeHtmlEntities(str){
       const r=await fetch(AUTORESPONDER_URL+'/messaging/threads?kontoId='+k+'&limit=20',{headers:{'x-api-key':AUTORESPONDER_KEY}});
       if(!r.ok) return [];
       const d=await r.json();
-      return (d.threads||[]).map(function(t){return {...t,_kontoId:k};});
+      const threads=d.threads||[];
+      // Pobierz wiadomości dla każdego wątku
+      const withMsgs=await Promise.all(threads.map(async function(t){
+        try{
+          const mr=await fetch(AUTORESPONDER_URL+'/messaging/threads/'+t.id+'/messages?kontoId='+k,{headers:{'x-api-key':AUTORESPONDER_KEY}});
+          if(!mr.ok) return {...t,_kontoId:k,lastMessage:''};
+          const md=await mr.json();
+          const msgs=(md.messages||[]).sort((a,b)=>new Date(a.createdAt)-new Date(b.createdAt));
+          const buyerMsgs=msgs.filter(m=>(m.author?.role||'BUYER')!=='SELLER'&&m.text).map(m=>m.text);
+          return {...t,_kontoId:k,lastMessage:buyerMsgs.join('\n\n---\n\n'),allMessages:msgs.map(m=>({text:m.text||'',role:m.author?.role||'BUYER',date:m.createdAt||''}))};
+        }catch(e){return {...t,_kontoId:k,lastMessage:''};}
+      }));
+      return withMsgs;
     }));
     const allThreads=[];
     results.forEach(function(r){if(r.status==='fulfilled') r.value.forEach(function(t){allThreads.push(t);});});
