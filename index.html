@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.142</title>
+<title>MosquitoApp v20260521.143</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='v20260521.142';
+  window.__MOSK_VERSION='v20260521.143';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -2073,9 +2073,13 @@ function decodeHtmlEntities(str){
       }).then(r=>r.json()).then(d=>{
         if(d.ok){
           const msg=d.messageToSeller||'';
+          // Jeśli brak messageToSeller, weź ostatnią wiadomość od kupującego z wątku
+          const threadMsgs=(d.threadHistory||[]).filter(m=>(m.author?.role||m.type||'')!=='SELLER'&&m.text);
+          const lastBuyerMsg=threadMsgs.length>0?threadMsgs[threadMsgs.length-1].text:'';
+          const effectiveMsg=msg||lastBuyerMsg;
           setImportModal(prev=>{
             if(!prev || prev.imp?.allegroOrderId !== thisOrderId) return prev;
-            if(msg) setWiadomosc(msg);
+            if(effectiveMsg) setWiadomosc(effectiveMsg);
             const km=msg.match(/(?:FAV|STR|ARL|ALB|EVR|KAL)-\d{6}-\d{4}/i);
             const kn=km?km[0].toUpperCase():'';
             if(kn){
