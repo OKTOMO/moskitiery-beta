@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.145</title>
+<title>MosquitoApp v20260521.146</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='v20260521.145';
+  window.__MOSK_VERSION='v20260521.146';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -2079,31 +2079,29 @@ function decodeHtmlEntities(str){
           const threadMsgs=(d.threadHistory||[]).filter(m=>(m.author?.role||m.type||'')!=='SELLER'&&m.text);
           const lastBuyerMsg=threadMsgs.length>0?threadMsgs[threadMsgs.length-1].text:'';
           const effectiveMsg=msg||lastBuyerMsg;
+          if(effectiveMsg) setWiadomosc(effectiveMsg);
+          const km2=effectiveMsg.match(/(?:FAV|STR|ARL|ALB|EVR|KAL)-\d{6}-\d{4}/i);
+          const kn2=km2?km2[0].toUpperCase():'';
+          if(kn2){
+            fetch(AUTORESPONDER_URL+'/kalkulator/order/'+encodeURIComponent(kn2.toLowerCase()))
+              .then(r=>r.json())
+              .then(d2=>{
+                if(d2.error||!d2.orderNumber){
+                  setImportModal(p=>p?.imp?.allegroOrderId===thisOrderId?{...p,kalLoading:false,kalError:'Nie znaleziono: '+kn2}:p);
+                } else {
+                  setImportModal(p=>p?.imp?.allegroOrderId===thisOrderId?{...p,kalLoading:false,kalData:d2,kalError:''}:p);
+                }
+              }).catch(e=>setImportModal(p=>p?.imp?.allegroOrderId===thisOrderId?{...p,kalLoading:false,kalError:e.message}:p));
+          }
           setImportModal(prev=>{
             if(!prev || prev.imp?.allegroOrderId !== thisOrderId) return prev;
-            if(effectiveMsg) setWiadomosc(effectiveMsg);
-            const km=msg.match(/(?:FAV|STR|ARL|ALB|EVR|KAL)-\d{6}-\d{4}/i);
-            const kn=km?km[0].toUpperCase():'';
-            if(kn){
-              fetch(AUTORESPONDER_URL+'/kalkulator/order/'+encodeURIComponent(kn.toLowerCase()))
-                .then(r=>r.json())
-                .then(d2=>{
-                  if(d2.error||!d2.orderNumber){
-                    setImportModal(p=>p?.imp?.allegroOrderId===thisOrderId?{...p,kalLoading:false,kalError:'Nie znaleziono: '+kn}:p);
-                  } else {
-                    setImportModal(p=>p?.imp?.allegroOrderId===thisOrderId?{...p,kalLoading:false,kalData:d2,kalError:''}:p);
-                  }
-                }).catch(e=>setImportModal(p=>p?.imp?.allegroOrderId===thisOrderId?{...p,kalLoading:false,kalError:e.message}:p));
-            }
-            const km2=effectiveMsg.match(/(?:FAV|STR|ARL|ALB|EVR|KAL)-\d{6}-\d{4}/i);
-            const kn2=km2?km2[0].toUpperCase():'';
             return {...prev,
               imp:{...prev.imp,buyerMsg:effectiveMsg},
               checkoutMsg:d.checkoutMsg||'',
               threadHistory:d.threadHistory||[],
-              kalNum:kn2||kn||prev.kalNum,
-              kalLoading:!!(kn2||kn),
-              mode:(kn2||kn)?'kal':prev.mode
+              kalNum:kn2||prev.kalNum,
+              kalLoading:!!kn2,
+              mode:kn2?'kal':prev.mode
             };
           });
         }
