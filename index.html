@@ -3,12 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260521.150</title>
+<title>MosquitoApp v20260521.151</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script>
-  window.__MOSK_VERSION='v20260521.150';
+  window.__MOSK_VERSION='v20260521.151';
   console.log('%c🦟 MosquitoApp v'+window.__MOSK_VERSION,'color:#7acf7a;font-weight:bold;font-size:14px');
 
   // Rejestracja Service Workera dla Web Push
@@ -2071,11 +2071,22 @@ function decodeHtmlEntities(str){
       const tl=(t.interlocutor?.login||t.interlocutor||'').toLowerCase();
       return tl===buyerLoginForMsg||tl.includes(buyerLoginForMsg)||buyerLoginForMsg.includes(tl);
     }):null;
-    const msgFromThread=existingThread?.lastMessage||'';
-    setWiadomosc(imp.buyerMsg||msgFromThread||"");
-    // Jeśli brak buyerMsg i brak w msgThreads — pobierz szczegóły z Allegro w tle
+    const threadKontoId=existingThread?._kontoId||imp.kontoId;
+    setWiadomosc(imp.buyerMsg||"");
+    // Jeśli brak buyerMsg — pobierz wiadomości z wątku (z msgThreads lub z API)
     const thisOrderId = imp.allegroOrderId;
-    if(!imp.buyerMsg && !msgFromThread && imp.allegroOrderId && imp.kontoId){
+    if(!imp.buyerMsg && imp.allegroOrderId){
+      if(existingThread){
+        // Mamy wątek w msgThreads — pobierz jego wiadomości
+        fetch(AUTORESPONDER_URL+'/messaging/threads/'+existingThread.id+'/messages?kontoId='+threadKontoId,{headers:{'x-api-key':AUTORESPONDER_KEY}})
+          .then(r=>r.json()).then(d=>{
+            const msgs=(d.messages||[]).sort((a,b)=>new Date(a.createdAt)-new Date(b.createdAt));
+            const buyerMsgs=msgs.filter(m=>(m.author?.role||'BUYER')!=='SELLER'&&m.text).map(m=>m.text);
+            if(buyerMsgs.length>0) setWiadomosc(buyerMsgs.join('\n\n---\n\n'));
+          }).catch(()=>{});
+      }
+    }
+    if(!imp.buyerMsg && !existingThread && imp.allegroOrderId && imp.kontoId){
       fetch(AUTORESPONDER_URL+'/order/details?allegroOrderId='+imp.allegroOrderId+'&kontoId='+imp.kontoId,{
         headers:{'x-api-key':AUTORESPONDER_KEY}
       }).then(r=>r.json()).then(d=>{
