@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260525.101</title>
+<title>MosquitoApp v20260525.102</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -1030,6 +1030,7 @@ function App() {
     try{return JSON.parse(localStorage.getItem('allegro_import_results')||'[]');}catch{return [];}
   }); // lista zamówień z Allegro
   const [appStatuses,setAppStatuses]=useState(()=>{try{return JSON.parse(localStorage.getItem('app_statuses')||'{}');}catch{return {};}});
+  const [orderNotes,setOrderNotes]=useState(()=>{try{return JSON.parse(localStorage.getItem('order_notes')||'{}');}catch{return {};}});
   const [allegroShipments,setAllegroShipments]=useState(()=>{try{return JSON.parse(localStorage.getItem('allegro_shipments')||'{}');}catch{return {};}});
   const [mailSending,setMailSending]=useState({});
   const [mailPreview,setMailPreview]=useState(null); // {imp, to, subject, content}
@@ -5427,6 +5428,29 @@ function App() {
                       background:'#1a1a0a',border:'1px solid #4a4a1a',color:'#9a9a4a'}}>
                     ↩
                   </button>}
+                  {(function(){
+                    const _nid=imp.allegroOrderId;
+                    const _note=orderNotes[_nid]||'';
+                    const _editing=zamOpenBox[_nid]==='note';
+                    return <div style={{display:'flex',alignItems:'center',gap:4,marginBottom:3,minWidth:0}}>
+                      <span style={{fontSize:11,color:'#5a6a4a',flexShrink:0}} title="Notatka wewnętrzna">📝</span>
+                      {_editing
+                        ? <input autoFocus defaultValue={_note}
+                            onBlur={e=>{const v=e.target.value;setOrderNotes(prev=>{const n={...prev};if(v)n[_nid]=v;else delete n[_nid];localStorage.setItem('order_notes',JSON.stringify(n));return n;});toggleBox(_nid,'note');}}
+                            onKeyDown={e=>{if(e.key==='Enter'||e.key==='Escape'){e.target.blur();}}}
+                            style={{flex:1,fontSize:11,padding:'2px 6px',borderRadius:4,background:'#0a1a0a',border:'1px solid #3a6a3a',color:'#9fcf9f',minWidth:0}}
+                            placeholder="Notatka wewnętrzna (tylko dla Ciebie)..."/>
+                        : <span onClick={()=>toggleBox(_nid,'note')}
+                            style={{fontSize:11,color:_note?'#9fcf9f':'#2a3a2a',cursor:'pointer',flex:1,
+                              fontStyle:_note?'normal':'italic',
+                              overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',minWidth:0}}
+                            title={_note?_note:'Kliknij aby dodać notatkę'}>
+                            {_note||'+ notatka'}
+                          </span>
+                      }
+                      {_note&&!_editing&&<button onClick={e=>{e.stopPropagation();setOrderNotes(prev=>{const n={...prev};delete n[_nid];localStorage.setItem('order_notes',JSON.stringify(n));return n;});}} style={{padding:'0 4px',fontSize:10,background:'none',border:'none',color:'#4a2a2a',cursor:'pointer',flexShrink:0}} title="Usuń notatkę">✕</button>}
+                    </div>;
+                  })()}
                   <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>
                     {isMosk&&<button onClick={()=>importAllegroOrder(imp)} title="Zlecenie"
                       style={{padding:'4px 8px',fontSize:12,borderRadius:5,cursor:'pointer',fontWeight:700,
