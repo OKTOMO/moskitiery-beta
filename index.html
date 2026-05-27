@@ -5260,21 +5260,7 @@ function App() {
             if(zamSearch){const q=zamSearch.toLowerCase();return (imp.klientImie||'').toLowerCase().includes(q)||(imp.klientLogin||'').toLowerCase().includes(q)||(imp.klientMiasto||'').toLowerCase().includes(q)||(imp.offerNames||'').toLowerCase().includes(q);}
             return true;
           });
-          const noweList=filteredAll.filter(imp=>{
-            const s=getEffectiveStatus(imp);
-            if(s==='Nowe'||s==='Wstrzymano'||s==='Problem') return true;
-            // Zostaw na liście Nowe jeśli W realizacji ale brak etykiety lub brak zlecenia
-            if(s==='W realizacji'){
-              const _sh=allegroShipments[imp.allegroOrderId];
-              const _ord=orders.some(function(o){return o.allegroOrderId===imp.allegroOrderId;});
-              const _offerL=(imp.offerNames||'').toLowerCase();
-              const _isMosk=_offerL.includes('moskitier')||_offerL.includes('siatk')||_offerL.includes('ramk')||_offerL.includes('drzwi');
-              const brakEtykiety=!_sh;
-              const brakZlecenia=_isMosk&&!_ord;
-              return brakEtykiety||brakZlecenia;
-            }
-            return false;
-          });
+          const noweList=filteredAll.filter(imp=>{const s=getEffectiveStatus(imp);return s==='Nowe'||s==='Wstrzymano'||s==='Problem';});
           const _statusTimes=JSON.parse(localStorage.getItem('app_status_times')||'{}');
           // Ręczne zamówienia (bez allegroOrderId) w statusie W realizacji
           const reczneWRealizacji=orders.filter(o=>{
@@ -5300,16 +5286,7 @@ function App() {
             _linkedOrder:o,
             numerZlecenia:o.numerZlecenia||'',
           }));
-          const realizacjaList=[...filteredAll.filter(imp=>{
-            if(getEffectiveStatus(imp)!=='W realizacji') return false;
-            // Jeśli brak etykiety lub zlecenia - zostaje w Nowe, nie tu
-            const _sh=allegroShipments[imp.allegroOrderId];
-            const _ord=orders.some(function(o){return o.allegroOrderId===imp.allegroOrderId;});
-            const _offerL=(imp.offerNames||'').toLowerCase();
-            const _isMosk=_offerL.includes('moskitier')||_offerL.includes('siatk')||_offerL.includes('ramk')||_offerL.includes('drzwi');
-            if(!_sh||(_isMosk&&!_ord)) return false;
-            return true;
-          }),...reczneWRealizacji].sort((a,b)=>{
+          const realizacjaList=[...filteredAll.filter(imp=>getEffectiveStatus(imp)==='W realizacji'),...reczneWRealizacji].sort((a,b)=>{
             const ta=_statusTimes[a.allegroOrderId]||a.updatedAt||a.boughtAt||a.data||'';
             const tb=_statusTimes[b.allegroOrderId]||b.updatedAt||b.boughtAt||b.data||'';
             return tb.localeCompare(ta);
