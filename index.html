@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260527.116</title>
+<title>MosquitoApp v20260527.117</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -1174,6 +1174,7 @@ function App() {
   const [leads,setLeads]=useState([]);
   const [showOrderedLeads,setShowOrderedLeads]=useState(false);
   const [leadQrModal,setLeadQrModal]=useState(null);
+  const [leadContacted,setLeadContacted]=useState(function(){try{return JSON.parse(localStorage.getItem('lead_contacted')||'{}');}catch{return {};}});
   const [leadsLoading,setLeadsLoading]=useState(false);
   const [fakSzablony,setFakSzablony]=useState(()=>{try{return JSON.parse(localStorage.getItem('fak_szablony')||'[]');}catch{return [];}});
   const [szablonEditId,setSzablonEditId]=useState(null); // null=lista, 'new'=nowy, id=edycja
@@ -5988,6 +5989,7 @@ function App() {
                               {lead.phone&&<span style={{fontSize:12,color:'#7acfaf',fontFamily:'monospace'}}>📞 {lead.phone}</span>}
                               {lead.email&&<span style={{fontSize:11,color:'#5a8aaf',fontFamily:'monospace'}}>✉️ {lead.email}</span>}
                               {matchedImp&&<span style={{fontSize:11,color:'#5acf9a',background:'#0a2a1a',border:'1px solid #2a6a4a',borderRadius:4,padding:'1px 6px'}}>✅ Zamówił {ordDate?'('+ordDate+')':''}</span>}
+              {leadContacted[lead.id]&&<span style={{fontSize:11,color:'#dfdf7a',background:'#1a1a0a',border:'1px solid #5a5a2a',borderRadius:4,padding:'1px 6px'}} title={'SMS wysłany: '+new Date(leadContacted[lead.id]).toLocaleString('pl-PL')}>📱 SMS {new Date(leadContacted[lead.id]).toLocaleDateString('pl-PL')}</span>}
                               <span style={{fontSize:10,padding:'1px 6px',borderRadius:4,background:brandBg,color:'#9fcfdf',fontFamily:'monospace',fontWeight:700,marginLeft:'auto'}}>{lead.brandName||lead.brand||''}</span>
                               <span style={{fontSize:11,color:'#2a5a6a'}}>{lead.savedAt?new Date(lead.savedAt).toLocaleString('pl-PL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</span>
                               <span style={{fontSize:11,color:'#3a6a7a'}}>{_exp?'▲':'▼'}</span>
@@ -6026,7 +6028,7 @@ function App() {
                               const tresc=encodeURIComponent('Dzień dobry, dziękujemy za skorzystanie z naszego kalkulatora — przy zakupie poza Allegro otrzymają Państwo dodatkowo 10% rabatu od skalkulowanej ceny. Wysyłka na terenie kraju po naszej stronie. Piotr Rudnicki');
                               const smsLink='sms:'+telKlienta+'?body='+tresc;
                               const qrUrl='https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='+encodeURIComponent(smsLink);
-                              return <button onClick={function(e){e.stopPropagation();setLeadQrModal({phone:lead.phone,qrUrl:qrUrl,smsLink:smsLink,name:lead.name||'',tresc:'Dzień dobry, dziękujemy za skorzystanie z naszego kalkulatora — przy zakupie poza Allegro otrzymają Państwo dodatkowo 10% rabatu od skalkulowanej ceny. Wysyłka na terenie kraju po naszej stronie. Piotr Rudnicki'});}}
+                              return <button onClick={function(e){e.stopPropagation();setLeadQrModal({phone:lead.phone,qrUrl:qrUrl,smsLink:smsLink,name:lead.name||'',tresc:'Dzień dobry, dziękujemy za skorzystanie z naszego kalkulatora — przy zakupie poza Allegro otrzymają Państwo dodatkowo 10% rabatu od skalkulowanej ceny. Wysyłka na terenie kraju po naszej stronie. Piotr Rudnicki',leadId:lead.id});}}
                                 style={{padding:'5px 12px',fontSize:12,background:'#1a1a0a',border:'1px solid #5a5a2a',borderRadius:5,color:'#dfdf7a',cursor:'pointer'}}>
                                 📱 QR SMS
                               </button>;
@@ -10116,6 +10118,7 @@ setFvForm(f=>({...f,nabywcaNazwa:_keepName,nabywcaAdres:d.ulica||f.nabywcaAdres,
               <img src={leadQrModal.qrUrl} alt="QR SMS" style={{width:220,height:220,borderRadius:8,border:'3px solid #2a5a2a',background:'#fff'}}/>
             </div>
             <div style={{fontSize:11,color:'#4a7a4a',textAlign:'center',marginBottom:12}}>Zeskanuj telefonem → otworzy SMS z wypełnioną treścią</div>
+            <button onClick={function(){if(!leadQrModal.leadId) return;setLeadContacted(function(prev){const n={...prev,[leadQrModal.leadId]:new Date().toISOString()};localStorage.setItem('lead_contacted',JSON.stringify(n));return n;});setLeadQrModal(null);}} style={{width:'100%',padding:'8px',fontSize:13,background:'#1a1a0a',border:'1px solid #5a5a2a',borderRadius:6,color:'#dfdf7a',cursor:'pointer',fontWeight:700,marginBottom:8}}>📱 Oznacz jako wysłany SMS i zamknij</button>
             <div style={{display:'flex',gap:8}}>
               <a href={leadQrModal.smsLink} style={{flex:1,display:'block',textAlign:'center',padding:'8px',fontSize:13,background:'#1a3a1a',border:'1px solid #3a7a3a',borderRadius:6,color:'#7acf7a',textDecoration:'none',fontWeight:700}}>
                 💬 Otwórz SMS na tym urządzeniu
