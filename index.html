@@ -5300,7 +5300,16 @@ function App() {
             _linkedOrder:o,
             numerZlecenia:o.numerZlecenia||'',
           }));
-          const realizacjaList=[...filteredAll.filter(imp=>getEffectiveStatus(imp)==='W realizacji'),...reczneWRealizacji].sort((a,b)=>{
+          const realizacjaList=[...filteredAll.filter(imp=>{
+            if(getEffectiveStatus(imp)!=='W realizacji') return false;
+            // Jeśli brak etykiety lub zlecenia - zostaje w Nowe, nie tu
+            const _sh=allegroShipments[imp.allegroOrderId];
+            const _ord=orders.some(function(o){return o.allegroOrderId===imp.allegroOrderId;});
+            const _offerL=(imp.offerNames||'').toLowerCase();
+            const _isMosk=_offerL.includes('moskitier')||_offerL.includes('siatk')||_offerL.includes('ramk')||_offerL.includes('drzwi');
+            if(!_sh||(_isMosk&&!_ord)) return false;
+            return true;
+          }),...reczneWRealizacji].sort((a,b)=>{
             const ta=_statusTimes[a.allegroOrderId]||a.updatedAt||a.boughtAt||a.data||'';
             const tb=_statusTimes[b.allegroOrderId]||b.updatedAt||b.boughtAt||b.data||'';
             return tb.localeCompare(ta);
@@ -10177,7 +10186,7 @@ setFvForm(f=>({...f,nabywcaNazwa:_keepName,nabywcaAdres:d.ulica||f.nabywcaAdres,
             {/* Pozycje z szablonu / Allegro */}
             {fakModal.pozLoading&&<div style={{padding:'8px 12px',background:'#0a1a0a',border:'1px solid #2a4a2a',borderRadius:6,marginBottom:8,fontSize:12,color:'#5a9a7a'}}>⏳ Pobieranie pozycji z Allegro...</div>}
             {/* Szybkie przypisanie istniejącej faktury */}
-            {(()=>{
+            {(function(){
               const _oid=fakModal.imp?.allegroOrderId||fakModal.order?.allegroOrderId||'';
               const _invSent=invoicesSent[_oid];
               if(_invSent) return null;
