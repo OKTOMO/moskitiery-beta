@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260527.103</title>
+<title>MosquitoApp v20260527.104</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -10108,6 +10108,46 @@ setFvForm(f=>({...f,nabywcaNazwa:_keepName,nabywcaAdres:d.ulica||f.nabywcaAdres,
             </div>
             {/* Pozycje z szablonu / Allegro */}
             {fakModal.pozLoading&&<div style={{padding:'8px 12px',background:'#0a1a0a',border:'1px solid #2a4a2a',borderRadius:6,marginBottom:8,fontSize:12,color:'#5a9a7a'}}>⏳ Pobieranie pozycji z Allegro...</div>}
+            {/* Szybkie przypisanie istniejącej faktury */}
+            {(()=>{
+              const _oid=fakModal.imp?.allegroOrderId||fakModal.order?.allegroOrderId||'';
+              const _invSent=invoicesSent[_oid];
+              if(_invSent) return null;
+              return <div style={{background:'#1a1a0a',border:'1px solid #4a4a1a',borderRadius:6,padding:'8px 12px',marginBottom:12,fontSize:12}}>
+                <span style={{color:'#cfcf7a',fontWeight:700}}>📎 Faktura już wystawiona w Fakturowni?</span>
+                <div style={{display:'flex',gap:6,marginTop:6,alignItems:'center'}}>
+                  <input id="przypisz_fak_nr" placeholder="Numer faktury np. F/5/2026 lub ID z URL"
+                    style={{flex:1,padding:'4px 8px',fontSize:12,background:'#0a0a0a',border:'1px solid #5a5a2a',borderRadius:4,color:'#dfdf9a'}}/>
+                  <button onClick={function(){
+                    const val=document.getElementById('przypisz_fak_nr').value.trim();
+                    if(!val) return;
+                    // Sprawdź czy to ID numeryczne (z URL) czy numer (F/5/2026)
+                    const isId=/^\d+$/.test(val);
+                    const entry={
+                      number:isId?('F/'+val):val,
+                      fakturowniaId:isId?val:null,
+                      date:new Date().toISOString().slice(0,10),
+                      allegroOrderId:_oid,
+                      kontoId:fakModal.imp?.kontoId||'',
+                      firma:fakModal.order?.firma||'F',
+                      klientNazwa:fakModal.form?.nazwaFirmy||fakModal.form?.imie||fakModal.imp?.klientImie||'',
+                      klientMiasto:fakModal.form?.miasto||fakModal.imp?.klientMiasto||'',
+                      kwota:parseFloat(fakModal.form?.kwota)||0,
+                      _manualAssign:true,
+                    };
+                    setInvoicesSent(function(prev){
+                      const next={...prev,[_oid]:entry};
+                      localStorage.setItem('invoices_sent',JSON.stringify(next));
+                      return next;
+                    });
+                    setFakModal(null);
+                  }} style={{padding:'4px 10px',fontSize:12,background:'#2a2a0a',border:'1px solid #6a6a2a',borderRadius:4,color:'#dfdf6a',cursor:'pointer',fontWeight:700}}>
+                    Przypisz
+                  </button>
+                </div>
+                <div style={{fontSize:10,color:'#6a6a3a',marginTop:4}}>Wpisz numer (np. <em>5/2026/EVR</em>) lub ID z URL Fakturowni (<em>…/invoices/12345</em>)</div>
+              </div>;
+            })()}
             {fakModal.form.pozycjeAllegro&&fakModal.form.pozycjeAllegro.length>0&&(
               <div style={{marginBottom:12}}>
                 <span className="lbl">Pozycje faktury ({fakModal.form.pozycjeAllegro.length})</span>
