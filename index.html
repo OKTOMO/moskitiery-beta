@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260527.118</title>
+<title>MosquitoApp v20260527.119</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -1176,6 +1176,8 @@ function App() {
   const [leadQrModal,setLeadQrModal]=useState(null);
   const [leadContacted,setLeadContacted]=useState(function(){try{return JSON.parse(localStorage.getItem('lead_contacted')||'{}');}catch{return {};}});
   const [leadStatus,setLeadStatus]=useState(function(){try{return JSON.parse(localStorage.getItem('lead_status')||'{}');}catch{return {};}});
+  const [leadNotes,setLeadNotes]=useState(function(){try{return JSON.parse(localStorage.getItem('lead_notes_own')||'{}');}catch{return {};}});
+  const [leadEmailed,setLeadEmailed]=useState(function(){try{return JSON.parse(localStorage.getItem('lead_emailed')||'{}');}catch{return {};}});
   const [leadsLoading,setLeadsLoading]=useState(false);
   const [fakSzablony,setFakSzablony]=useState(()=>{try{return JSON.parse(localStorage.getItem('fak_szablony')||'[]');}catch{return [];}});
   const [szablonEditId,setSzablonEditId]=useState(null); // null=lista, 'new'=nowy, id=edycja
@@ -5992,6 +5994,7 @@ function App() {
                               {matchedImp&&<span style={{fontSize:11,color:'#5acf9a',background:'#0a2a1a',border:'1px solid #2a6a4a',borderRadius:4,padding:'1px 6px'}}>✅ Zamówił {ordDate?'('+ordDate+')':''}</span>}
               {leadContacted[lead.id]&&<span style={{fontSize:11,color:'#dfdf7a',background:'#1a1a0a',border:'1px solid #5a5a2a',borderRadius:4,padding:'1px 6px'}} title={'SMS wysłany: '+new Date(leadContacted[lead.id]).toLocaleString('pl-PL')}>📱 SMS {new Date(leadContacted[lead.id]).toLocaleDateString('pl-PL')}</span>}
               {leadStatus[lead.id]==='realizacja'&&<span style={{fontSize:11,color:'#7acf7a',background:'#0a2a0a',border:'1px solid #2a6a2a',borderRadius:4,padding:'1px 6px'}} title={'W realizacji od: '+new Date(leadStatus[lead.id+'_date']||Date.now()).toLocaleString('pl-PL')}>⚙️ W realizacji</span>}
+              {leadEmailed[lead.id]&&<span style={{fontSize:11,color:'#7aaFcf',background:'#0a1a2a',border:'1px solid #2a4a6a',borderRadius:4,padding:'1px 6px'}} title={'Email wysłany: '+new Date(leadEmailed[lead.id]).toLocaleString('pl-PL')}>✉️ Email {new Date(leadEmailed[lead.id]).toLocaleDateString('pl-PL')}</span>}
                               <span style={{fontSize:10,padding:'1px 6px',borderRadius:4,background:brandBg,color:'#9fcfdf',fontFamily:'monospace',fontWeight:700,marginLeft:'auto'}}>{lead.brandName||lead.brand||''}</span>
                               <span style={{fontSize:11,color:'#2a5a6a'}}>{lead.savedAt?new Date(lead.savedAt).toLocaleString('pl-PL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</span>
                               <span style={{fontSize:11,color:'#3a6a7a'}}>{_exp?'▲':'▼'}</span>
@@ -6021,6 +6024,25 @@ function App() {
                             {parseFloat(lead.totalCost)>0&&<span style={{fontSize:15,color:'#dfbf3a',fontWeight:700,background:'#1a1400',border:'1px solid #4a3a0a',borderRadius:5,padding:'3px 12px'}}>💰 {parseFloat(lead.totalCost).toFixed(2)} zł</span>}
                             {lead.notes&&<span style={{fontSize:12,color:'#7a9a7a',fontStyle:'italic',flex:1}}>📝 {lead.notes}</span>}
                           </div>
+                          {/* Pole uwag własnych */}
+                          <div style={{marginBottom:8}}>
+                            {(function(){
+                              const _note=leadNotes[lead.id]||'';
+                              const _editing=zamOpenBox[lead.id+'_ln']==='note';
+                              return <div style={{display:'flex',alignItems:'center',gap:6}}>
+                                <span style={{fontSize:11,color:'#4a6a4a',flexShrink:0}}>📝</span>
+                                {_editing
+                                  ? <input autoFocus defaultValue={_note}
+                                      onBlur={function(e){const v=e.target.value;setLeadNotes(function(prev){const n={...prev};if(v)n[lead.id]=v;else delete n[lead.id];localStorage.setItem('lead_notes_own',JSON.stringify(n));return n;});toggleBox(lead.id+'_ln','note');}}
+                                      onKeyDown={function(e){if(e.key==='Enter'||e.key==='Escape')e.target.blur();}}
+                                      style={{flex:1,fontSize:11,padding:'2px 6px',borderRadius:4,background:'#0a1a0a',border:'1px solid #3a6a3a',color:'#9fcf9f'}}
+                                      placeholder="Uwagi własne..."/>
+                                  : <span onClick={function(){toggleBox(lead.id+'_ln','note');}} style={{fontSize:11,color:_note?'#9fcf9f':'#2a4a2a',cursor:'pointer',fontStyle:_note?'normal':'italic'}}>{_note||'+ uwagi własne'}</span>
+                                }
+                                {_note&&!_editing&&<button onClick={function(e){e.stopPropagation();setLeadNotes(function(prev){const n={...prev};delete n[lead.id];localStorage.setItem('lead_notes_own',JSON.stringify(n));return n;});}} style={{padding:'0 4px',fontSize:10,background:'none',border:'none',color:'#4a2a2a',cursor:'pointer'}}>✕</button>}
+                              </div>;
+                            })()}
+                          </div>
                           <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
                             {(function(){
                               const isReal=leadStatus[lead.id]==='realizacja';
@@ -6029,7 +6051,14 @@ function App() {
                               </button>;
                             })()}
                             {lead.phone&&<a href={'tel:'+lead.phone} onClick={function(e){e.stopPropagation();}} style={{padding:'5px 12px',fontSize:12,background:'#0a2a1a',border:'1px solid #2a6a4a',borderRadius:5,color:'#7acfaf',textDecoration:'none'}}>📞 Zadzwoń</a>}
-                            {lead.email&&<a href={'mailto:'+lead.email} onClick={function(e){e.stopPropagation();}} style={{padding:'5px 12px',fontSize:12,background:'#0a1a2a',border:'1px solid #2a4a6a',borderRadius:5,color:'#7aafcf',textDecoration:'none'}}>✉️ Email</a>}
+                            {lead.email&&(function(){
+                              const mailLink='mailto:'+lead.email+'?subject='+encodeURIComponent('Oferta specjalna — moskitiery na wymiar')+'&body='+encodeURIComponent('Dzień dobry, dziękujemy za skorzystanie z naszego kalkulatora — przy zakupie poza Allegro otrzymają Państwo dodatkowo 10% rabatu od skalkulowanej ceny. Wysyłka na terenie kraju po naszej stronie. Piotr Rudnicki');
+                              const isEmailed=!!leadEmailed[lead.id];
+                              return <div style={{display:'flex',gap:4,alignItems:'center'}}>
+                                <a href={mailLink} onClick={function(e){e.stopPropagation();}} style={{padding:'5px 12px',fontSize:12,background:isEmailed?'#0a2a3a':'#0a1a2a',border:'1px solid '+(isEmailed?'#2a6a8a':'#2a4a6a'),borderRadius:5,color:isEmailed?'#5acfdf':'#7aafcf',textDecoration:'none'}}>✉️ {isEmailed?'Wyślij ponownie':'Email'}</a>
+                                <button onClick={function(e){e.stopPropagation();setLeadEmailed(function(prev){const n={...prev};if(isEmailed){delete n[lead.id];}else{n[lead.id]=new Date().toISOString();}localStorage.setItem('lead_emailed',JSON.stringify(n));return n;});}} style={{padding:'5px 8px',fontSize:11,background:isEmailed?'#0a2a0a':'#0a1a0a',border:'1px solid '+(isEmailed?'#2a6a2a':'#1a3a1a'),borderRadius:5,color:isEmailed?'#7acf7a':'#3a6a3a',cursor:'pointer'}} title={isEmailed?'Cofnij oznaczenie':'Oznacz email jako wysłany'}>{isEmailed?'✓':'+✉️'}</button>
+              </div>;
+                            })()}
                             {lead.phone&&(function(){
                               const tel=(lead.phone||'').replace(/[\s\-]/g,'');
                               const telKlienta=tel.startsWith('+')?tel:(tel.startsWith('48')?'+'+tel:'+48'+tel);
