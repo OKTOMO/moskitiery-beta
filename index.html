@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260527.119</title>
+<title>MosquitoApp v20260527.120</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -4007,9 +4007,13 @@ function App() {
           ?[...pozOkna,...pozDrzwi]
           :[...pozOkna.filter(p=>!p.isDrzwi),...pozDrzwi.filter(p=>p.isDrzwi)];
         setForm(f=>({...f,
-          klientImie:r.klientImie||f.klientImie,klientUlica:r.klientUlica||f.klientUlica,
-          klientKod:r.klientKod||f.klientKod,klientMiasto:r.klientMiasto||f.klientMiasto,
-          telefon:r.telefon||f.telefon,uwagi:f.uwagi,
+          // Jeśli dane z kalkulatora już zaciągnięte - nie nadpisuj danymi z AI
+          klientImie:f._kalNum&&f.klientImie?f.klientImie:(r.klientImie||f.klientImie),
+          klientUlica:f._kalNum&&f.klientUlica?f.klientUlica:(r.klientUlica||f.klientUlica),
+          klientKod:f._kalNum&&f.klientKod?f.klientKod:(r.klientKod||f.klientKod),
+          klientMiasto:f._kalNum&&f.klientMiasto?f.klientMiasto:(r.klientMiasto||f.klientMiasto),
+          telefon:f._kalNum&&f.telefon?f.telefon:(r.telefon||f.telefon),
+          uwagi:f.uwagi,
           pozycje:finalPoz.length?finalPoz:f.pozycje
         }));
       } else {
@@ -4018,9 +4022,12 @@ function App() {
         const r=await parseAI(wiadomosc,adres,isDrzwiMode?"drzwi":"okno",_offerNames,aiRules);
         const pozycje=mapPozycje(r.pozycje,isDrzwiMode,!isDrzwiMode);
         setForm(f=>({...f,
-          klientImie:r.klientImie||f.klientImie,klientUlica:r.klientUlica||f.klientUlica,
-          klientKod:r.klientKod||f.klientKod,klientMiasto:r.klientMiasto||f.klientMiasto,
-          telefon:r.telefon||f.telefon,uwagi:f.uwagi,
+          klientImie:f._kalNum&&f.klientImie?f.klientImie:(r.klientImie||f.klientImie),
+          klientUlica:f._kalNum&&f.klientUlica?f.klientUlica:(r.klientUlica||f.klientUlica),
+          klientKod:f._kalNum&&f.klientKod?f.klientKod:(r.klientKod||f.klientKod),
+          klientMiasto:f._kalNum&&f.klientMiasto?f.klientMiasto:(r.klientMiasto||f.klientMiasto),
+          telefon:f._kalNum&&f.telefon?f.telefon:(r.telefon||f.telefon),
+          uwagi:f.uwagi,
           pozycje:pozycje.length?pozycje:f.pozycje
         }));
       }
