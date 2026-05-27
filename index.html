@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260527.114</title>
+<title>MosquitoApp v20260527.115</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -6022,8 +6022,9 @@ function App() {
                             {lead.email&&<a href={'mailto:'+lead.email} onClick={function(e){e.stopPropagation();}} style={{padding:'5px 12px',fontSize:12,background:'#0a1a2a',border:'1px solid #2a4a6a',borderRadius:5,color:'#7aafcf',textDecoration:'none'}}>✉️ Email</a>}
                             {lead.phone&&(function(){
                               const tel=(lead.phone||'').replace(/[\s\-]/g,'');
+                              const telKlienta=tel.startsWith('+')?tel:(tel.startsWith('48')?'+'+tel:'+48'+tel);
                               const tresc=encodeURIComponent('Dzień dobry, widzę że interesowała Państwa wycena moskitier. Chętnie zrealizujemy zamówienie — przy zakupie bezpośrednio u nas cena jest o 10% niższa niż na platformie, a wysyłka na terenie Polski po naszej stronie. Zapraszam — Piotr Rudnicki');
-                              const smsLink='sms:+48605361191?body='+tresc;
+                              const smsLink='sms:'+telKlienta+'?body='+tresc;
                               const qrUrl='https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='+encodeURIComponent(smsLink);
                               return <button onClick={function(e){e.stopPropagation();setLeadQrModal({phone:lead.phone,qrUrl:qrUrl,smsLink:smsLink,name:lead.name||'',tresc:'Dzień dobry, widzę że interesowała Państwa wycena moskitier. Chętnie zrealizujemy zamówienie — przy zakupie bezpośrednio u nas cena jest o 10% niższa niż na platformie, a wysyłka na terenie Polski po naszej stronie. Zapraszam — Piotr Rudnicki'});}}
                                 style={{padding:'5px 12px',fontSize:12,background:'#1a1a0a',border:'1px solid #5a5a2a',borderRadius:5,color:'#dfdf7a',cursor:'pointer'}}>
@@ -10102,11 +10103,11 @@ setFvForm(f=>({...f,nabywcaNazwa:_keepName,nabywcaAdres:d.ulica||f.nabywcaAdres,
               <span style={{fontWeight:700,fontSize:16,color:'#9acf9a'}}>📱 QR SMS do klienta</span>
               <button onClick={function(){setLeadQrModal(null);}} style={{background:'none',border:'none',color:'#7a9a7a',fontSize:20,cursor:'pointer'}}>✕</button>
             </div>
-            <div style={{fontSize:12,color:'#5a8a5a',marginBottom:8}}>Do: <strong style={{color:'#9fcfdf'}}>{leadQrModal.name||''} {leadQrModal.phone}</strong> — wysyłasz z <strong style={{color:'#cfdf7a'}}>605 361 191</strong></div>
+            <div style={{fontSize:12,color:'#5a8a5a',marginBottom:8}}>Do klienta: <strong style={{color:'#9fcfdf'}}>{leadQrModal.name||''} {leadQrModal.phone}</strong> — skanujesz swoim telefonem (605 361 191)</div>
             <textarea
               defaultValue={leadQrModal.tresc}
               onChange={function(e){
-                const tresc=encodeURIComponent('sms:+48605361191?body='+e.target.value);
+                const _tel2=(leadQrModal.phone||'').replace(/[\s\-]/g,'');const _telK=_tel2.startsWith('+')?_tel2:(_tel2.startsWith('48')?'+'+_tel2:'+48'+_tel2);const tresc=encodeURIComponent('sms:'+_telK+'?body='+e.target.value);
                 const qrUrl='https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='+tresc;
                 setLeadQrModal(function(prev){return {...prev,qrUrl:qrUrl,tresc:e.target.value};});
               }}
