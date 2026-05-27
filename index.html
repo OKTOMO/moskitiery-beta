@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260527.115</title>
+<title>MosquitoApp v20260527.116</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -6023,10 +6023,10 @@ function App() {
                             {lead.phone&&(function(){
                               const tel=(lead.phone||'').replace(/[\s\-]/g,'');
                               const telKlienta=tel.startsWith('+')?tel:(tel.startsWith('48')?'+'+tel:'+48'+tel);
-                              const tresc=encodeURIComponent('Dzień dobry, widzę że interesowała Państwa wycena moskitier. Chętnie zrealizujemy zamówienie — przy zakupie bezpośrednio u nas cena jest o 10% niższa niż na platformie, a wysyłka na terenie Polski po naszej stronie. Zapraszam — Piotr Rudnicki');
+                              const tresc=encodeURIComponent('Dzień dobry, dziękujemy za skorzystanie z naszego kalkulatora — przy zakupie poza Allegro otrzymają Państwo dodatkowo 10% rabatu od skalkulowanej ceny. Wysyłka na terenie kraju po naszej stronie. Piotr Rudnicki');
                               const smsLink='sms:'+telKlienta+'?body='+tresc;
                               const qrUrl='https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='+encodeURIComponent(smsLink);
-                              return <button onClick={function(e){e.stopPropagation();setLeadQrModal({phone:lead.phone,qrUrl:qrUrl,smsLink:smsLink,name:lead.name||'',tresc:'Dzień dobry, widzę że interesowała Państwa wycena moskitier. Chętnie zrealizujemy zamówienie — przy zakupie bezpośrednio u nas cena jest o 10% niższa niż na platformie, a wysyłka na terenie Polski po naszej stronie. Zapraszam — Piotr Rudnicki'});}}
+                              return <button onClick={function(e){e.stopPropagation();setLeadQrModal({phone:lead.phone,qrUrl:qrUrl,smsLink:smsLink,name:lead.name||'',tresc:'Dzień dobry, dziękujemy za skorzystanie z naszego kalkulatora — przy zakupie poza Allegro otrzymają Państwo dodatkowo 10% rabatu od skalkulowanej ceny. Wysyłka na terenie kraju po naszej stronie. Piotr Rudnicki'});}}
                                 style={{padding:'5px 12px',fontSize:12,background:'#1a1a0a',border:'1px solid #5a5a2a',borderRadius:5,color:'#dfdf7a',cursor:'pointer'}}>
                                 📱 QR SMS
                               </button>;
