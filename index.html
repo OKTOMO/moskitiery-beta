@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260527.110</title>
+<title>MosquitoApp v20260527.111</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -378,6 +378,7 @@ Przykłady: "73,5x2+221,5x2=590/10=59 x3" → szerokosc=73.5, wysokosc=221.5, il
 
 NOTACJA X/Y: "120/124" dla okna → szerokosc=120, uwagi="120/124"
 CZTERY POMIARY OKNA: "46+46+66+66" → szerokosc=46, wysokosc=66
+DWA WYMIARY SZEROKOŚCI OKNA: gdy klient podaje dwie bliskie wartości jako A i B (np. "A 101,5cm, B 104,5cm") → szerokosc=101.5, szer2=104.5 (JEDNA pozycja, nie dwie!). Analogicznie dla wysokości: dwie wartości → wysokosc=mniejsza, wys2=większa.
 ZAWIAS: rozpoznaj stronę zawiasu z dowolnego sformułowania:
 - "lewy", "lewa", "po lewo", "po lewej", "zawiasy lewe", "zawiasy po lewo", "zawias lewy", "left" → zawias="L"
 - "prawy", "prawa", "po prawo", "po prawej", "zawiasy prawe", "zawiasy po prawo", "zawias prawy", "right" → zawias="P"
@@ -4007,7 +4008,8 @@ function App() {
           pozycje:finalPoz.length?finalPoz:f.pozycje
         }));
       } else {
-        const isDrzwiMode=parseTyp==="drzwi"||_hasDrzwiInForm;
+        // _hasDrzwiInForm tylko gdy user nie kliknął jawnie 'Okno' - nie nadpisuj ręcznego wyboru
+        const isDrzwiMode=parseTyp==="drzwi"||(parseTyp!=='okno'&&_hasDrzwiInForm);
         const r=await parseAI(wiadomosc,adres,isDrzwiMode?"drzwi":"okno",_offerNames,aiRules);
         const pozycje=mapPozycje(r.pozycje,isDrzwiMode,!isDrzwiMode);
         setForm(f=>({...f,
