@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260527.111</title>
+<title>MosquitoApp v20260527.112</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -5963,58 +5963,67 @@ function App() {
                     });
                     filtered.sort(function(a,b){return (b.savedAt||'').localeCompare(a.savedAt||'');});
                     if(filtered.length===0&&!leadsLoading) return <div style={{color:'#3a5a6a',textAlign:'center',padding:'30px 0',fontSize:14}}>Brak porzuconych zapytań</div>;
-                    return filtered.map(function(lead){return (
-                    <div key={lead.id} style={{background:'#0a1a2a',border:'1px solid #1a3a4a',borderRadius:7,padding:'10px 14px',marginBottom:8,display:'flex',gap:12,alignItems:'flex-start'}}>
-                      <div style={{flex:1,minWidth:0}}>
-                        <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginBottom:4}}>
-                          {lead.name&&<span style={{fontWeight:700,color:'#9fcfdf',fontSize:14}}>{lead.name}</span>}
-                          {(function(){
-                          const lp=(lead.phone||'').replace(/[\s\-\+]/g,'').slice(-9);
-                          const leadEmail=(lead.email||'').toLowerCase().trim();
-                          const leadLogin=(lead.allegroLogin||lead.login||'').toLowerCase().trim();
-                          // Szukaj dopasowania po telefonie (ostatnie 9 cyfr), loginie lub emailu
-                          const leadName=(lead.name||'').toLowerCase().trim();
-                          const matchedImp=allegroImportResults.find(function(imp){
-                            const ip=(imp.telefon||'').replace(/[\s\-\+]/g,'').slice(-9);
-                            const impLogin=(imp.klientLogin||'').toLowerCase().trim();
-                            const impName=(imp.klientImie||'').toLowerCase().trim();
-                            const byPhone=lp&&lp.length>=9&&ip&&ip===lp;
-                            const byLogin=leadLogin&&impLogin&&leadLogin===impLogin;
-                            // Imię+nazwisko - tylko gdy min 2 słowa i pełne dopasowanie
-                            const byName=leadName&&leadName.includes(' ')&&impName&&(
-                              impName===leadName||
-                              impName.split(' ').reverse().join(' ')===leadName||
-                              leadName.split(' ').reverse().join(' ')===impName
-                            );
-                            return byPhone||byLogin||byName;
-                          });
-                          if(!matchedImp) return null;
-                          const ordDate=matchedImp.boughtAt?new Date(matchedImp.boughtAt).toLocaleDateString('pl-PL'):'';
-                          return <span style={{fontSize:11,color:'#5acf9a',background:'#0a2a1a',border:'1px solid #2a6a4a',borderRadius:4,padding:'1px 6px',cursor:'default'}} title={'Zamówienie: '+(matchedImp.klientImie||matchedImp.klientLogin||'')+(ordDate?' ('+ordDate+')':'')}>✅ Zamówił {ordDate?'('+ordDate+')':''}</span>;
-                        })()}
-                          {lead.phone&&<a href={'tel:'+lead.phone} style={{color:'#7acf9f',fontSize:13,textDecoration:'none'}}>📞 {lead.phone}</a>}
-                          {lead.email&&<a href={'mailto:'+lead.email} style={{color:'#7aafcf',fontSize:13,textDecoration:'none'}}>✉️ {lead.email}</a>}
-                          <span style={{fontSize:11,color:'#3a6a7a',marginLeft:'auto'}}>{lead.brandName||lead.brand||''}</span>
-                        </div>
-                        {lead.pozycje&&lead.pozycje.length>0&&(
-                          <div style={{fontSize:12,color:'#5a8a9a',marginBottom:3}}>
-                            {(expandedLeads.has(lead.id)?lead.pozycje:lead.pozycje.slice(0,3)).map(function(p,i){return <span key={i} style={{marginRight:8}}>{p.szerokosc&&p.wysokosc?p.szerokosc+'x'+p.wysokosc+' cm':'—'}{p.kolorProfilu?' '+p.kolorProfilu:''}{p.ilosc>1?' x'+p.ilosc:''}</span>;})}
-                            {lead.pozycje.length>3&&(
-                              expandedLeads.has(lead.id)
-                                ? <span onClick={function(){setExpandedLeads(function(prev){var n=new Set(prev);n.delete(lead.id);return n;});}} style={{color:'#5abfbf',cursor:'pointer',marginLeft:4}}>▲ zwiń</span>
-                                : <span onClick={function(){setExpandedLeads(function(prev){var n=new Set(prev);n.add(lead.id);return n;});}} style={{color:'#5abfbf',cursor:'pointer',marginLeft:4}}>+{lead.pozycje.length-3} więcej ▼</span>
-                            )}
+                    return filtered.map(function(lead){
+                      const _exp=expandedLeads.has(lead.id);
+                      const lp=(lead.phone||'').replace(/[\s\-\+]/g,'').slice(-9);
+                      const leadLogin=(lead.allegroLogin||lead.login||'').toLowerCase().trim();
+                      const leadName2=(lead.name||'').toLowerCase().trim();
+                      const matchedImp=allegroImportResults.find(function(imp){
+                        const ip=(imp.telefon||'').replace(/[\s\-\+]/g,'').slice(-9);
+                        const impLogin=(imp.klientLogin||'').toLowerCase().trim();
+                        const impName=(imp.klientImie||'').toLowerCase().trim();
+                        return (lp&&lp.length>=9&&ip&&ip===lp)||(leadLogin&&impLogin&&leadLogin===impLogin)||(leadName2&&leadName2.includes(' ')&&impName&&(impName===leadName2||impName.split(' ').reverse().join(' ')===leadName2||leadName2.split(' ').reverse().join(' ')===impName));
+                      });
+                      const ordDate=matchedImp&&matchedImp.boughtAt?new Date(matchedImp.boughtAt).toLocaleDateString('pl-PL'):'';
+                      const BRAND_COL={fav:'#1a3a2a',favo5:'#1a3a2a',str:'#1a3a1a',arl:'#1a2a3a',evr:'#1a1a3a',alb:'#2a2a1a'};
+                      const brandBg=BRAND_COL[lead.brand]||'#1a2a3a';
+                      return (
+                      <div key={lead.id} style={{background:'#080f1a',border:'1px solid '+(_exp?'#2a5a7a':'#1a3a4a'),borderRadius:8,marginBottom:8,overflow:'hidden'}}>
+                        <div onClick={function(){setExpandedLeads(function(prev){var n=new Set(prev);_exp?n.delete(lead.id):n.add(lead.id);return n;});}}
+                          style={{display:'flex',gap:8,alignItems:'center',padding:'9px 12px',cursor:'pointer',background:_exp?'#0a1a2a':'transparent',flexWrap:'wrap'}}>
+                          <div style={{flex:1,minWidth:0}}>
+                            <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginBottom:2}}>
+                              {lead.name&&<span style={{fontWeight:700,color:'#9fcfdf',fontSize:14}}>{lead.name}</span>}
+                              {lead.phone&&<span style={{fontSize:12,color:'#7acfaf',fontFamily:'monospace'}}>📞 {lead.phone}</span>}
+                              {lead.email&&<span style={{fontSize:11,color:'#5a8aaf',fontFamily:'monospace'}}>✉️ {lead.email}</span>}
+                              {matchedImp&&<span style={{fontSize:11,color:'#5acf9a',background:'#0a2a1a',border:'1px solid #2a6a4a',borderRadius:4,padding:'1px 6px'}}>✅ Zamówił {ordDate?'('+ordDate+')':''}</span>}
+                              <span style={{fontSize:10,padding:'1px 6px',borderRadius:4,background:brandBg,color:'#9fcfdf',fontFamily:'monospace',fontWeight:700,marginLeft:'auto'}}>{lead.brandName||lead.brand||''}</span>
+                              <span style={{fontSize:11,color:'#2a5a6a'}}>{lead.savedAt?new Date(lead.savedAt).toLocaleString('pl-PL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</span>
+                              <span style={{fontSize:11,color:'#3a6a7a'}}>{_exp?'▲':'▼'}</span>
+                            </div>
+                            {!_exp&&lead.pozycje&&lead.pozycje.length>0&&<div style={{fontSize:11,color:'#4a7a8a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
+                              {lead.pozycje.map(function(p,i){return (p.szerokosc||p.wysokosc)?p.szerokosc+'×'+p.wysokosc+' cm'+(p.kolorProfilu?' '+p.kolorProfilu:'')+(parseInt(p.ilosc||1)>1?' ×'+p.ilosc:''):null;}).filter(Boolean).join(' | ')}
+                              {parseFloat(lead.totalCost)>0&&<span style={{color:'#dfbf3a',fontWeight:700,marginLeft:8}}>{parseFloat(lead.totalCost).toFixed(2)} zł</span>}
+                            </div>}
                           </div>
-                        )}
-                        <div style={{display:'flex',gap:10,alignItems:'center'}}>
-                          {parseFloat(lead.totalCost)>0&&<span style={{fontSize:13,color:'#dfbf3a',fontWeight:700,background:'#1a1400',border:'1px solid #4a3a0a',borderRadius:5,padding:'1px 8px'}}>{parseFloat(lead.totalCost).toFixed(2)} zł</span>}
-                          {lead.notes&&<span style={{fontSize:12,color:'#5a7a7a',fontStyle:'italic'}}>{lead.notes}</span>}
-                          <span style={{fontSize:11,color:'#2a5a6a',marginLeft:'auto'}}>{lead.savedAt?new Date(lead.savedAt).toLocaleString('pl-PL'):''}</span>
+                          <button onClick={function(e){e.stopPropagation();deleteLead(lead.id);}} title="Usuń" style={{background:'#2a0a0a',border:'1px solid #5a2a2a',color:'#af5a5a',borderRadius:5,padding:'3px 8px',cursor:'pointer',fontSize:12,flexShrink:0}}>✕</button>
                         </div>
+                        {_exp&&<div style={{padding:'10px 14px',borderTop:'1px solid #1a3a4a',background:'#060e18'}}>
+                          {lead.pozycje&&lead.pozycje.length>0&&<div style={{marginBottom:10}}>
+                            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 50px 1fr',gap:4,padding:'3px 8px',background:'#0a1f1a',borderRadius:4,fontSize:10,color:'#3a8a6a',fontWeight:700,marginBottom:3,letterSpacing:'.05em'}}>
+                              {['Szerokość','Wysokość','Szt.','Kolor'].map(function(h){return <span key={h}>{h}</span>;})}
+                            </div>
+                            {lead.pozycje.map(function(p,i){return(
+                              <div key={i} style={{display:'grid',gridTemplateColumns:'1fr 1fr 50px 1fr',gap:4,padding:'5px 8px',background:i%2===0?'#080f18':'#0a1420',fontSize:12,borderRadius:3}}>
+                                <span style={{color:'#7acfdf',fontWeight:600}}>{p.szerokosc||'—'} cm</span>
+                                <span style={{color:'#7acfdf',fontWeight:600}}>{p.wysokosc||'—'} cm</span>
+                                <span style={{color:'#cfdf9a',fontWeight:700,textAlign:'center'}}>{p.ilosc||1}</span>
+                                <span style={{color:'#dfcf7a',fontSize:11}}>{p.kolorProfilu||'—'}</span>
+                              </div>
+                            );})}
+                          </div>}
+                          <div style={{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap',marginBottom:8}}>
+                            {parseFloat(lead.totalCost)>0&&<span style={{fontSize:15,color:'#dfbf3a',fontWeight:700,background:'#1a1400',border:'1px solid #4a3a0a',borderRadius:5,padding:'3px 12px'}}>💰 {parseFloat(lead.totalCost).toFixed(2)} zł</span>}
+                            {lead.notes&&<span style={{fontSize:12,color:'#7a9a7a',fontStyle:'italic',flex:1}}>📝 {lead.notes}</span>}
+                          </div>
+                          <div style={{display:'flex',gap:6}}>
+                            {lead.phone&&<a href={'tel:'+lead.phone} onClick={function(e){e.stopPropagation();}} style={{padding:'5px 12px',fontSize:12,background:'#0a2a1a',border:'1px solid #2a6a4a',borderRadius:5,color:'#7acfaf',textDecoration:'none'}}>📞 Zadzwoń</a>}
+                            {lead.email&&<a href={'mailto:'+lead.email} onClick={function(e){e.stopPropagation();}} style={{padding:'5px 12px',fontSize:12,background:'#0a1a2a',border:'1px solid #2a4a6a',borderRadius:5,color:'#7aafcf',textDecoration:'none'}}>✉️ Email</a>}
+                          </div>
+                        </div>}
                       </div>
-                      <button onClick={function(){deleteLead(lead.id);}} title="Usuń" style={{background:'#2a0a0a',border:'1px solid #5a2a2a',color:'#af5a5a',borderRadius:5,padding:'3px 8px',cursor:'pointer',fontSize:12,flexShrink:0}}>✕</button>
-                    </div>
-                    );});
+                      );
+                    });
                   })()}
                 </div>
               )}
