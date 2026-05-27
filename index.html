@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260527.106</title>
+<title>MosquitoApp v20260527.107</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -238,7 +238,7 @@ async function parseAI(msg, adres, typ, offerNames, rules) {
   const prompt=`Wyodrębnij dane z wiadomości i zwróć TYLKO JSON bez markdown.
 
 TYP ZAMÓWIENIA: ${autoTyp==="drzwi"?"DRZWI MOSKITIEROWE — ustaw isDrzwi:true dla wszystkich pozycji":typ==="okno"?"OKNA MOSKITIEROWE — ustaw isDrzwi:false, chyba że wiadomość wyraźnie mówi o drzwiach — wtedy isDrzwi:true":"OKNA I DRZWI MOSKITIEROWE — wykryj typ każdej pozycji"}
-${offerNames?`\nTYTUŁ OFERTY Z ALLEGRO: "${offerNames}" — użyj do określenia typu (drzwi/okno) i koloru gdy nie podano w wiadomości.`:''}
+${offerNames?`\nTYTUŁ OFERTY Z ALLEGRO: "${offerNames}" — użyj do określenia typu (drzwi/okno), koloru i poprzeczki (jeśli tytuł zawiera "bez poprzeczki" → poprzeczka=false, "z poprzeczką" → poprzeczka=true) gdy nie podano w wiadomości.`:''}
 
 STRUKTURA JSON:
 {
@@ -321,7 +321,8 @@ UWAGA: jeśli klient podaje NUMEROWANĄ LISTĘ pozycji (np. "1. 59×62 ... 2. 59
 Pozostałe pola:
 - glebokosc = null
 - zawias = "L" lub "P" — jeśli nie podano = "L"
-- poprzeczka = true/false — jeśli nie podano = true
+- poprzeczka = true/false — jeśli nie podano = false
+- WAŻNE: jeśli tytuł oferty lub wiadomość zawiera "bez poprzeczki" → poprzeczka=false; jeśli zawiera "z poprzeczką" → poprzeczka=true
 - samodomykajacy = liczba zawiasów samodomykających (0 jeśli nie podano)
 
 KOLORY RAMKI (tylko z tej listy):
@@ -399,7 +400,7 @@ ${adres||"(brak)"}`;
 }
 
 function pustaPoz(){ return {szerokosc:"",wysokosc:"",glebokosc:String(DOMYSLNA_GLEBOKOS),kolorRamki:"Antracyt",kolorSiatki:"Czarna",ilosc:1}; }
-function pustaPozDrzwi(){ return {isDrzwi:true,szerokosc:"",szer2:"",wysokosc:"",wys2:"",kolorRamki:"Antracyt",kolorSiatki:"Czarna",zawias:"L",poprzeczka:true,samodomykajacyL:0,samodomykajacyP:0,ilosc:1,uwagi:""}; }
+function pustaPozDrzwi(){ return {isDrzwi:true,szerokosc:"",szer2:"",wysokosc:"",wys2:"",kolorRamki:"Antracyt",kolorSiatki:"Czarna",zawias:"L",poprzeczka:false,samodomykajacyL:0,samodomykajacyP:0,ilosc:1,uwagi:""}; }
 function obliczDrzwi(pozycje){
   let profilMb=0,narozniki=0,poprzeczki=0,uchwyty=0,zawiasy=0,samodomykajace=0,magnesy=0,klamki=0,uszczelkaMb=0,szczotkaMb=0,kartony=0,radelka=0,instrukcje=0,wkrety=0;
   (pozycje||[]).filter(p=>p.isDrzwi).forEach(p=>{
