@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260527.112</title>
+<title>MosquitoApp v20260527.114</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -1173,6 +1173,7 @@ function App() {
   const [zamTab,setZamTab]=useState('nowe');
   const [leads,setLeads]=useState([]);
   const [showOrderedLeads,setShowOrderedLeads]=useState(false);
+  const [leadQrModal,setLeadQrModal]=useState(null);
   const [leadsLoading,setLeadsLoading]=useState(false);
   const [fakSzablony,setFakSzablony]=useState(()=>{try{return JSON.parse(localStorage.getItem('fak_szablony')||'[]');}catch{return [];}});
   const [szablonEditId,setSzablonEditId]=useState(null); // null=lista, 'new'=nowy, id=edycja
@@ -5992,7 +5993,7 @@ function App() {
                               <span style={{fontSize:11,color:'#3a6a7a'}}>{_exp?'▲':'▼'}</span>
                             </div>
                             {!_exp&&lead.pozycje&&lead.pozycje.length>0&&<div style={{fontSize:11,color:'#4a7a8a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
-                              {lead.pozycje.map(function(p,i){return (p.szerokosc||p.wysokosc)?p.szerokosc+'×'+p.wysokosc+' cm'+(p.kolorProfilu?' '+p.kolorProfilu:'')+(parseInt(p.ilosc||1)>1?' ×'+p.ilosc:''):null;}).filter(Boolean).join(' | ')}
+                              {lead.pozycje.map(function(p,i){return (p.szerokosc||p.wysokosc)?p.szerokosc+'×'+p.wysokosc+' cm'+(p.kolorProfilu?' '+p.kolorProfilu:p.kolorSiatki?' siatka:'+p.kolorSiatki:'')+(parseInt(p.ilosc||1)>1?' ×'+p.ilosc:''):null;}).filter(Boolean).join(' | ')}
                               {parseFloat(lead.totalCost)>0&&<span style={{color:'#dfbf3a',fontWeight:700,marginLeft:8}}>{parseFloat(lead.totalCost).toFixed(2)} zł</span>}
                             </div>}
                           </div>
@@ -6008,7 +6009,7 @@ function App() {
                                 <span style={{color:'#7acfdf',fontWeight:600}}>{p.szerokosc||'—'} cm</span>
                                 <span style={{color:'#7acfdf',fontWeight:600}}>{p.wysokosc||'—'} cm</span>
                                 <span style={{color:'#cfdf9a',fontWeight:700,textAlign:'center'}}>{p.ilosc||1}</span>
-                                <span style={{color:'#dfcf7a',fontSize:11}}>{p.kolorProfilu||'—'}</span>
+                                <span style={{color:'#dfcf7a',fontSize:11}}>{p.kolorProfilu||(p.kolorSiatki?'siatka: '+p.kolorSiatki:'—')}</span>
                               </div>
                             );})}
                           </div>}
@@ -6016,9 +6017,19 @@ function App() {
                             {parseFloat(lead.totalCost)>0&&<span style={{fontSize:15,color:'#dfbf3a',fontWeight:700,background:'#1a1400',border:'1px solid #4a3a0a',borderRadius:5,padding:'3px 12px'}}>💰 {parseFloat(lead.totalCost).toFixed(2)} zł</span>}
                             {lead.notes&&<span style={{fontSize:12,color:'#7a9a7a',fontStyle:'italic',flex:1}}>📝 {lead.notes}</span>}
                           </div>
-                          <div style={{display:'flex',gap:6}}>
+                          <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
                             {lead.phone&&<a href={'tel:'+lead.phone} onClick={function(e){e.stopPropagation();}} style={{padding:'5px 12px',fontSize:12,background:'#0a2a1a',border:'1px solid #2a6a4a',borderRadius:5,color:'#7acfaf',textDecoration:'none'}}>📞 Zadzwoń</a>}
                             {lead.email&&<a href={'mailto:'+lead.email} onClick={function(e){e.stopPropagation();}} style={{padding:'5px 12px',fontSize:12,background:'#0a1a2a',border:'1px solid #2a4a6a',borderRadius:5,color:'#7aafcf',textDecoration:'none'}}>✉️ Email</a>}
+                            {lead.phone&&(function(){
+                              const tel=(lead.phone||'').replace(/[\s\-]/g,'');
+                              const tresc=encodeURIComponent('Dzień dobry, widzę że interesowała Państwa wycena moskitier. Chętnie zrealizujemy zamówienie — przy zakupie bezpośrednio u nas cena jest o 10% niższa niż na platformie, a wysyłka na terenie Polski po naszej stronie. Zapraszam — Piotr Rudnicki');
+                              const smsLink='sms:+48605361191?body='+tresc;
+                              const qrUrl='https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='+encodeURIComponent(smsLink);
+                              return <button onClick={function(e){e.stopPropagation();setLeadQrModal({phone:lead.phone,qrUrl:qrUrl,smsLink:smsLink,name:lead.name||'',tresc:'Dzień dobry, widzę że interesowała Państwa wycena moskitier. Chętnie zrealizujemy zamówienie — przy zakupie bezpośrednio u nas cena jest o 10% niższa niż na platformie, a wysyłka na terenie Polski po naszej stronie. Zapraszam — Piotr Rudnicki'});}}
+                                style={{padding:'5px 12px',fontSize:12,background:'#1a1a0a',border:'1px solid #5a5a2a',borderRadius:5,color:'#dfdf7a',cursor:'pointer'}}>
+                                📱 QR SMS
+                              </button>;
+                            })()}
                           </div>
                         </div>}
                       </div>
@@ -10082,6 +10093,36 @@ setFvForm(f=>({...f,nabywcaNazwa:_keepName,nabywcaAdres:d.ulica||f.nabywcaAdres,
       {/* ── MODAL ETYKIETA ── */}
             {/* ── GLOBALNE MODAŁY (dostępne z każdej zakładki) ── */}
       {/* ══ MODAL FAKTURY ══ */}
+      {leadQrModal&&(
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.85)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',padding:20}}
+          onClick={function(){setLeadQrModal(null);}}>
+          <div style={{background:'#0a1a0a',border:'1px solid #3a6a3a',borderRadius:12,padding:24,maxWidth:420,width:'100%',boxShadow:'0 8px 40px #000'}}
+            onClick={function(e){e.stopPropagation();}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
+              <span style={{fontWeight:700,fontSize:16,color:'#9acf9a'}}>📱 QR SMS do klienta</span>
+              <button onClick={function(){setLeadQrModal(null);}} style={{background:'none',border:'none',color:'#7a9a7a',fontSize:20,cursor:'pointer'}}>✕</button>
+            </div>
+            <div style={{fontSize:12,color:'#5a8a5a',marginBottom:8}}>Do: <strong style={{color:'#9fcfdf'}}>{leadQrModal.name||''} {leadQrModal.phone}</strong> — wysyłasz z <strong style={{color:'#cfdf7a'}}>605 361 191</strong></div>
+            <textarea
+              defaultValue={leadQrModal.tresc}
+              onChange={function(e){
+                const tresc=encodeURIComponent('sms:+48605361191?body='+e.target.value);
+                const qrUrl='https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='+tresc;
+                setLeadQrModal(function(prev){return {...prev,qrUrl:qrUrl,tresc:e.target.value};});
+              }}
+              style={{width:'100%',height:100,padding:'8px 10px',background:'#0a2a0a',border:'1px solid #2a5a2a',borderRadius:6,color:'#9acf9a',fontSize:12,resize:'vertical',marginBottom:14,boxSizing:'border-box'}}/>
+            <div style={{display:'flex',justifyContent:'center',marginBottom:14}}>
+              <img src={leadQrModal.qrUrl} alt="QR SMS" style={{width:220,height:220,borderRadius:8,border:'3px solid #2a5a2a',background:'#fff'}}/>
+            </div>
+            <div style={{fontSize:11,color:'#4a7a4a',textAlign:'center',marginBottom:12}}>Zeskanuj telefonem → otworzy SMS z wypełnioną treścią</div>
+            <div style={{display:'flex',gap:8}}>
+              <a href={leadQrModal.smsLink} style={{flex:1,display:'block',textAlign:'center',padding:'8px',fontSize:13,background:'#1a3a1a',border:'1px solid #3a7a3a',borderRadius:6,color:'#7acf7a',textDecoration:'none',fontWeight:700}}>
+                💬 Otwórz SMS na tym urządzeniu
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
       {fakModal&&(
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.7)',zIndex:3000,display:'flex',alignItems:'center',justifyContent:'center',padding:16}}>
           <div style={{background:'#0d1a0d',border:'1px solid #2a5a2a',borderRadius:12,padding:20,width:'100%',maxWidth:520,maxHeight:'90vh',overflowY:'auto'}}>
