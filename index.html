@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260527.117</title>
+<title>MosquitoApp v20260527.118</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -1175,6 +1175,7 @@ function App() {
   const [showOrderedLeads,setShowOrderedLeads]=useState(false);
   const [leadQrModal,setLeadQrModal]=useState(null);
   const [leadContacted,setLeadContacted]=useState(function(){try{return JSON.parse(localStorage.getItem('lead_contacted')||'{}');}catch{return {};}});
+  const [leadStatus,setLeadStatus]=useState(function(){try{return JSON.parse(localStorage.getItem('lead_status')||'{}');}catch{return {};}});
   const [leadsLoading,setLeadsLoading]=useState(false);
   const [fakSzablony,setFakSzablony]=useState(()=>{try{return JSON.parse(localStorage.getItem('fak_szablony')||'[]');}catch{return [];}});
   const [szablonEditId,setSzablonEditId]=useState(null); // null=lista, 'new'=nowy, id=edycja
@@ -5990,6 +5991,7 @@ function App() {
                               {lead.email&&<span style={{fontSize:11,color:'#5a8aaf',fontFamily:'monospace'}}>✉️ {lead.email}</span>}
                               {matchedImp&&<span style={{fontSize:11,color:'#5acf9a',background:'#0a2a1a',border:'1px solid #2a6a4a',borderRadius:4,padding:'1px 6px'}}>✅ Zamówił {ordDate?'('+ordDate+')':''}</span>}
               {leadContacted[lead.id]&&<span style={{fontSize:11,color:'#dfdf7a',background:'#1a1a0a',border:'1px solid #5a5a2a',borderRadius:4,padding:'1px 6px'}} title={'SMS wysłany: '+new Date(leadContacted[lead.id]).toLocaleString('pl-PL')}>📱 SMS {new Date(leadContacted[lead.id]).toLocaleDateString('pl-PL')}</span>}
+              {leadStatus[lead.id]==='realizacja'&&<span style={{fontSize:11,color:'#7acf7a',background:'#0a2a0a',border:'1px solid #2a6a2a',borderRadius:4,padding:'1px 6px'}} title={'W realizacji od: '+new Date(leadStatus[lead.id+'_date']||Date.now()).toLocaleString('pl-PL')}>⚙️ W realizacji</span>}
                               <span style={{fontSize:10,padding:'1px 6px',borderRadius:4,background:brandBg,color:'#9fcfdf',fontFamily:'monospace',fontWeight:700,marginLeft:'auto'}}>{lead.brandName||lead.brand||''}</span>
                               <span style={{fontSize:11,color:'#2a5a6a'}}>{lead.savedAt?new Date(lead.savedAt).toLocaleString('pl-PL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</span>
                               <span style={{fontSize:11,color:'#3a6a7a'}}>{_exp?'▲':'▼'}</span>
@@ -6020,6 +6022,12 @@ function App() {
                             {lead.notes&&<span style={{fontSize:12,color:'#7a9a7a',fontStyle:'italic',flex:1}}>📝 {lead.notes}</span>}
                           </div>
                           <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+                            {(function(){
+                              const isReal=leadStatus[lead.id]==='realizacja';
+                              return <button onClick={function(e){e.stopPropagation();setLeadStatus(function(prev){const n={...prev};if(isReal){delete n[lead.id];delete n[lead.id+'_date'];}else{n[lead.id]='realizacja';n[lead.id+'_date']=new Date().toISOString();}localStorage.setItem('lead_status',JSON.stringify(n));return n;});}} style={{padding:'5px 12px',fontSize:12,background:isReal?'#0a3a0a':'#0a1a0a',border:'1px solid '+(isReal?'#3a8a3a':'#2a5a2a'),borderRadius:5,color:isReal?'#7acf7a':'#4a8a4a',cursor:'pointer'}}>
+                                {isReal?'⚙️ W realizacji ✓':'⚙️ Oznacz W realizacji'}
+                              </button>;
+                            })()}
                             {lead.phone&&<a href={'tel:'+lead.phone} onClick={function(e){e.stopPropagation();}} style={{padding:'5px 12px',fontSize:12,background:'#0a2a1a',border:'1px solid #2a6a4a',borderRadius:5,color:'#7acfaf',textDecoration:'none'}}>📞 Zadzwoń</a>}
                             {lead.email&&<a href={'mailto:'+lead.email} onClick={function(e){e.stopPropagation();}} style={{padding:'5px 12px',fontSize:12,background:'#0a1a2a',border:'1px solid #2a4a6a',borderRadius:5,color:'#7aafcf',textDecoration:'none'}}>✉️ Email</a>}
                             {lead.phone&&(function(){
