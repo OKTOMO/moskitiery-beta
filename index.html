@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260527.107</title>
+<title>MosquitoApp v20260527.109</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -382,6 +382,8 @@ ZAWIAS: rozpoznaj stronę zawiasu z dowolnego sformułowania:
 - "lewy", "lewa", "po lewo", "po lewej", "zawiasy lewe", "zawiasy po lewo", "zawias lewy", "left" → zawias="L"
 - "prawy", "prawa", "po prawo", "po prawej", "zawiasy prawe", "zawiasy po prawo", "zawias prawy", "right" → zawias="P"
 - "strona montażu zawiasów: lewa" → zawias="L", "prawa" → zawias="P"
+- "zawiasy samodomykające po prawej" → zawias="P" I samodomykajacyP=ilosc (zawias i samodomykający razem!)
+- "zawiasy samodomykające po lewej" → zawias="L" I samodomykajacyL=ilosc
 - jeśli nie podano strony → zawias="L" (domyślnie)
 
 WIADOMOŚĆ OD KLIENTA:
@@ -3981,7 +3983,10 @@ function App() {
   async function handleParse(){
     if(!wiadomosc.trim()&&!adres.trim()) return;
     setParsing(true);setSaved(false);
-    const _offerNames=(allegroImportResults.find(i=>i.allegroOrderId===allegroOrderIdForForm)||{}).offerNames||'';
+    const _allegroImp=allegroImportResults.find(i=>i.allegroOrderId===allegroOrderIdForForm);
+    const _offerNames=_allegroImp?.offerNames||'';
+    // Jeśli formularz ma już pozycje drzwi a parseTyp='okno' — przełącz tryb automatycznie
+    const _hasDrzwiInForm=form.pozycje&&form.pozycje.some(function(p){return p.isDrzwi;});
     try{
       if(withDrzwi){
         const r=await parseAI(wiadomosc,adres,"okno",_offerNames,aiRules);
@@ -4001,7 +4006,7 @@ function App() {
           pozycje:finalPoz.length?finalPoz:f.pozycje
         }));
       } else {
-        const isDrzwiMode=parseTyp==="drzwi";
+        const isDrzwiMode=parseTyp==="drzwi"||_hasDrzwiInForm;
         const r=await parseAI(wiadomosc,adres,isDrzwiMode?"drzwi":"okno",_offerNames,aiRules);
         const pozycje=mapPozycje(r.pozycje,isDrzwiMode,!isDrzwiMode);
         setForm(f=>({...f,
@@ -5254,7 +5259,21 @@ function App() {
             if(zamSearch){const q=zamSearch.toLowerCase();return (imp.klientImie||'').toLowerCase().includes(q)||(imp.klientLogin||'').toLowerCase().includes(q)||(imp.klientMiasto||'').toLowerCase().includes(q)||(imp.offerNames||'').toLowerCase().includes(q);}
             return true;
           });
-          const noweList=filteredAll.filter(imp=>{const s=getEffectiveStatus(imp);return s==='Nowe'||s==='Wstrzymano'||s==='Problem';});
+          const noweList=filteredAll.filter(imp=>{
+            const s=getEffectiveStatus(imp);
+            if(s==='Nowe'||s==='Wstrzymano'||s==='Problem') return true;
+            // Zostaw na liście Nowe jeśli W realizacji ale brak etykiety lub brak zlecenia
+            if(s==='W realizacji'){
+              const _sh=allegroShipments[imp.allegroOrderId];
+              const _ord=orders.some(function(o){return o.allegroOrderId===imp.allegroOrderId;});
+              const _offerL=(imp.offerNames||'').toLowerCase();
+              const _isMosk=_offerL.includes('moskitier')||_offerL.includes('siatk')||_offerL.includes('ramk')||_offerL.includes('drzwi');
+              const brakEtykiety=!_sh;
+              const brakZlecenia=_isMosk&&!_ord;
+              return brakEtykiety||brakZlecenia;
+            }
+            return false;
+          });
           const _statusTimes=JSON.parse(localStorage.getItem('app_status_times')||'{}');
           // Ręczne zamówienia (bez allegroOrderId) w statusie W realizacji
           const reczneWRealizacji=orders.filter(o=>{
