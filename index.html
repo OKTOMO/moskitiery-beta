@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260527.120</title>
+<title>MosquitoApp v20260527.121</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -361,6 +361,7 @@ WAŻNE:
 - WYMIARY: szerokosc zawsze mniejsza wartość, wysokosc zawsze większa. Np. klient podał "214 x 81,5" → szerokosc=81.5, wysokosc=214. Dotyczy zarówno okien jak i drzwi.
 - JEDNOSTKI mm vs cm: wymiary ZAWSZE zwracaj w cm. Jeśli klient podał wartości w mm (np. "780 x 2165 mm" lub liczby >400 bez jednostki), podziel przez 10. Przykład: 780mm → 78cm, 2165mm → 216.5cm. Jeśli wartość bez jednostki jest np. 78 lub 216 — to już cm, nie przeliczaj.
 - NOTACJA "2×WARTOŚĆ": klient mierzy dwukrotnie i zapisuje np. "A wysokość 2×216,5" lub "2×78 cm" — oznacza to JEDNĄ wartość 216,5 (lub 78), mierzoną dwa razy. Użyj tej jednej wartości, NIE mnóż przez 2.
+- WYJĄTEK — gdy klient pisze "Okno 1: A-117,5cmx2, B-80cmx2" i numeruje kolejne okna — każde "Okno X" to OSOBNA pozycja. "A-117,5cmx2" = wysokosc=117.5 (x2 = mierzone dwa razy), "B-80cmx2" = szerokosc=80. Przykład: Okno1 A-117,5x2 B-80x2, Okno2 A-117,5x2 B-80x2, Okno3 A-117,5x2 B-61x2, Okno4 A-117,5x2 B-61x2 → 4 pozycje: {szer:80,wys:117.5}, {szer:80,wys:117.5}, {szer:61,wys:117.5}, {szer:61,wys:117.5} każda ilosc=1.
 - "NA GOTOWO" / "NA ZERO" / "WYMIAR ZEWNĘTRZNY" / "nie powiększać" / "bez powiększenia" / "proszę nie powiększać": klient podaje gotowy wymiar zewnętrzny ramy. Zasady:
   * ODEJMIJ dokładnie 4cm od szerokości i 4cm od wysokości — wpisz wynik bezpośrednio do szerokosc i wysokosc
   * Przykład: "85 x 227 na gotowo" → szerokosc=81, wysokosc=223
@@ -368,7 +369,7 @@ WAŻNE:
   * NIE wpisuj oryginalnego wymiaru nigdzie — ani do szer2, wys2, ani do uwagi
   * Ustaw isDrzwi:true
   * TYLKO przy tych konkretnych zwrotach — bez nich NIE odejmuj nic
-- ROZPOZNAWANIE DRZWI bez słowa "drzwi": jeśli wysokość >180cm lub klient pisze "balkon", "taras", "wejście", "na gotowo", "nie powiększać" → ustaw isDrzwi:true nawet bez słowa "drzwi"
+- ROZPOZNAWANIE DRZWI bez słowa "drzwi": jeśli klient pisze "balkon", "taras", "wejście", "na gotowo", "nie powiększać" → ustaw isDrzwi:true. NIE ustawiaj isDrzwi tylko dlatego że wysokość >180cm — okna mogą być wysokie.
 - IGNORUJ NOTATKI CENOWE: frazy w nawiasach zawierające słowa "jednostek", "wg kalkulatora", "kalkulator", "jedn." itp. to adnotacje wewnętrzne sprzedawcy — CAŁKOWICIE IGNORUJ zawarte w nich liczby przy parsowaniu ilosc. Przykład: "(Ilosc jednostek wg kalkulatora 45)" → ilosc=1 (lub wg rzeczywistej ilości sztuk z reszty tekstu), NIE 45.
 
 IGNORUJ OBLICZENIA JEDNOSTEK:
