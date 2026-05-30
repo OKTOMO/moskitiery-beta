@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260528.122</title>
+<title>MosquitoApp v20260528.123</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -6063,7 +6063,7 @@ function App() {
                               const mailLink='mailto:'+lead.email+'?subject='+encodeURIComponent('Oferta specjalna — moskitiery na wymiar')+'&body='+encodeURIComponent('Dzień dobry, dziękujemy za skorzystanie z naszego kalkulatora — przy zakupie poza Allegro otrzymają Państwo dodatkowo 10% rabatu od skalkulowanej ceny. Wysyłka na terenie kraju po naszej stronie. Piotr Rudnicki');
                               const isEmailed=!!leadEmailed[lead.id];
                               return <div style={{display:'flex',gap:4,alignItems:'center'}}>
-                                <a href={mailLink} onClick={function(e){e.stopPropagation();}} style={{padding:'5px 12px',fontSize:12,background:isEmailed?'#0a2a3a':'#0a1a2a',border:'1px solid '+(isEmailed?'#2a6a8a':'#2a4a6a'),borderRadius:5,color:isEmailed?'#5acfdf':'#7aafcf',textDecoration:'none'}}>✉️ {isEmailed?'Wyślij ponownie':'Email'}</a>
+                                <a href={mailLink} onClick={function(e){e.stopPropagation();setLeadEmailed(function(prev){const n={...prev,[lead.id]:new Date().toISOString()};localStorage.setItem('lead_emailed',JSON.stringify(n));return n;});}} style={{padding:'5px 12px',fontSize:12,background:isEmailed?'#0a2a3a':'#0a1a2a',border:'1px solid '+(isEmailed?'#2a6a8a':'#2a4a6a'),borderRadius:5,color:isEmailed?'#5acfdf':'#7aafcf',textDecoration:'none'}}>✉️ {isEmailed?'Wyślij ponownie':'Email'}</a>
                                 <button onClick={function(e){e.stopPropagation();setLeadEmailed(function(prev){const n={...prev};if(isEmailed){delete n[lead.id];}else{n[lead.id]=new Date().toISOString();}localStorage.setItem('lead_emailed',JSON.stringify(n));return n;});}} style={{padding:'5px 8px',fontSize:11,background:isEmailed?'#0a2a0a':'#0a1a0a',border:'1px solid '+(isEmailed?'#2a6a2a':'#1a3a1a'),borderRadius:5,color:isEmailed?'#7acf7a':'#3a6a3a',cursor:'pointer'}} title={isEmailed?'Cofnij oznaczenie':'Oznacz email jako wysłany'}>{isEmailed?'✓':'+✉️'}</button>
               </div>;
                             })()}
@@ -10165,7 +10165,7 @@ setFvForm(f=>({...f,nabywcaNazwa:_keepName,nabywcaAdres:d.ulica||f.nabywcaAdres,
             <div style={{fontSize:11,color:'#4a7a4a',textAlign:'center',marginBottom:12}}>Zeskanuj telefonem → otworzy SMS z wypełnioną treścią</div>
             <button onClick={function(){if(!leadQrModal.leadId) return;setLeadContacted(function(prev){const n={...prev,[leadQrModal.leadId]:new Date().toISOString()};localStorage.setItem('lead_contacted',JSON.stringify(n));return n;});setLeadQrModal(null);}} style={{width:'100%',padding:'8px',fontSize:13,background:'#1a1a0a',border:'1px solid #5a5a2a',borderRadius:6,color:'#dfdf7a',cursor:'pointer',fontWeight:700,marginBottom:8}}>📱 Oznacz jako wysłany SMS i zamknij</button>
             <div style={{display:'flex',gap:8}}>
-              <a href={leadQrModal.smsLink} style={{flex:1,display:'block',textAlign:'center',padding:'8px',fontSize:13,background:'#1a3a1a',border:'1px solid #3a7a3a',borderRadius:6,color:'#7acf7a',textDecoration:'none',fontWeight:700}}>
+              <a href={leadQrModal.smsLink} onClick={function(){if(leadQrModal.leadId){setLeadContacted(function(prev){const n={...prev,[leadQrModal.leadId]:new Date().toISOString()};localStorage.setItem('lead_contacted',JSON.stringify(n));return n;});}setTimeout(function(){setLeadQrModal(null);},500);}} style={{flex:1,display:'block',textAlign:'center',padding:'8px',fontSize:13,background:'#1a3a1a',border:'1px solid #3a7a3a',borderRadius:6,color:'#7acf7a',textDecoration:'none',fontWeight:700}}>
                 💬 Otwórz SMS na tym urządzeniu
               </a>
             </div>
