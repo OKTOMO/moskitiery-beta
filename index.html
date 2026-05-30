@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260528.126</title>
+<title>MosquitoApp v20260528.127</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -6102,9 +6102,10 @@ function App() {
                     if(nazwa.length>4&&_invValues.some(function(v){return (v.klientNazwa||'').toLowerCase().trim()===nazwa;})) return true;
                     return false;
                   }
-                  // Pokaż tylko zamówienia DO wystawienia faktury (invoiceRequired=true, brak faktury)
+                  // Pokaż tylko zamówienia DO wystawienia faktury (invoiceRequired=true, brak faktury, ostatnie 60 dni)
+                  const _60dni=new Date(Date.now()-60*24*60*60*1000).toISOString();
                   const fvList=allegroImportResults
-                    .filter(imp=>imp.invoiceRequired&&!_hasFaktura(imp))
+                    .filter(imp=>imp.invoiceRequired&&!_hasFaktura(imp)&&(imp.boughtAt||imp.data||'')>=_60dni.slice(0,10))
                     .map(imp=>{
                       const orderId=imp.allegroOrderId;
                       const v=invoicesSent[orderId]||{};
