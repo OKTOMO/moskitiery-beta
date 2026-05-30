@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260528.125</title>
+<title>MosquitoApp v20260528.126</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -6090,9 +6090,21 @@ function App() {
                 // ── Zakładka Faktury w module zamówień ──
                 if(zamTab==='faktury_zam'){
                   const cfg=fakturowniaConfig;
+                  // Sprawdź czy faktura istnieje - po kluczu LUB po NIP/nazwie (dla faktur z Fakturowni)
+                  const _invValues=Object.values(invoicesSent);
+                  function _hasFaktura(imp){
+                    if(invoicesSent[imp.allegroOrderId]) return true;
+                    // Sprawdź po NIP
+                    const nip=(imp.nabywcaNip||'').replace(/[^0-9]/g,'');
+                    if(nip&&_invValues.some(function(v){return (v.nip||'').replace(/[^0-9]/g,'')===nip&&nip;})) return true;
+                    // Sprawdź po nazwie klienta (ostateczny fallback)
+                    const nazwa=(imp.nabywcaNazwa||imp.klientImie||'').toLowerCase().trim();
+                    if(nazwa.length>4&&_invValues.some(function(v){return (v.klientNazwa||'').toLowerCase().trim()===nazwa;})) return true;
+                    return false;
+                  }
                   // Pokaż tylko zamówienia DO wystawienia faktury (invoiceRequired=true, brak faktury)
                   const fvList=allegroImportResults
-                    .filter(imp=>imp.invoiceRequired&&!invoicesSent[imp.allegroOrderId])
+                    .filter(imp=>imp.invoiceRequired&&!_hasFaktura(imp))
                     .map(imp=>{
                       const orderId=imp.allegroOrderId;
                       const v=invoicesSent[orderId]||{};
