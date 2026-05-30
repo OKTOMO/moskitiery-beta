@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260527.121</title>
+<title>MosquitoApp v20260528.122</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -3611,17 +3611,17 @@ function App() {
             const _ins=_INS[_kraj];
             const _kwota=Math.max(parseFloat(imp.kwotaBrutto)||0, 50); // min 50 PLN jako podstawa ubezpieczenia
             if(isCOD && codAmount>0){
-              // Zagraniczne COD — przelicz na lokalną walutę
+              // Zagraniczne COD — codAmount z Allegro już jest w lokalnej walucie (CZK/HUF/EUR)
+              // NIE przeliczaj przez kurs — to podwójne przeliczenie!
               if(_ins){
-                const _codLocal=(codAmount*_ins.r).toFixed(2);
                 return {
-                  cashOnDelivery:{amount:_codLocal,currency:_ins.c},
-                  insurance:{amount:_codLocal,currency:_ins.c}
+                  cashOnDelivery:{amount:codAmount.toFixed(2),currency:_ins.c},
+                  insurance:{amount:codAmount.toFixed(2),currency:_ins.c}
                 };
               }
               return {
-                cashOnDelivery:{amount:String(codAmount.toFixed(2)),currency:"PLN"},
-                insurance:{amount:String(codAmount.toFixed(2)),currency:"PLN"}
+                cashOnDelivery:{amount:codAmount.toFixed(2),currency:imp.kwotaWaluta||"PLN"},
+                insurance:{amount:codAmount.toFixed(2),currency:imp.kwotaWaluta||"PLN"}
               };
             }
             // Użyj wymagań z API jeśli dostępne
