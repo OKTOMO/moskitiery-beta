@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260528.123</title>
+<title>MosquitoApp v20260528.124</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -9304,7 +9304,16 @@ setFvForm(f=>({...f,nabywcaNazwa:_keepName,nabywcaAdres:d.ulica||f.nabywcaAdres,
 
           // ── Lista faktur ──
           // ── Lista faktur ──
-          const listaFirmy=faktury.filter(f=>!currentProfile||f.firma===currentProfile.id);
+          const listaFirmy=faktury.filter(f=>!currentProfile||f.firma===currentProfile.id).sort(function(a,b){
+            // Sortuj po dacie wystawienia malejąco (najnowsze na górze)
+            const da=a.dataWystawienia||a.data||'';
+            const db=b.dataWystawienia||b.data||'';
+            if(da&&db&&da!==db) return db.localeCompare(da);
+            // Fallback: sortuj po numerze malejąco
+            const na=parseInt((a.numer||'').match(/\d+/)?.[0]||0);
+            const nb=parseInt((b.numer||'').match(/\d+/)?.[0]||0);
+            return nb-na;
+          });
           return (
             <div style={{maxWidth:1000,margin:"0 auto"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
