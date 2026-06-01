@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260528.130</title>
+<title>MosquitoApp v20260528.131</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -1185,6 +1185,7 @@ function App() {
   const [leads,setLeads]=useState([]);
   const [showOrderedLeads,setShowOrderedLeads]=useState(false);
   const [leadQrModal,setLeadQrModal]=useState(null);
+  const [mailPreviewHtml,setMailPreviewHtml]=useState(null);
   const [leadContacted,setLeadContacted]=useState(function(){try{return JSON.parse(localStorage.getItem('lead_contacted')||'{}');}catch{return {};}});
   const [leadStatus,setLeadStatus]=useState(function(){try{return JSON.parse(localStorage.getItem('lead_status')||'{}');}catch{return {};}});
   const [leadNotes,setLeadNotes]=useState(function(){try{return JSON.parse(localStorage.getItem('lead_notes_own')||'{}');}catch{return {};}});
@@ -8052,7 +8053,7 @@ function App() {
                       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
                         <div style={{fontWeight:700,color:'#9a9adf',fontSize:14}}>💄 Kosmetyki</div>
                         <div style={{display:'flex',gap:6}}>
-                          <button onClick={function(){const w=window.open('','_blank');w.document.write(buildMailHtml());w.document.close();}}
+                          <button onClick={function(){setMailPreviewHtml(buildMailHtml());}}
                             style={{padding:'4px 10px',fontSize:12,background:'#0a1a2a',border:'1px solid #2a4a6a',borderRadius:5,color:'#7aafcf',cursor:'pointer'}}>
                             👁 Podgląd
                           </button>
@@ -10183,6 +10184,19 @@ setFvForm(f=>({...f,nabywcaNazwa:_keepName,nabywcaAdres:d.ulica||f.nabywcaAdres,
       {/* ── MODAL ETYKIETA ── */}
             {/* ── GLOBALNE MODAŁY (dostępne z każdej zakładki) ── */}
       {/* ══ MODAL FAKTURY ══ */}
+      {mailPreviewHtml&&(
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.85)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',padding:20}}
+          onClick={function(){setMailPreviewHtml(null);}}>
+          <div style={{background:'#fff',borderRadius:10,padding:24,maxWidth:660,width:'100%',maxHeight:'85vh',overflowY:'auto',boxShadow:'0 8px 40px #000'}}
+            onClick={function(e){e.stopPropagation();}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
+              <span style={{fontWeight:700,fontSize:15,color:'#1a3a1a'}}>👁 Podgląd maila</span>
+              <button onClick={function(){setMailPreviewHtml(null);}} style={{background:'none',border:'none',fontSize:20,cursor:'pointer',color:'#666'}}>✕</button>
+            </div>
+            <div dangerouslySetInnerHTML={{__html:mailPreviewHtml}}/>
+          </div>
+        </div>
+      )}
       {leadQrModal&&(
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.85)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',padding:20}}
           onClick={function(){setLeadQrModal(null);}}>
