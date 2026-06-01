@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260528.131</title>
+<title>MosquitoApp v20260528.132</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -6029,11 +6029,11 @@ function App() {
                         </div>
                         {_exp&&<div style={{padding:'10px 14px',borderTop:'1px solid #1a3a4a',background:'#060e18'}}>
                           {lead.pozycje&&lead.pozycje.length>0&&<div style={{marginBottom:10}}>
-                            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 50px 1fr',gap:4,padding:'3px 8px',background:'#0a1f1a',borderRadius:4,fontSize:10,color:'#3a8a6a',fontWeight:700,marginBottom:3,letterSpacing:'.05em'}}>
-                              {['Szerokość','Wysokość','Szt.','Kolor'].map(function(h){return <span key={h}>{h}</span>;})}
+                            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 40px 1fr',gap:4,padding:'3px 8px',background:'#0a1f1a',borderRadius:4,fontSize:10,color:'#3a8a6a',fontWeight:700,marginBottom:3,letterSpacing:'.05em'}}>
+                              {['Szer.','Wys.','Szt.','Kolor'].map(function(h){return <span key={h}>{h}</span>;})}
                             </div>
                             {lead.pozycje.map(function(p,i){return(
-                              <div key={i} style={{display:'grid',gridTemplateColumns:'1fr 1fr 50px 1fr',gap:4,padding:'5px 8px',background:i%2===0?'#080f18':'#0a1420',fontSize:12,borderRadius:3}}>
+                              <div key={i} style={{display:'grid',gridTemplateColumns:'1fr 1fr 40px 1fr',gap:4,padding:'5px 8px',background:i%2===0?'#080f18':'#0a1420',fontSize:12,borderRadius:3}}>
                                 <span style={{color:'#7acfdf',fontWeight:600}}>{p.szerokosc||'—'} cm</span>
                                 <span style={{color:'#7acfdf',fontWeight:600}}>{p.wysokosc||'—'} cm</span>
                                 <span style={{color:'#cfdf9a',fontWeight:700,textAlign:'center'}}>{p.ilosc||1}</span>
@@ -10187,7 +10187,7 @@ setFvForm(f=>({...f,nabywcaNazwa:_keepName,nabywcaAdres:d.ulica||f.nabywcaAdres,
       {mailPreviewHtml&&(
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.85)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',padding:20}}
           onClick={function(){setMailPreviewHtml(null);}}>
-          <div style={{background:'#fff',borderRadius:10,padding:24,maxWidth:660,width:'100%',maxHeight:'85vh',overflowY:'auto',boxShadow:'0 8px 40px #000'}}
+          <div style={{background:'#fff',borderRadius:10,padding:'12px',maxWidth:660,width:'100%',maxHeight:'85vh',overflowY:'auto',boxShadow:'0 8px 40px #000'}}
             onClick={function(e){e.stopPropagation();}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
               <span style={{fontWeight:700,fontSize:15,color:'#1a3a1a'}}>👁 Podgląd maila</span>
@@ -10200,7 +10200,7 @@ setFvForm(f=>({...f,nabywcaNazwa:_keepName,nabywcaAdres:d.ulica||f.nabywcaAdres,
       {leadQrModal&&(
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.85)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',padding:20}}
           onClick={function(){setLeadQrModal(null);}}>
-          <div style={{background:'#0a1a0a',border:'1px solid #3a6a3a',borderRadius:12,padding:24,maxWidth:420,width:'100%',boxShadow:'0 8px 40px #000'}}
+          <div style={{background:'#0a1a0a',border:'1px solid #3a6a3a',borderRadius:12,padding:'16px',maxWidth:420,width:'100%',boxShadow:'0 8px 40px #000'}}
             onClick={function(e){e.stopPropagation();}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
               <span style={{fontWeight:700,fontSize:16,color:'#9acf9a'}}>📱 QR SMS do klienta</span>
