@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260528.128</title>
+<title>MosquitoApp v20260528.130</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -7979,7 +7979,7 @@ function App() {
                   const r=await fetch(AUTORESPONDER_URL+'/email/send',{
                     method:'POST',
                     headers:{'Content-Type':'application/json','x-api-key':AUTORESPONDER_KEY},
-                    body:JSON.stringify({to:adres,subject:'Zestawienie kosmetyków — '+m,html:buildMailHtml()})
+                    body:JSON.stringify({to:adres,subject:'Zestawienie kosmetyków — '+m,content:buildMailHtml()})
                   });
                   const d=await r.json();
                   if(d.ok) alert('✅ Mail wysłany do '+adres);
@@ -8051,10 +8051,16 @@ function App() {
                     <div style={{background:'#0a0a1a',border:'1px solid #2a2a5a',borderRadius:8,padding:'12px 16px'}}>
                       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
                         <div style={{fontWeight:700,color:'#9a9adf',fontSize:14}}>💄 Kosmetyki</div>
-                        <button onClick={wyslijMail}
-                          style={{padding:'4px 12px',fontSize:12,background:'#1a1a3a',border:'1px solid #4a4a9a',borderRadius:5,color:'#9a9adf',cursor:'pointer',fontWeight:700}}>
-                          ✉️ Wyślij do producenta
-                        </button>
+                        <div style={{display:'flex',gap:6}}>
+                          <button onClick={function(){const w=window.open('','_blank');w.document.write(buildMailHtml());w.document.close();}}
+                            style={{padding:'4px 10px',fontSize:12,background:'#0a1a2a',border:'1px solid #2a4a6a',borderRadius:5,color:'#7aafcf',cursor:'pointer'}}>
+                            👁 Podgląd
+                          </button>
+                          <button onClick={wyslijMail}
+                            style={{padding:'4px 12px',fontSize:12,background:'#1a1a3a',border:'1px solid #4a4a9a',borderRadius:5,color:'#9a9adf',cursor:'pointer',fontWeight:700}}>
+                            ✉️ Wyślij do producenta
+                          </button>
+                        </div>
                       </div>
                       {/* Tabela produktów */}
                       <div style={{fontSize:12,marginBottom:8}}>
