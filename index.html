@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260528.127</title>
+<title>MosquitoApp v20260528.128</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -239,6 +239,7 @@ async function parseAI(msg, adres, typ, offerNames, rules) {
 
 TYP ZAMÓWIENIA: ${autoTyp==="drzwi"?"DRZWI MOSKITIEROWE — ustaw isDrzwi:true dla wszystkich pozycji":typ==="okno"?"OKNA MOSKITIEROWE — ustaw isDrzwi:false, chyba że wiadomość wyraźnie mówi o drzwiach — wtedy isDrzwi:true":"OKNA I DRZWI MOSKITIEROWE — wykryj typ każdej pozycji"}
 ${offerNames?`\nTYTUŁ OFERTY Z ALLEGRO: "${offerNames}" — użyj do określenia typu (drzwi/okno), koloru i poprzeczki (jeśli tytuł zawiera "bez poprzeczki" → poprzeczka=false, "z poprzeczką" → poprzeczka=true) gdy nie podano w wiadomości.`:''}
+${rules&&rules._totalAmount?`\nCENA ZAMÓWIENIA: ${rules._totalAmount} zł — użyj do określenia poprzeczki i samodomykacza (499=bez poprzeczki bez samo, 539=bez poprzeczki z samo, 549=z poprzeczką bez samo, 589=z poprzeczką z samo)`:''}
 
 STRUKTURA JSON:
 {
@@ -292,7 +293,7 @@ KLUCZOWA ZASADA: klient BARDZO CZĘSTO podaje 4 liczby dla jednych drzwi — to 
 
 Jak rozpoznać 4 wymiary jednych drzwi:
 - klient pisze np. "98,5 i 102,5 cm szerokość, 216,5 i 220,5 cm wysokość" → JEDNA pozycja
-- klient pisze "A=214, B=81,5, D=92" gdzie dwie wartości dotyczą jednego wymiaru → JEDNA pozycja  
+- klient pisze "A=214, B=81,5, D=92" gdzie A=wysokość(214), B i D=szerokości(81.5 i 92) → szerokosc=81.5, szer2=92, wys=214 JEDNA pozycja — KLUCZOWE: zawsze sortuj wartości numerycznie, nie bierz A i D jako pary!
 - klient pisze "98,5/102,5 x 216,5/220,5" → JEDNA pozycja
 - klient oznacza wymiary literami A,B,C,D — ZAWSZE chodzi o JEDNE drzwi
 
@@ -323,6 +324,12 @@ Pozostałe pola:
 - zawias = "L" lub "P" — jeśli nie podano = "L"
 - poprzeczka = true/false — jeśli nie podano = false
 - WAŻNE: jeśli tytuł oferty lub wiadomość zawiera "bez poprzeczki" → poprzeczka=false; jeśli zawiera "z poprzeczką" → poprzeczka=true
+- ROZPOZNAWANIE Z CENY ZAMÓWIENIA: ceny drzwi jednoznacznie określają poprzeczkę i samodomykacz:
+  499 zł → poprzeczka=false, samodomykajacy=0
+  539 zł → poprzeczka=false, samodomykajacy=1 (lub 2)
+  549 zł → poprzeczka=true, samodomykajacy=0
+  589 zł → poprzeczka=true, samodomykajacy=1 (lub 2)
+  Jeśli znasz cenę zamówienia, użyj jej do określenia poprzeczki i samodomykacza!
 - samodomykajacy = liczba zawiasów samodomykających (0 jeśli nie podano)
 
 KOLORY RAMKI (tylko z tej listy):
@@ -369,7 +376,10 @@ WAŻNE:
   * NIE wpisuj oryginalnego wymiaru nigdzie — ani do szer2, wys2, ani do uwagi
   * Ustaw isDrzwi:true
   * TYLKO przy tych konkretnych zwrotach — bez nich NIE odejmuj nic
-- ROZPOZNAWANIE DRZWI bez słowa "drzwi": jeśli klient pisze "balkon", "taras", "wejście", "na gotowo", "nie powiększać" → ustaw isDrzwi:true. NIE ustawiaj isDrzwi tylko dlatego że wysokość >180cm — okna mogą być wysokie.
+- ROZPOZNAWANIE DRZWI: ustaw isDrzwi:true TYLKO gdy:
+  1. Tytuł oferty zawiera słowo "drzwi" (sprawdź TYTUŁ OFERTY Z ALLEGRO powyżej) — TO JEST NAJWAŻNIEJSZE KRYTERIUM
+  2. LUB wiadomość klienta zawiera: "balkon", "taras", "wejście", "na gotowo", "nie powiększać"
+  3. NIE ustawiaj isDrzwi tylko dlatego że wysokość >180cm lub >200cm — okna mogą być bardzo wysokie!
 - IGNORUJ NOTATKI CENOWE: frazy w nawiasach zawierające słowa "jednostek", "wg kalkulatora", "kalkulator", "jedn." itp. to adnotacje wewnętrzne sprzedawcy — CAŁKOWICIE IGNORUJ zawarte w nich liczby przy parsowaniu ilosc. Przykład: "(Ilosc jednostek wg kalkulatora 45)" → ilosc=1 (lub wg rzeczywistej ilości sztuk z reszty tekstu), NIE 45.
 
 IGNORUJ OBLICZENIA JEDNOSTEK:
@@ -3997,7 +4007,8 @@ function App() {
     const _hasDrzwiInForm=form.pozycje&&form.pozycje.some(function(p){return p.isDrzwi;});
     try{
       if(withDrzwi){
-        const r=await parseAI(wiadomosc,adres,"okno",_offerNames,aiRules);
+        const _rulesWithPrice={...(aiRules||{}),_totalAmount:allegroImportResults.find(i=>i.allegroOrderId===allegroOrderIdForForm)?.totalAmount||''};
+        const r=await parseAI(wiadomosc,adres,"okno",_offerNames,_rulesWithPrice);
         const pozOkna=mapPozycje(r.pozycje,false,true);
         let pozDrzwi=[];
         const srcDrzwi=wiadomoscDrzwi.trim()||wiadomosc.trim();
@@ -4020,7 +4031,8 @@ function App() {
       } else {
         // _hasDrzwiInForm tylko gdy user nie kliknął jawnie 'Okno' - nie nadpisuj ręcznego wyboru
         const isDrzwiMode=parseTyp==="drzwi"||(parseTyp!=='okno'&&_hasDrzwiInForm);
-        const r=await parseAI(wiadomosc,adres,isDrzwiMode?"drzwi":"okno",_offerNames,aiRules);
+        const _rulesWithPrice2={...(aiRules||{}),_totalAmount:allegroImportResults.find(i=>i.allegroOrderId===allegroOrderIdForForm)?.totalAmount||''};
+        const r=await parseAI(wiadomosc,adres,isDrzwiMode?"drzwi":"okno",_offerNames,_rulesWithPrice2);
         const pozycje=mapPozycje(r.pozycje,isDrzwiMode,!isDrzwiMode);
         setForm(f=>({...f,
           klientImie:f._kalNum&&f.klientImie?f.klientImie:(r.klientImie||f.klientImie),
