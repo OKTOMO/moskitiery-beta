@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260528.132</title>
+<title>MosquitoApp v20260528.133</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -214,8 +214,13 @@ async function cloudSave(o){
 
 async function parseAI(msg, adres, typ, offerNames, rules) {
   const offerLower=(offerNames||'').toLowerCase();
+  const msgLower=(msg||'').toLowerCase();
   const isDrzwiOffer=offerLower.includes('drzwi')||offerLower.includes('balkon')||offerLower.includes('taras');
-  const autoTyp=isDrzwiOffer?'drzwi':typ;
+  // Wykryj mix (okna+drzwi) gdy wiadomość zawiera oba
+  const msgHasDrzwi=msgLower.includes('drzwi')||msgLower.includes('drzwiow')||msgLower.includes('balkon')||msgLower.includes('taras');
+  const msgHasOkno=msgLower.includes('okno')||msgLower.includes('okienn')||msgLower.includes('okien');
+  // Jeśli wiadomość zawiera i drzwi i okna → tryb mix; jeśli tylko drzwi → tryb drzwi
+  const autoTyp=isDrzwiOffer?'drzwi':(msgHasDrzwi&&msgHasOkno)?'mix':(msgHasDrzwi?'drzwi':typ);
 
   // Buduj sekcję reguł AI z bazy użytkownika
   let rulesSection='';
@@ -237,7 +242,7 @@ async function parseAI(msg, adres, typ, offerNames, rules) {
   }
   const prompt=`Wyodrębnij dane z wiadomości i zwróć TYLKO JSON bez markdown.
 
-TYP ZAMÓWIENIA: ${autoTyp==="drzwi"?"DRZWI MOSKITIEROWE — ustaw isDrzwi:true dla wszystkich pozycji":typ==="okno"?"OKNA MOSKITIEROWE — ustaw isDrzwi:false, chyba że wiadomość wyraźnie mówi o drzwiach — wtedy isDrzwi:true":"OKNA I DRZWI MOSKITIEROWE — wykryj typ każdej pozycji"}
+TYP ZAMÓWIENIA: ${autoTyp==="drzwi"?"DRZWI MOSKITIEROWE — ustaw isDrzwi:true dla wszystkich pozycji":autoTyp==="mix"?"OKNA I DRZWI MOSKITIEROWE — wiadomość zawiera oba typy, wykryj każdą pozycję osobno (isDrzwi:true dla drzwi, isDrzwi:false dla okien)":typ==="okno"?"OKNA MOSKITIEROWE — ustaw isDrzwi:false, chyba że wiadomość wyraźnie mówi o drzwiach — wtedy isDrzwi:true":"OKNA I DRZWI MOSKITIEROWE — wykryj typ każdej pozycji"}
 ${offerNames?`\nTYTUŁ OFERTY Z ALLEGRO: "${offerNames}" — użyj do określenia typu (drzwi/okno), koloru i poprzeczki (jeśli tytuł zawiera "bez poprzeczki" → poprzeczka=false, "z poprzeczką" → poprzeczka=true) gdy nie podano w wiadomości.`:''}
 ${rules&&rules._totalAmount?`\nCENA ZAMÓWIENIA: ${rules._totalAmount} zł — użyj do określenia poprzeczki i samodomykacza (499=bez poprzeczki bez samo, 539=bez poprzeczki z samo, 549=z poprzeczką bez samo, 589=z poprzeczką z samo)`:''}
 
@@ -368,6 +373,7 @@ WAŻNE:
 - WYMIARY: szerokosc zawsze mniejsza wartość, wysokosc zawsze większa. Np. klient podał "214 x 81,5" → szerokosc=81.5, wysokosc=214. Dotyczy zarówno okien jak i drzwi.
 - JEDNOSTKI mm vs cm: wymiary ZAWSZE zwracaj w cm. Jeśli klient podał wartości w mm (np. "780 x 2165 mm" lub liczby >400 bez jednostki), podziel przez 10. Przykład: 780mm → 78cm, 2165mm → 216.5cm. Jeśli wartość bez jednostki jest np. 78 lub 216 — to już cm, nie przeliczaj.
 - NOTACJA "2×WARTOŚĆ": klient mierzy dwukrotnie i zapisuje np. "A wysokość 2×216,5" lub "2×78 cm" — oznacza to JEDNĄ wartość 216,5 (lub 78), mierzoną dwa razy. Użyj tej jednej wartości, NIE mnóż przez 2.
+- FORMAT "szer.=90, wys.=227,5 (a=83, b=221)" → szerokosc=83, szer2=90, wysokosc=221, wys2=227.5 (wartości w nawiasie to wymiary wewnętrzne/mniejsze)
 - WYJĄTEK — gdy klient pisze "Okno 1: A-117,5cmx2, B-80cmx2" i numeruje kolejne okna — każde "Okno X" to OSOBNA pozycja. "A-117,5cmx2" = wysokosc=117.5 (x2 = mierzone dwa razy), "B-80cmx2" = szerokosc=80. Przykład: Okno1 A-117,5x2 B-80x2, Okno2 A-117,5x2 B-80x2, Okno3 A-117,5x2 B-61x2, Okno4 A-117,5x2 B-61x2 → 4 pozycje: {szer:80,wys:117.5}, {szer:80,wys:117.5}, {szer:61,wys:117.5}, {szer:61,wys:117.5} każda ilosc=1.
 - "NA GOTOWO" / "NA ZERO" / "WYMIAR ZEWNĘTRZNY" / "nie powiększać" / "bez powiększenia" / "proszę nie powiększać": klient podaje gotowy wymiar zewnętrzny ramy. Zasady:
   * ODEJMIJ dokładnie 4cm od szerokości i 4cm od wysokości — wpisz wynik bezpośrednio do szerokosc i wysokosc
