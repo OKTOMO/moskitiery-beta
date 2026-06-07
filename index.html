@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260607.141</title>
+<title>MosquitoApp v20260607.142</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -6064,7 +6064,7 @@ function App() {
                               <span style={{fontSize:11,color:'#3a6a7a'}}>{_exp?'▲':'▼'}</span>
                             </div>
                             {!_exp&&lead.pozycje&&lead.pozycje.length>0&&<div style={{fontSize:11,color:'#4a7a8a',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
-                              {lead.pozycje.map(function(p,i){return (p.szerokosc||p.wysokosc)?p.szerokosc+'×'+p.wysokosc+' cm'+(p.kolorProfilu?' '+p.kolorProfilu:p.kolorSiatki?' siatka:'+p.kolorSiatki:'')+(parseInt(p.ilosc||1)>1?' ×'+p.ilosc:''):null;}).filter(Boolean).join(' | ')}
+                              {lead.pozycje.map(function(p,i){const _s=String(p.szerokosc||'').replace('.',',');const _w=String(p.wysokosc||'').replace('.',',');return (_s||_w)?_s+'×'+_w+' cm'+(p.kolorProfilu?' '+p.kolorProfilu:p.kolorSiatki?' siatka:'+p.kolorSiatki:'')+(parseInt(p.ilosc||1)>1?' ×'+p.ilosc:''):null;}).filter(Boolean).join(' | ')}
                               {parseFloat(lead.totalCost)>0&&<span style={{color:'#dfbf3a',fontWeight:700,marginLeft:8}}>{parseFloat(lead.totalCost).toFixed(2)} zł</span>}
                             </div>}
                           </div>
@@ -6077,8 +6077,8 @@ function App() {
                             </div>
                             {lead.pozycje.map(function(p,i){return(
                               <div key={i} style={{display:'grid',gridTemplateColumns:'1fr 1fr 40px 1fr',gap:4,padding:'5px 8px',background:i%2===0?'#080f18':'#0a1420',fontSize:12,borderRadius:3}}>
-                                <span style={{color:'#7acfdf',fontWeight:600}}>{p.szerokosc||'—'} cm</span>
-                                <span style={{color:'#7acfdf',fontWeight:600}}>{p.wysokosc||'—'} cm</span>
+                                <span style={{color:'#7acfdf',fontWeight:600}}>{String(p.szerokosc||'—').replace('.',',')} cm</span>
+                                <span style={{color:'#7acfdf',fontWeight:600}}>{String(p.wysokosc||'—').replace('.',',')} cm</span>
                                 <span style={{color:'#cfdf9a',fontWeight:700,textAlign:'center'}}>{p.ilosc||1}</span>
                                 <span style={{color:'#dfcf7a',fontSize:11}}>{p.kolorProfilu||(p.kolorSiatki?'siatka: '+p.kolorSiatki:'—')}</span>
                               </div>
