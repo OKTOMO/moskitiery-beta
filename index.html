@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260607.142</title>
+<title>MosquitoApp v20260607.143</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -1178,8 +1178,14 @@ function App() {
   const [statMonth,setStatMonth]=useState(()=>new Date().getMonth()+1);
   const [statYear,setStatYear]=useState(()=>new Date().getFullYear());
   const [nbpRates,setNbpRates]=useState({CZK:0.168,EUR:4.25,HUF:0.011,SKK:0.168});
-  const [statMatyDuzaExtra,setStatMatyDuzaExtra]=useState(()=>parseInt(localStorage.getItem('stat_maty_duza_extra')||'0'));
-  const [statMatyMalaExtra,setStatMatyMalaExtra]=useState(()=>parseInt(localStorage.getItem('stat_maty_mala_extra')||'0'));
+  const [statMatyDuzaExtra,setStatMatyDuzaExtra]=useState(function(){
+    const now=new Date();const key=now.getFullYear()+'_'+(now.getMonth()+1);
+    return parseInt(localStorage.getItem('stat_maty_duza_extra_'+key)||'0');
+  });
+  const [statMatyMalaExtra,setStatMatyMalaExtra]=useState(function(){
+    const now=new Date();const key=now.getFullYear()+'_'+(now.getMonth()+1);
+    return parseInt(localStorage.getItem('stat_maty_mala_extra_'+key)||'0');
+  });
   const [statKosmExtra,setStatKosmExtra]=useState({});
   const [zamSearch,setZamSearch]=useState('');
   const [zamKonto,setZamKonto]=useState('');
@@ -7992,11 +7998,11 @@ function App() {
                   {/* Selektor okresu */}
                   <div style={{display:'flex',gap:10,alignItems:'center',marginBottom:14,flexWrap:'wrap'}}>
                     <span style={{fontSize:13,color:'#4a8a4a',fontWeight:700,letterSpacing:'.1em'}}>📊 ZESTAWIENIA</span>
-                    <select value={statMonth} onChange={function(e){setStatMonth(parseInt(e.target.value));}}
+                    <select value={statMonth} onChange={function(e){const m=parseInt(e.target.value);setStatMonth(m);const key=statYear+'_'+m;setStatMatyDuzaExtra(parseInt(localStorage.getItem('stat_maty_duza_extra_'+key)||'0'));setStatMatyMalaExtra(parseInt(localStorage.getItem('stat_maty_mala_extra_'+key)||'0'));}}
                       style={{padding:'3px 8px',fontSize:13,background:'#0a1a0a',border:'1px solid #2a5a2a',borderRadius:5,color:'#9fcf9f'}}>
                       {miesNazwy.slice(1).map(function(m,i){return <option key={i+1} value={i+1}>{m}</option>;})}
                     </select>
-                    <select value={statYear} onChange={function(e){setStatYear(parseInt(e.target.value));}}
+                    <select value={statYear} onChange={function(e){const y=parseInt(e.target.value);setStatYear(y);const key=y+'_'+statMonth;setStatMatyDuzaExtra(parseInt(localStorage.getItem('stat_maty_duza_extra_'+key)||'0'));setStatMatyMalaExtra(parseInt(localStorage.getItem('stat_maty_mala_extra_'+key)||'0'));}}
                       style={{padding:'3px 8px',fontSize:13,background:'#0a1a0a',border:'1px solid #2a5a2a',borderRadius:5,color:'#9fcf9f'}}>
                       {[2024,2025,2026].map(function(y){return <option key={y} value={y}>{y}</option>;})}
                     </select>
@@ -8019,7 +8025,7 @@ function App() {
                           <span style={{fontSize:11,color:'#3a6a3a'}}>Allegro: {countSzt(matyDuza)}</span>
                           <span style={{fontSize:11,color:'#3a6a3a'}}> + ręcznie:</span>
                           <input type="number" min="0" value={statMatyDuzaExtra}
-                            onChange={function(e){var v=parseInt(e.target.value)||0;setStatMatyDuzaExtra(v);localStorage.setItem('stat_maty_duza_extra',String(v));}}
+                            onChange={function(e){var v=parseInt(e.target.value)||0;setStatMatyDuzaExtra(v);localStorage.setItem('stat_maty_duza_extra_'+statYear+'_'+statMonth,String(v));}}
                             style={{width:50,padding:'2px 4px',fontSize:12,background:'#0a1a0a',border:'1px solid #2a5a2a',borderRadius:4,color:'#afffaf',textAlign:'center'}}/>
                           <span style={{fontSize:11,color:'#3a6a3a',marginLeft:'auto'}}>{matyDuzaWartRazem.toFixed(2)} zł{(parseInt(statMatyDuzaExtra)||0)>0&&AVG_DUZA>0?<span style={{color:'#5a9a7a'}}> (+{((parseInt(statMatyDuzaExtra)||0)*AVG_DUZA).toFixed(2)})</span>:null}</span>
                         </div>
@@ -8034,7 +8040,7 @@ function App() {
                           <span style={{fontSize:11,color:'#3a6a3a'}}>Allegro: {countSzt(matyMala)}</span>
                           <span style={{fontSize:11,color:'#3a6a3a'}}> + ręcznie:</span>
                           <input type="number" min="0" value={statMatyMalaExtra}
-                            onChange={function(e){var v=parseInt(e.target.value)||0;setStatMatyMalaExtra(v);localStorage.setItem('stat_maty_mala_extra',String(v));}}
+                            onChange={function(e){var v=parseInt(e.target.value)||0;setStatMatyMalaExtra(v);localStorage.setItem('stat_maty_mala_extra_'+statYear+'_'+statMonth,String(v));}}
                             style={{width:50,padding:'2px 4px',fontSize:12,background:'#0a1a0a',border:'1px solid #2a5a2a',borderRadius:4,color:'#afffaf',textAlign:'center'}}/>
                           <span style={{fontSize:11,color:'#3a6a3a',marginLeft:'auto'}}>{matyMalaWartRazem.toFixed(2)} zł{(parseInt(statMatyMalaExtra)||0)>0&&AVG_MALA>0?<span style={{color:'#5a9a7a'}}> (+{((parseInt(statMatyMalaExtra)||0)*AVG_MALA).toFixed(2)})</span>:null}</span>
                         </div>
