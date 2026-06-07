@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260607.139</title>
+<title>MosquitoApp v20260607.140</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -1192,6 +1192,7 @@ function App() {
   const [showOrderedLeads,setShowOrderedLeads]=useState(false);
   const [leadQrModal,setLeadQrModal]=useState(null);
   const [mailPreviewHtml,setMailPreviewHtml]=useState(null);
+  const [expandedOrders,setExpandedOrders]=useState(new Set());
   const [leadContacted,setLeadContacted]=useState(function(){try{return JSON.parse(localStorage.getItem('lead_contacted')||'{}');}catch{return {};}});
   const [leadStatus,setLeadStatus]=useState(function(){try{return JSON.parse(localStorage.getItem('lead_status')||'{}');}catch{return {};}});
   const [leadNotes,setLeadNotes]=useState(function(){try{return JSON.parse(localStorage.getItem('lead_notes_own')||'{}');}catch{return {};}});
@@ -7557,114 +7558,69 @@ function App() {
               </div>
             )}
 
-            <div className="card" style={{padding:0,overflow:"hidden"}}>
-              <div style={{overflowX:"auto"}}>
-              <table style={{width:"100%",minWidth:700,borderCollapse:"collapse",fontSize:13}}>
-                <thead>
-                  <tr style={{borderBottom:"2px solid #1e3a1e",background:"#0c1a0c"}}>
-                    {[{h:"☐"},{h:"Nr zlecenia"},{h:"Data"},{h:"Klient"},{h:"Miasto"},{h:"Mosk."},{h:"Linka",hide:true},{h:"Blaszki",hide:true},{h:"Ramka"},{h:"Siatka"},{},,{h:"✉️"},{}].map(function(col,i){if(!col)return null;return <th key={i} className={col.hide?"hide-mob":""} style={{padding:"10px 10px",textAlign:"left",fontSize:14,color:"#5aaa5a",letterSpacing:".1em",textTransform:"uppercase",fontWeight:700}}>{col.h||""}</th>;})}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredOrders.length===0&&<tr><td colSpan={10} style={{textAlign:"center",padding:28,color:"#4a7a4a",fontSize:14}}>Brak zamówień</td></tr>}
-                  {filteredOrders.map(o=>{
-                    const il=o.pozycje.reduce((a,p)=>a+(parseFloat(p.ilosc)||1),0);
-                    const hasDrzwi=o.pozycje.some(p=>p.isDrzwi);
-                    const lnk=obliczLinkeLaczna(o.pozycje);
-                    const kol=[...new Set(o.pozycje.map(p=>p.kolorRamki))].join(", ");
-                    const kolSiatki=[...new Set(o.pozycje.map(p=>p.kolorSiatki).filter(Boolean))].join(", ");
-                    return (
-                      <tr key={o.id} className="tr">
-                        <td style={{padding:"6px 8px",width:28}}>
-                          <input type="checkbox" checked={batchMailSelected.includes(o.id)}
-                            onChange={e=>{const id=o.id;setBatchMailSelected(prev=>e.target.checked?[...prev,id]:prev.filter(x=>x!==id));}}
-                            style={{width:15,height:15,cursor:"pointer",accentColor:"#9a9adf"}}/>
-                        </td>
-                        <td style={{padding:"10px 10px"}}>
-                          <button onClick={()=>{if(confirm("Usunąć "+o.numerZlecenia+"?"))updateOrders(orders.filter(x=>x.id!==o.id))}}
-                            style={{background:"#2a0a0a",border:"1px solid #6a2a2a",color:"#df7a7a",borderRadius:4,padding:"1px 6px",fontSize:12,cursor:"pointer",marginRight:2}}>🗑</button>
-                          <button onClick={()=>{setForm({data:o.data,firma:o.firma,klientImie:o.klientImie,klientUlica:o.klientUlica||"",klientKod:o.klientKod||"",klientMiasto:o.klientMiasto,telefon:o.telefon,uwagi:o.uwagi,pozycje:o.pozycje.map(p=>({...p}))});setNumerOverride(o.numerZlecenia);setEditingId(o.id);setTab("nowe");setSaved(false);}}
-                            style={{background:"#0a1a2a",border:"1px solid #2a4a6a",color:"#7ab8df",borderRadius:4,padding:"1px 6px",fontSize:12,cursor:"pointer",marginRight:4}}>✏️</button>
-                          <span className="firma-badge">{o.firma||"?"}</span>
-                          {hasDrzwi&&<span style={{marginLeft:4,fontSize:14}}>🚪</span>}
-                          <span style={{marginLeft:6,color:"#dfcf5f",fontWeight:700,cursor:"pointer",borderBottom:"1px dashed #5a5a2a"}}
-                            title="Kliknij aby edytować numer"
-                            onClick={()=>{
-                              const nowyNr=prompt('Zmień numer zlecenia:',o.numerZlecenia||'');
-                              if(nowyNr!==null&&nowyNr.trim()&&nowyNr.trim()!==o.numerZlecenia){
-                                updateOrders(orders.map(x=>x.id===o.id?{...x,numerZlecenia:nowyNr.trim()}:x));
-                              }
-                            }}>{o.numerZlecenia||"—"}</span>
-                          {o.kalNumer&&<div style={{fontSize:14,color:"#4a8a6a",fontFamily:"monospace",marginTop:2,letterSpacing:'.03em'}}>📨 {o.kalNumer}</div>}
-                        </td>
-                        <td style={{padding:"10px 10px",color:"#7a9a7a"}}>{formatDate(o.data)}</td>
-                        <td style={{padding:"10px 10px",color:"#a0cf9f"}}>{o.klientImie||"—"}</td>
-                        <td style={{padding:"10px 10px",color:"#7a9a7a"}}>{o.klientMiasto||"—"}</td>
-                        <td style={{padding:"10px 10px",textAlign:"center"}}><span className="badge b-g">{il}</span></td>
-                        <td style={{padding:"10px 10px",textAlign:"center"}} className="hide-mob">{Math.round(lnk*10)/10} mb</td>
-                        <td style={{padding:"10px 10px",textAlign:"center"}} className="hide-mob">{il*8}</td>
-                        <td style={{padding:"10px 10px",fontSize:14,color:"#5a8a5a",maxWidth:110,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} className="hide-mob">{kol}</td>
-                        <td style={{padding:"10px 10px",fontSize:14,color:"#4a7a8a",maxWidth:80,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} className="hide-mob">{kolSiatki}</td>
-                        <td style={{padding:"6px 8px",whiteSpace:'nowrap'}}>
-                          <div style={{display:'flex',gap:4,flexWrap:'nowrap'}}>
-                          {o.pozycje.some(p=>!p.isDrzwi)&&<button className="btn-pdf" onClick={()=>drukujPDF(o)} title="Drukuj PDF — okna">🪟 PDF</button>}
-                          {o.pozycje.some(p=>p.isDrzwi)&&<button className="btn-pdf" style={{background:"#1a2a4a"}} onClick={()=>drukujPDF_drzwi(o)} title="Drukuj PDF — drzwi">🚪 PDF</button>}
-                          <button className="btn-pdf" style={{background:o.dpdWaybill?"#0a2a1a":"#1a1a2a",borderColor:o.dpdWaybill?"#2a6a4a":"#3a3a5a",color:o.dpdWaybill?"#6acf9a":"#8a8abf",fontSize:12}} onClick={()=>{setDpdModal(o);setDpdWaga("5");}} title={o.dpdWaybill?"DPD: "+o.dpdWaybill:"Nadeślij DPD"}>{o.dpdWaybill?"📦 "+o.dpdWaybill.slice(-6):"📦 DPD"}</button>
-                          <button className="btn-pdf" style={{background:"#1a1a3a",borderColor:"#3a3a7a",color:"#9a9adf"}} title="Wyślij na produkcję" onClick={async()=>{
-                            let emailCfg=JSON.parse(localStorage.getItem('email_produkcji_config')||'{}');
-                            let to=emailCfg.emailProdukcji||'';
-                            if(!to){
-                              try{
-                                await loadSettingsFromKV();
-                                emailCfg=JSON.parse(localStorage.getItem('email_produkcji_config')||'{}');
-                                to=emailCfg.emailProdukcji||'';
-                              }catch(e){}
-                            }
-                            if(!to){alert('Brak adresu email produkcji.\n\nUstaw go w: Admin → Ustawienia → "Email produkcji" → Zapisz w chmurze.\n\nPo zapisaniu na komputerze telefon pobierze ustawienia automatycznie.');return;}
-                            const sh=allegroShipments[o.allegroOrderId||''];
-                            const etykietaDesc=sh?.description||sh?.textOnLabel||'';
-                            const isMata=etykietaDesc&&(/\b(ss|BS)\b/i.test(etykietaDesc)||/^(p |ol |ż |żel )/i.test(etykietaDesc));
-                            const subject=isMata
-                              ?`${etykietaDesc} ${o.klientMiasto||''}`.trim()
-                              :`${o.numerZlecenia||''} ${o.klientImie||''} ${o.klientMiasto||''}`.trim();
-                            setMailPreview({imp:o,order:o,to,subject,hasEtykieta:!!sh});
-                            loadRecentEmails();
-                          }}>✉️</button>
-                          {!o.allegroOrderId&&<button className="btn-pdf" title="Generuj etykietę DPD (własna umowa)"
-                            style={{background:'#2a1a0a',borderColor:'#7a3a0a',color:'#f0c060'}}
-                            onClick={()=>{setDpdModal(o);setDpdWaga('5');setDpdCod(false);setDpdCodAmount('');setDpdError('');}}>
-                            📦
-                          </button>}
-                          <button className="btn-del" onClick={()=>{if(confirm("Usunąć "+o.numerZlecenia+"?"))updateOrders(orders.filter(x=>x.id!==o.id))}} title="Usuń" style={{background:"#2a0a0a",borderColor:"#6a2a2a",color:"#df7a7a",padding:"3px 8px",fontSize:13}}>🗑</button>
-                          </div>
-                        </td>
-                        <td style={{padding:"10px 10px",display:"flex",gap:4,alignItems:"center"}}>
-                          <button className="btn-pdf" style={{background:"#4a7a9a"}} onClick={()=>{setForm({data:o.data,firma:o.firma,klientImie:o.klientImie,klientUlica:o.klientUlica||"",klientKod:o.klientKod||"",klientMiasto:o.klientMiasto,telefon:o.telefon,uwagi:o.uwagi,pozycje:o.pozycje.map(p=>({...p}))});setNumerOverride(o.numerZlecenia);setEditingId(o.id);setAllegroOrderIdForForm(o.allegroOrderId||"");setTab("nowe");setSaved(false);}} title="Edytuj zamówienie">✏️</button>
-                          <button className="btn-pdf" style={{background:"#2a1a4a",color:"#bf9fdf",borderColor:"#7a5aaf"}} onClick={()=>{setImportModal(null);setWiadomosc("");setAllegroOrderIdForForm(o.allegroOrderId||"");setForm({data:new Date().toISOString().slice(0,10),firma:o.firma,klientImie:o.klientImie,klientUlica:o.klientUlica||"",klientKod:o.klientKod||"",klientMiasto:o.klientMiasto,telefon:o.telefon,uwagi:"",pozycje:[pustaPoz()]});setNumerOverride("");setEditingId(null);setSaved(false);setTab("nowe");}} title="Nowe zamówienie dla tego samego klienta">👤+</button>
-                          <button className="btn-pdf" style={{background:"#1a1a2a",color:"#9a9adf",borderColor:"#3a3a6a"}}
-                            onClick={()=>{const imp=allegroImportResults.find(i=>i.allegroOrderId===o.allegroOrderId);openFakModal(o,imp||null);}}
-                            title="Wystaw fakturę w Fakturowni">🧾</button>
-                        </td>
-                        <td style={{padding:"10px 10px"}}>
-                          <button className="btn-pdf" title="Napisz wiadomość na Allegro" style={{background:"#1a3a4a",color:"#7acfdf",borderColor:"#2a6a7a"}}
-                            title={"Napisz do: "+(o.klientImie||"klient")+(o.allegroOrderId?" | UUID: "+o.allegroOrderId:"")}
-                            onClick={()=>{
-                              const konto=msgKonto||"favo5";
-                              if(!(allegroTokens[konto]||"")) {alert("Brak tokenu dla "+konto+" — zaloguj się w Admin → Allegro."); return;}
-                              setMsgNewLogin("");
-                              setMsgNewOrderId(o.allegroOrderId||"");
-                              setMsgNewText("");
-                              setMsgNewShow(true);
-                              setMsgSubTab("threads");
-                              setTab("wiadomosci");
-                            }}>✉️</button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-              </div>
+            <div className="card" style={{padding:0}}>
+              {filteredOrders.length===0&&<div style={{textAlign:"center",padding:28,color:"#4a7a4a",fontSize:14}}>Brak zamówień</div>}
+              {filteredOrders.map(function(o){
+                const il=o.pozycje.reduce(function(a,p){return a+(parseFloat(p.ilosc)||1);},0);
+                const hasDrzwi=o.pozycje.some(function(p){return p.isDrzwi;});
+                const lnk=obliczLinkeLaczna(o.pozycje);
+                const kol=[...new Set(o.pozycje.map(function(p){return p.kolorRamki;}))].join(", ");
+                const kolSiatki=[...new Set(o.pozycje.map(function(p){return p.kolorSiatki;}).filter(Boolean))].join(", ");
+                const _exp=expandedOrders&&expandedOrders.has(o.id);
+                return <div key={o.id} style={{borderBottom:"1px solid #1a2a1a"}}>
+                  {/* Wiersz 1: numer + klient + data */}
+                  <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",flexWrap:"wrap"}}>
+                    <input type="checkbox" checked={batchMailSelected.includes(o.id)}
+                      onChange={function(e){const id=o.id;setBatchMailSelected(function(prev){return e.target.checked?[...prev,id]:prev.filter(function(x){return x!==id;});});}}
+                      style={{width:15,height:15,cursor:"pointer",accentColor:"#9a9adf",flexShrink:0}}/>
+                    <span className="firma-badge" style={{flexShrink:0}}>{o.firma||"?"}</span>
+                    {hasDrzwi&&<span style={{fontSize:13}}>🚪</span>}
+                    <span style={{color:"#dfcf5f",fontWeight:700,cursor:"pointer",borderBottom:"1px dashed #5a5a2a",flexShrink:0}}
+                      onClick={function(){const nowyNr=prompt("Zmień numer zlecenia:",o.numerZlecenia||"");if(nowyNr!==null&&nowyNr.trim()&&nowyNr.trim()!==o.numerZlecenia)updateOrders(orders.map(function(x){return x.id===o.id?{...x,numerZlecenia:nowyNr.trim()}:x;}));}}>{o.numerZlecenia||"—"}</span>
+                    <span style={{color:"#7a9a7a",fontSize:12,flexShrink:0}}>{formatDate(o.data)}</span>
+                    <span style={{color:"#a0cf9f",fontSize:13,flex:1,minWidth:80}}>{o.klientImie||"—"}</span>
+                    <span style={{color:"#7a9a7a",fontSize:12}}>{o.klientMiasto||"—"}</span>
+                    <span className="badge b-g" style={{flexShrink:0}}>{il}</span>
+                    <button onClick={function(){setExpandedOrders(function(prev){const n=new Set(prev||[]);_exp?n.delete(o.id):n.add(o.id);return n;});}}
+                      style={{background:"none",border:"none",color:"#3a7a5a",cursor:"pointer",padding:"0 4px",fontSize:13,flexShrink:0}}>{_exp?"▲":"▼"}</button>
+                  </div>
+                  {/* Wiersz 2: przyciski */}
+                  <div style={{display:"flex",gap:4,padding:"4px 10px 8px",flexWrap:"wrap"}}>
+                    <button onClick={function(){setForm({data:o.data,firma:o.firma,klientImie:o.klientImie,klientUlica:o.klientUlica||"",klientKod:o.klientKod||"",klientMiasto:o.klientMiasto,telefon:o.telefon,uwagi:o.uwagi,pozycje:o.pozycje.map(function(p){return {...p};})});setNumerOverride(o.numerZlecenia);setEditingId(o.id);setTab("nowe");setSaved(false);}}
+                      className="btn-pdf" style={{background:"#0a1a2a",borderColor:"#2a4a6a",color:"#7ab8df"}} title="Edytuj">✏️</button>
+                    {o.pozycje.some(function(p){return !p.isDrzwi;})&&<button className="btn-pdf" onClick={function(){drukujPDF(o);}} title="PDF okna">🪟 PDF</button>}
+                    {o.pozycje.some(function(p){return p.isDrzwi;})&&<button className="btn-pdf" style={{background:"#1a2a4a"}} onClick={function(){drukujPDF_drzwi(o);}} title="PDF drzwi">🚪 PDF</button>}
+                    <button className="btn-pdf" style={{background:o.dpdWaybill?"#0a2a1a":"#1a1a2a",borderColor:o.dpdWaybill?"#2a6a4a":"#3a3a5a",color:o.dpdWaybill?"#6acf9a":"#8a8abf",fontSize:12}} onClick={function(){setDpdModal(o);setDpdWaga("5");}} title={o.dpdWaybill?"DPD: "+o.dpdWaybill:"Nadeślij DPD"}>{o.dpdWaybill?"📦 "+o.dpdWaybill.slice(-6):"📦 DPD"}</button>
+                    <button className="btn-pdf" style={{background:"#1a1a3a",borderColor:"#3a3a7a",color:"#9a9adf"}} title="Wyślij na produkcję" onClick={async function(){
+                      let emailCfg=JSON.parse(localStorage.getItem('email_produkcji_config')||'{}');
+                      let to=emailCfg.emailProdukcji||'';
+                      if(!to){try{await loadSettingsFromKV();emailCfg=JSON.parse(localStorage.getItem('email_produkcji_config')||'{}');to=emailCfg.emailProdukcji||'';}catch(e){}}
+                      if(!to){alert('Brak adresu email produkcji.');return;}
+                      const sh=allegroShipments[o.allegroOrderId||''];
+                      const etykietaDesc=sh?.description||sh?.textOnLabel||'';
+                      const isMata=etykietaDesc&&(/(ss|BS)/i.test(etykietaDesc)||/^(p |ol |ż |żel )/i.test(etykietaDesc));
+                      const subject=isMata?`${etykietaDesc} ${o.klientMiasto||''}`.trim():`${o.numerZlecenia||''} ${o.klientImie||''} ${o.klientMiasto||''}`.trim();
+                      const _drzwiMixOrd=orders.find(function(x){return x.allegroOrderId===o.allegroOrderId&&x.numerZlecenia&&x.numerZlecenia.startsWith('D')&&x.id!==o.id;});
+                      setMailPreview({imp:o,order:_drzwiMixOrd?{...o,_mixDrzwiOrder:_drzwiMixOrd}:o,to,subject,hasEtykieta:!!sh});
+                      loadRecentEmails();
+                    }}>✉️</button>
+                    <button className="btn-pdf" style={{background:"#2a1a4a",color:"#bf9fdf",borderColor:"#7a5aaf"}} onClick={function(){setImportModal(null);setWiadomosc("");setAllegroOrderIdForForm(o.allegroOrderId||"");setForm({data:new Date().toISOString().slice(0,10),firma:o.firma,klientImie:o.klientImie,klientUlica:o.klientUlica||"",klientKod:o.klientKod||"",klientMiasto:o.klientMiasto,telefon:o.telefon,uwagi:"",pozycje:[pustaPoz()]});setNumerOverride("");setEditingId(null);setSaved(false);setTab("nowe");}} title="Nowe zamówienie — ten sam klient">👤+</button>
+                    <button className="btn-pdf" style={{background:"#1a1a2a",color:"#9a9adf",borderColor:"#3a3a6a"}} onClick={function(){const imp=allegroImportResults.find(function(i){return i.allegroOrderId===o.allegroOrderId;});openFakModal(o,imp||null);}} title="Faktura">🧾</button>
+                    <button className="btn-pdf" title="Wiadomość Allegro" style={{background:"#1a3a4a",color:"#7acfdf",borderColor:"#2a6a7a"}}
+                      onClick={function(){setWiadModal({imp:allegroImportResults.find(function(i){return i.allegroOrderId===o.allegroOrderId;})||{allegroOrderId:o.allegroOrderId,kontoId:o.kontoId||'favo5',klientImie:o.klientImie},order:o});}}>💬</button>
+                    <button className="btn-del" onClick={function(){if(confirm("Usunąć "+o.numerZlecenia+"?"))updateOrders(orders.filter(function(x){return x.id!==o.id;}));}} title="Usuń" style={{background:"#2a0a0a",borderColor:"#6a2a2a",color:"#df7a7a",padding:"3px 8px",fontSize:13}}>🗑</button>
+                  </div>
+                  {/* Rozwinięcie ze szczegółami */}
+                  {_exp&&<div style={{padding:"6px 10px 10px",background:"#060e06",borderTop:"1px solid #1a3a1a",display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:6,fontSize:12}}>
+                    <div><span style={{color:"#3a7a5a"}}>Linka:</span> <span style={{color:"#9acf9a"}}>{Math.round(lnk*10)/10} mb</span></div>
+                    <div><span style={{color:"#3a7a5a"}}>Blaszki:</span> <span style={{color:"#9acf9a"}}>{il*8} szt</span></div>
+                    <div><span style={{color:"#3a7a5a"}}>Ramka:</span> <span style={{color:"#9acf9a"}}>{kol||"—"}</span></div>
+                    <div><span style={{color:"#3a7a5a"}}>Siatka:</span> <span style={{color:"#9acf9a"}}>{kolSiatki||"—"}</span></div>
+                    {o.klientUlica&&<div><span style={{color:"#3a7a5a"}}>Adres:</span> <span style={{color:"#7a9a7a"}}>{o.klientUlica}, {o.klientKod} {o.klientMiasto}</span></div>}
+                    {o.uwagi&&<div style={{gridColumn:"1/-1"}}><span style={{color:"#3a7a5a"}}>Uwagi:</span> <span style={{color:"#cfcf7a"}}>{o.uwagi}</span></div>}
+                  </div>}
+                </div>;
+              })}
             </div>
           </div>
         )}
