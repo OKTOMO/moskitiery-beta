@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260607.140</title>
+<title>MosquitoApp v20260607.141</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -6116,7 +6116,7 @@ function App() {
                             })()}
                             {lead.phone&&<a href={'tel:'+lead.phone} onClick={function(e){e.stopPropagation();}} style={{padding:'5px 12px',fontSize:12,background:'#0a2a1a',border:'1px solid #2a6a4a',borderRadius:5,color:'#7acfaf',textDecoration:'none'}}>📞 Zadzwoń</a>}
                             {lead.email&&(function(){
-                              const mailLink='mailto:'+lead.email+'?subject='+encodeURIComponent('Oferta specjalna — moskitiery na wymiar')+'&body='+encodeURIComponent('Dzień dobry, dziękujemy za skorzystanie z naszego kalkulatora — przy zakupie poza Allegro otrzymają Państwo dodatkowo 10% rabatu od skalkulowanej ceny. Wysyłka na terenie kraju po naszej stronie. Piotr Rudnicki');
+                              const mailLink='mailto:'+lead.email+'?subject='+encodeURIComponent('Oferta specjalna — moskitiery na wymiar')+'&body='+encodeURIComponent('Dzień dobry, dziękujemy za skorzystanie z naszego kalkulatora wyceny moskitier— przy zakupie poza Allegro otrzymają Państwo dodatkowo 10% rabatu od skalkulowanej ceny. Wysyłka na terenie kraju po naszej stronie. Piotr Rudnicki.');
                               const isEmailed=!!leadEmailed[lead.id];
                               return <div style={{display:'flex',gap:4,alignItems:'center'}}>
                                 <a href={mailLink} onClick={function(e){e.stopPropagation();setLeadEmailed(function(prev){const n={...prev,[lead.id]:new Date().toISOString()};localStorage.setItem('lead_emailed',JSON.stringify(n));return n;});}} style={{padding:'5px 12px',fontSize:12,background:isEmailed?'#0a2a3a':'#0a1a2a',border:'1px solid '+(isEmailed?'#2a6a8a':'#2a4a6a'),borderRadius:5,color:isEmailed?'#5acfdf':'#7aafcf',textDecoration:'none'}}>✉️ {isEmailed?'Wyślij ponownie':'Email'}</a>
@@ -6126,10 +6126,10 @@ function App() {
                             {lead.phone&&(function(){
                               const tel=(lead.phone||'').replace(/[\s\-]/g,'');
                               const telKlienta=tel.startsWith('+')?tel:(tel.startsWith('48')?'+'+tel:'+48'+tel);
-                              const tresc=encodeURIComponent('Dzień dobry, dziękujemy za skorzystanie z naszego kalkulatora — przy zakupie poza Allegro otrzymają Państwo dodatkowo 10% rabatu od skalkulowanej ceny. Wysyłka na terenie kraju po naszej stronie. Piotr Rudnicki');
+                              const tresc=encodeURIComponent('Dzień dobry, dziękujemy za skorzystanie z naszego kalkulatora wyceny moskitier— przy zakupie poza Allegro otrzymają Państwo dodatkowo 10% rabatu od skalkulowanej ceny. Wysyłka na terenie kraju po naszej stronie. Piotr Rudnicki.');
                               const smsLink='sms:'+telKlienta+'?body='+tresc;
                               const qrUrl='https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='+encodeURIComponent(smsLink);
-                              return <button onClick={function(e){e.stopPropagation();setLeadQrModal({phone:lead.phone,qrUrl:qrUrl,smsLink:smsLink,name:lead.name||'',tresc:'Dzień dobry, dziękujemy za skorzystanie z naszego kalkulatora — przy zakupie poza Allegro otrzymają Państwo dodatkowo 10% rabatu od skalkulowanej ceny. Wysyłka na terenie kraju po naszej stronie. Piotr Rudnicki',leadId:lead.id});}}
+                              return <button onClick={function(e){e.stopPropagation();setLeadQrModal({phone:lead.phone,qrUrl:qrUrl,smsLink:smsLink,name:lead.name||'',tresc:'Dzień dobry, dziękujemy za skorzystanie z naszego kalkulatora wyceny moskitier— przy zakupie poza Allegro otrzymają Państwo dodatkowo 10% rabatu od skalkulowanej ceny. Wysyłka na terenie kraju po naszej stronie. Piotr Rudnicki.',leadId:lead.id});}}
                                 style={{padding:'5px 12px',fontSize:12,background:'#1a1a0a',border:'1px solid #5a5a2a',borderRadius:5,color:'#dfdf7a',cursor:'pointer'}}>
                                 📱 QR SMS
                               </button>;
