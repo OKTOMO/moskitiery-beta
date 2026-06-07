@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260528.134</title>
+<title>MosquitoApp v20260607.135</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -2225,7 +2225,7 @@ function App() {
       setForm(f=>({...f,firma,pozycje:poz}));
       // Otwórz modal importu z danymi z kalkulatora
       const fakeImp={
-        allegroOrderId:'',_kalNum:n,kontoId:({'fav':'favo5','str':'staroleska_pl','arl':'arlis_pl','evr':'everis_pl','favo5':'favo5','everis_pl':'everis_pl','arlis_pl':'arlis_pl'}[d.brand]||'favo5'),
+        allegroOrderId:allegroOrderIdForForm&&!allegroOrderIdForForm.startsWith('manual_')?allegroOrderIdForForm:'',_kalNum:n,kontoId:({'fav':'favo5','str':'staroleska_pl','arl':'arlis_pl','evr':'everis_pl','favo5':'favo5','everis_pl':'everis_pl','arlis_pl':'arlis_pl'}[d.brand]||(allegroOrderIdForForm?allegroImportResults.find(i=>i.allegroOrderId===allegroOrderIdForForm)?.kontoId:null)||'favo5'),
         klientImie:'',klientLogin:'',klientMiasto:'',klientUlica:'',klientKod:'',telefon:'',
         offerNames:d.pozycje?.map(p=>p.kolorProfilu?'Moskitiera '+p.kolorProfilu:'Moskitiera').join(', ')||'Moskitiera',
         boughtAt:new Date().toISOString().slice(0,10),
@@ -4047,6 +4047,25 @@ function App() {
         // _hasDrzwiInForm tylko gdy user nie kliknął jawnie 'Okno' - nie nadpisuj ręcznego wyboru
         const isDrzwiMode=parseTyp==="drzwi"||(parseTyp!=='okno'&&_hasDrzwiInForm);
         const _rulesWithPrice2={...(aiRules||{}),_totalAmount:allegroImportResults.find(i=>i.allegroOrderId===allegroOrderIdForForm)?.totalAmount||''};
+        // Sprawdź czy wiadomość/oferta sugeruje mix (okna+drzwi)
+        const offerLowerCheck=(_offerNames||'').toLowerCase();
+        const msgLowerCheck=(wiadomosc||'').toLowerCase();
+        const isMixDetected=(offerLowerCheck.includes('drzwi')&&(offerLowerCheck.includes('okienn')||offerLowerCheck.includes('okno')))||(msgLowerCheck.includes('drzwi')&&(msgLowerCheck.includes('okienn')||msgLowerCheck.includes('okno')));
+        if(isMixDetected && !isDrzwiMode){
+          // Auto-mix: parsuj jako mix - jedno wywołanie AI które rozdziela
+          const _rulesWithPriceMix={...(aiRules||{}),_totalAmount:_rulesWithPrice2._totalAmount};
+          const r=await parseAI(wiadomosc,adres,'mix',_offerNames,_rulesWithPriceMix);
+          const pozycje=[...mapPozycje((r.pozycje||[]).filter(function(p){return !p.isDrzwi;}),false,true),...mapPozycje((r.pozycje||[]).filter(function(p){return p.isDrzwi;}),true,false)];
+          setForm(f=>({...f,
+            klientImie:f._kalNum&&f.klientImie?f.klientImie:(r.klientImie||f.klientImie),
+            klientUlica:f._kalNum&&f.klientUlica?f.klientUlica:(r.klientUlica||f.klientUlica),
+            klientKod:f._kalNum&&f.klientKod?f.klientKod:(r.klientKod||f.klientKod),
+            klientMiasto:f._kalNum&&f.klientMiasto?f.klientMiasto:(r.klientMiasto||f.klientMiasto),
+            telefon:f._kalNum&&f.telefon?f.telefon:(r.telefon||f.telefon),
+            uwagi:f.uwagi,
+            pozycje:pozycje.length?pozycje:f.pozycje
+          }));
+        } else {
         const r=await parseAI(wiadomosc,adres,isDrzwiMode?"drzwi":"okno",_offerNames,_rulesWithPrice2);
         const pozycje=mapPozycje(r.pozycje,isDrzwiMode,!isDrzwiMode);
         setForm(f=>({...f,
@@ -4058,6 +4077,7 @@ function App() {
           uwagi:f.uwagi,
           pozycje:pozycje.length?pozycje:f.pozycje
         }));
+        } // end else isMixDetected
       }
     }catch(e){
       let msg=e.message||String(e);
