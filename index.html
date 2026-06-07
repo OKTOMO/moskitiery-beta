@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260528.133</title>
+<title>MosquitoApp v20260528.134</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -2597,8 +2597,14 @@ function App() {
         const hasOkna = order.pozycje && order.pozycje.some(p=>!p.isDrzwi);
         // Generuj odpowiedni PDF — drzwi lub okna (lub oba jeśli mieszane)
         let pdfHtmls = [];
-        if(hasOkna) pdfHtmls.push({html: generateOrderHtml(order), name: subject+'.pdf'});
-        if(hasDrzwi) pdfHtmls.push({html: drukujPDF_drzwi(order, true), name: subject+' DRZWI.pdf'});
+        if(hasOkna) {
+          const orderOkna = hasOkna&&hasDrzwi ? {...order, pozycje: order.pozycje.filter(function(p){return !p.isDrzwi;})} : order;
+          pdfHtmls.push({html: generateOrderHtml(orderOkna), name: subject+'.pdf'});
+        }
+        if(hasDrzwi) {
+          const orderDrzwi = hasOkna&&hasDrzwi ? {...order, pozycje: order.pozycje.filter(function(p){return p.isDrzwi;})} : order;
+          pdfHtmls.push({html: drukujPDF_drzwi(orderDrzwi, true), name: subject+' DRZWI.pdf'});
+        }
         if(pdfHtmls.length === 0) pdfHtmls.push({html: generateOrderHtml(order), name: subject+'.pdf'});
         for(const {html, name} of pdfHtmls){
           console.log('[PDF] wysyłam HTML do workera:',name,'długość:',html.length);
@@ -2609,8 +2615,10 @@ function App() {
           });
           const pd=await pr.json();
           if(!pd.ok) throw new Error('PDF render fail: '+JSON.stringify(pd));
-          console.log('[PDF] rozmiar:',pd.size,'bytes');
+          console.log('[PDF] rozmiar:',pd.size,'bytes, nazwa:',name);
+          if(!pd.pdf){console.error('[PDF] brak pdf w response dla:',name,pd);throw new Error('Brak PDF dla '+name);}
           attachments.push({name,content:pd.pdf,mimeType:'application/pdf'});
+          console.log('[PDF] dodano załącznik:',name,'attachments.length:',attachments.length);
         }
       }
       // Etykieta PDF — tylko dla prawdziwych zamówień Allegro i jeśli nie usunięta
