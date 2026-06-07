@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260607.135</title>
+<title>MosquitoApp v20260607.136</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -2595,6 +2595,8 @@ function App() {
       if(!removedFiles.includes('zlecenie') && maPozcje){
         const hasDrzwi = order.pozycje && order.pozycje.some(p=>p.isDrzwi);
         const hasOkna = order.pozycje && order.pozycje.some(p=>!p.isDrzwi);
+        // Dla zamówień mix zapisanych jako dwa osobne zlecenia
+        const mixDrzwiOrder = order._mixDrzwiOrder || null;
         // Generuj odpowiedni PDF — drzwi lub okna (lub oba jeśli mieszane)
         let pdfHtmls = [];
         if(hasOkna) {
@@ -2604,6 +2606,10 @@ function App() {
         if(hasDrzwi) {
           const orderDrzwi = hasOkna&&hasDrzwi ? {...order, pozycje: order.pozycje.filter(function(p){return p.isDrzwi;})} : order;
           pdfHtmls.push({html: drukujPDF_drzwi(orderDrzwi, true), name: subject+' DRZWI.pdf'});
+        }
+        // Mix jako dwa osobne zlecenia - dodaj PDF drzwi z _mixDrzwiOrder
+        if(!hasDrzwi && mixDrzwiOrder && mixDrzwiOrder.pozycje && mixDrzwiOrder.pozycje.length>0) {
+          pdfHtmls.push({html: drukujPDF_drzwi(mixDrzwiOrder, true), name: subject+' DRZWI.pdf'});
         }
         if(pdfHtmls.length === 0) pdfHtmls.push({html: generateOrderHtml(order), name: subject+'.pdf'});
         for(const {html, name} of pdfHtmls){
@@ -4129,7 +4135,7 @@ function App() {
       const orderDrzwi={...baseOrder,id:Date.now()+1,numerZlecenia:numerDrzwi,
         pozycje:pozDrzwi.map(p=>({...p,kolorSiatki:p.kolorSiatki||"Czarna"}))};
       updateOrders([orderOkna,orderDrzwi,..._ordBase]);
-      setSaved(true);setLastSavedOrder(orderOkna);
+      setSaved(true);setLastSavedOrder({...orderOkna,_mixDrzwiOrder:orderDrzwi});
       setTimeout(()=>setLastSavedOrder(null),1800000);
       setWiadomosc(""); setAdres(""); setForm(pustyForm(form.firma)); setNumerOverride(""); setKalNumerForForm("");
       setWithDrzwi(false); setWiadomoscDrzwi(""); setParseTyp("okno");
@@ -5620,7 +5626,9 @@ function App() {
                               if(!to){alert('Brak adresu email produkcji. Ustaw w Admin → Ustawienia.');return;}
                               const subject=(_linkedOrd.numerZlecenia||'')+' '+(_linkedOrd.klientImie||'')+' '+(_linkedOrd.klientMiasto||'');
                               const sh=allegroShipments[imp.allegroOrderId||''];
-                              setMailPreview({imp:imp,order:_linkedOrd,to,subject:subject.trim(),hasEtykieta:!!sh});
+                              // Sprawdź powiązane zlecenie drzwi (mix - numerZlecenia zaczyna się od D)
+                              const _drzwiMixOrd=orders.find(function(o){return o.allegroOrderId===imp.allegroOrderId&&o.numerZlecenia&&o.numerZlecenia.startsWith('D')&&(_linkedOrd?o.id!==_linkedOrd.id:true);});
+                              setMailPreview({imp:imp,order:_drzwiMixOrd&&_linkedOrd?{..._linkedOrd,_mixDrzwiOrder:_drzwiMixOrd}:_linkedOrd,to,subject:subject.trim(),hasEtykieta:!!sh});
                               loadRecentEmails();
                             }}>
                             ✉️📋
