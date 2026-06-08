@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260607.143</title>
+<title>MosquitoApp v20260608.146</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -244,7 +244,7 @@ async function parseAI(msg, adres, typ, offerNames, rules) {
 
 TYP ZAMÓWIENIA: ${autoTyp==="drzwi"?"DRZWI MOSKITIEROWE — ustaw isDrzwi:true dla wszystkich pozycji":autoTyp==="mix"?"OKNA I DRZWI MOSKITIEROWE — wiadomość zawiera oba typy, wykryj każdą pozycję osobno (isDrzwi:true dla drzwi, isDrzwi:false dla okien)":typ==="okno"?"OKNA MOSKITIEROWE — ustaw isDrzwi:false, chyba że wiadomość wyraźnie mówi o drzwiach — wtedy isDrzwi:true":"OKNA I DRZWI MOSKITIEROWE — wykryj typ każdej pozycji"}
 ${offerNames?`\nTYTUŁ OFERTY Z ALLEGRO: "${offerNames}" — użyj do określenia typu (drzwi/okno), koloru i poprzeczki (jeśli tytuł zawiera "bez poprzeczki" → poprzeczka=false, "z poprzeczką" → poprzeczka=true) gdy nie podano w wiadomości.`:''}
-${rules&&rules._totalAmount?`\nCENA ZAMÓWIENIA: ${rules._totalAmount} zł — użyj do określenia poprzeczki i samodomykacza (499=bez poprzeczki bez samo, 539=bez poprzeczki z samo, 549=z poprzeczką bez samo, 589=z poprzeczką z samo)`:''}
+${rules&&rules._drzwiCena?`\nCENA DRZWI (brutto): ${rules._drzwiCena} zł — użyj do określenia poprzeczki i samodomykacza:\n499 zł=bez poprzeczki, bez samodomykacza\n539 zł=bez poprzeczki, z samodomykaczem\n549 zł=Z POPRZECZKĄ, bez samodomykacza\n589 zł=Z POPRZECZKĄ, z samodomykaczem`:rules&&rules._totalAmount?`\nCENA ZAMÓWIENIA: ${rules._totalAmount} zł — użyj do określenia poprzeczki i samodomykacza (499=bez poprzeczki bez samo, 539=bez poprzeczki z samo, 549=z poprzeczką bez samo, 589=z poprzeczką z samo)`:''}
 
 STRUKTURA JSON:
 {
@@ -382,6 +382,7 @@ WAŻNE:
   * NIE wpisuj oryginalnego wymiaru nigdzie — ani do szer2, wys2, ani do uwagi
   * Ustaw isDrzwi:true
   * TYLKO przy tych konkretnych zwrotach — bez nich NIE odejmuj nic
+  * WYJĄTEK — gdy klient podaje 4 wymiary (A, B, C, D) z "na gotowo": A i C to szerokości (min i max), B i D to wysokości (min i max). Użyj ich BEZPOŚREDNIO bez odejmowania: szerokosc=min(A,C), szer2=max(A,C), wysokosc=min(B,D), wys2=max(B,D). Przykład: A=78, B=213.5, C=90, D=225 → szerokosc=78, szer2=90, wysokosc=213.5, wys2=225
 - ROZPOZNAWANIE DRZWI: ustaw isDrzwi:true TYLKO gdy:
   1. Tytuł oferty zawiera słowo "drzwi" (sprawdź TYTUŁ OFERTY Z ALLEGRO powyżej) — TO JEST NAJWAŻNIEJSZE KRYTERIUM
   2. LUB wiadomość klienta zawiera: "balkon", "taras", "wejście", "na gotowo", "nie powiększać"
@@ -3671,8 +3672,10 @@ function App() {
             }
             // DHL Automat krajowy i ORLEN krajowy nie obsługują insurance
             if(isDHLAutomat||isORLEN) return {};
-            // Zagraniczne — zawsze dodaj ubezpieczenie (wymagane przez Allegro)
-            if(_ins) return {
+            // Zagraniczne paczkomaty - nie zawsze obsługują ubezpieczenie
+            const _svcName=(service?.name||'').toLowerCase();
+            const _isAutomat=_svcName.includes('automat')||_svcName.includes('paczkomat')||_svcName.includes('parcel locker')||_svcName.includes('box');
+            if(_ins && !_isAutomat) return {
               insurance:{amount:(_kwota*_ins.r).toFixed(2),currency:_ins.c}
             };
             // Krajowe bez specjalnych wymagań
@@ -4035,7 +4038,9 @@ function App() {
     const _hasDrzwiInForm=form.pozycje&&form.pozycje.some(function(p){return p.isDrzwi;});
     try{
       if(withDrzwi){
-        const _rulesWithPrice={...(aiRules||{}),_totalAmount:allegroImportResults.find(i=>i.allegroOrderId===allegroOrderIdForForm)?.totalAmount||''};
+        const _allegroImpForPrice=allegroImportResults.find(i=>i.allegroOrderId===allegroOrderIdForForm);
+        const _drzwiCena=(_allegroImpForPrice?.pozycje||[]).filter(function(p){return p.nazwa&&(p.nazwa.toLowerCase().includes('drzwi')||p.nazwa.toLowerCase().includes('balkon'));}).map(function(p){return Math.round(parseFloat(p.cenaNetto||0)*1.23);}).filter(Boolean).join(', ');
+        const _rulesWithPrice={...(aiRules||{}),_totalAmount:_allegroImpForPrice?.totalAmount||'',_drzwiCena:_drzwiCena};
         const r=await parseAI(wiadomosc,adres,"okno",_offerNames,_rulesWithPrice);
         const pozOkna=mapPozycje(r.pozycje,false,true);
         let pozDrzwi=[];
@@ -4059,7 +4064,9 @@ function App() {
       } else {
         // _hasDrzwiInForm tylko gdy user nie kliknął jawnie 'Okno' - nie nadpisuj ręcznego wyboru
         const isDrzwiMode=parseTyp==="drzwi"||(parseTyp!=='okno'&&_hasDrzwiInForm);
-        const _rulesWithPrice2={...(aiRules||{}),_totalAmount:allegroImportResults.find(i=>i.allegroOrderId===allegroOrderIdForForm)?.totalAmount||''};
+        const _allegroImpForPrice2=allegroImportResults.find(i=>i.allegroOrderId===allegroOrderIdForForm);
+        const _drzwiCena2=(_allegroImpForPrice2?.pozycje||[]).filter(function(p){return p.nazwa&&(p.nazwa.toLowerCase().includes('drzwi')||p.nazwa.toLowerCase().includes('balkon'));}).map(function(p){return Math.round(parseFloat(p.cenaNetto||0)*1.23);}).filter(Boolean).join(', ');
+        const _rulesWithPrice2={...(aiRules||{}),_totalAmount:_allegroImpForPrice2?.totalAmount||'',_drzwiCena:_drzwiCena2};
         // Sprawdź czy wiadomość/oferta sugeruje mix (okna+drzwi)
         const offerLowerCheck=(_offerNames||'').toLowerCase();
         const msgLowerCheck=(wiadomosc||'').toLowerCase();
