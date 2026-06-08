@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260608.146</title>
+<title>MosquitoApp v20260608.147</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -2622,13 +2622,19 @@ function App() {
         if(pdfHtmls.length === 0) pdfHtmls.push({html: generateOrderHtml(order), name: subject+'.pdf'});
         for(const {html, name} of pdfHtmls){
           console.log('[PDF] wysyłam HTML do workera:',name,'długość:',html.length);
-          const pr=await fetch(AUTORESPONDER_URL+'/pdf/render',{
-            method:'POST',
-            headers:{'Content-Type':'application/json','x-api-key':AUTORESPONDER_KEY},
-            body:JSON.stringify({html})
-          });
-          const pd=await pr.json();
-          if(!pd.ok) throw new Error('PDF render fail: '+JSON.stringify(pd));
+          // Retry z backoffem przy 429
+          let pd=null;
+          for(let _try=0;_try<3;_try++){
+            if(_try>0) await new Promise(r=>setTimeout(r,2000*_try));
+            const pr=await fetch(AUTORESPONDER_URL+'/pdf/render',{
+              method:'POST',
+              headers:{'Content-Type':'application/json','x-api-key':AUTORESPONDER_KEY},
+              body:JSON.stringify({html})
+            });
+            pd=await pr.json();
+            if(pd.ok||pr.status!==429) break;
+          }
+          if(!pd||!pd.ok) throw new Error('PDF render fail: '+JSON.stringify(pd));
           console.log('[PDF] rozmiar:',pd.size,'bytes, nazwa:',name);
           if(!pd.pdf){console.error('[PDF] brak pdf w response dla:',name,pd);throw new Error('Brak PDF dla '+name);}
           attachments.push({name,content:pd.pdf,mimeType:'application/pdf'});
