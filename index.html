@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260608.147</title>
+<title>MosquitoApp v20260608.148</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -7610,17 +7610,16 @@ function App() {
                     {o.pozycje.some(function(p){return !p.isDrzwi;})&&<button className="btn-pdf" onClick={function(){drukujPDF(o);}} title="PDF okna">🪟 PDF</button>}
                     {o.pozycje.some(function(p){return p.isDrzwi;})&&<button className="btn-pdf" style={{background:"#1a2a4a"}} onClick={function(){drukujPDF_drzwi(o);}} title="PDF drzwi">🚪 PDF</button>}
                     <button className="btn-pdf" style={{background:o.dpdWaybill?"#0a2a1a":"#1a1a2a",borderColor:o.dpdWaybill?"#2a6a4a":"#3a3a5a",color:o.dpdWaybill?"#6acf9a":"#8a8abf",fontSize:12}} onClick={function(){setDpdModal(o);setDpdWaga("5");}} title={o.dpdWaybill?"DPD: "+o.dpdWaybill:"Nadeślij DPD"}>{o.dpdWaybill?"📦 "+o.dpdWaybill.slice(-6):"📦 DPD"}</button>
-                    <button className="btn-pdf" style={{background:"#1a1a3a",borderColor:"#3a3a7a",color:"#9a9adf"}} title="Wyślij na produkcję" onClick={async function(){
-                      let emailCfg=JSON.parse(localStorage.getItem('email_produkcji_config')||'{}');
-                      let to=emailCfg.emailProdukcji||'';
-                      if(!to){try{await loadSettingsFromKV();emailCfg=JSON.parse(localStorage.getItem('email_produkcji_config')||'{}');to=emailCfg.emailProdukcji||'';}catch(e){}}
+                    <button className="btn-pdf" style={{background:"#1a1a3a",borderColor:"#3a3a7a",color:"#9a9adf"}} title="Wyślij na produkcję" onClick={function(){
+                      const emailCfg=JSON.parse(localStorage.getItem('email_produkcji_config')||'{}');
+                      const to=emailCfg.emailProdukcji||'';
                       if(!to){alert('Brak adresu email produkcji.');return;}
                       const sh=allegroShipments[o.allegroOrderId||''];
                       const etykietaDesc=sh?.description||sh?.textOnLabel||'';
-                      const isMata=etykietaDesc&&(/(ss|BS)/i.test(etykietaDesc)||/^(p |ol |ż |żel )/i.test(etykietaDesc));
-                      const subject=isMata?`${etykietaDesc} ${o.klientMiasto||''}`.trim():`${o.numerZlecenia||''} ${o.klientImie||''} ${o.klientMiasto||''}`.trim();
+                      const isMata=etykietaDesc&&(/\b(ss|BS)\b/i.test(etykietaDesc)||/^(p |ol |ż |żel )/i.test(etykietaDesc));
+                      const subject=isMata?(etykietaDesc+' '+(o.klientMiasto||'')).trim():(o.numerZlecenia||'')+' '+(o.klientImie||'')+' '+(o.klientMiasto||'');
                       const _drzwiMixOrd=orders.find(function(x){return x.allegroOrderId===o.allegroOrderId&&x.numerZlecenia&&x.numerZlecenia.startsWith('D')&&x.id!==o.id;});
-                      setMailPreview({imp:o,order:_drzwiMixOrd?{...o,_mixDrzwiOrder:_drzwiMixOrd}:o,to,subject,hasEtykieta:!!sh});
+                      setMailPreview({imp:o,order:_drzwiMixOrd?{...o,_mixDrzwiOrder:_drzwiMixOrd}:o,to,subject:subject.trim(),hasEtykieta:!!sh});
                       loadRecentEmails();
                     }}>✉️</button>
                     <button className="btn-pdf" style={{background:"#2a1a4a",color:"#bf9fdf",borderColor:"#7a5aaf"}} onClick={function(){setImportModal(null);setWiadomosc("");setAllegroOrderIdForForm(o.allegroOrderId||"");setForm({data:new Date().toISOString().slice(0,10),firma:o.firma,klientImie:o.klientImie,klientUlica:o.klientUlica||"",klientKod:o.klientKod||"",klientMiasto:o.klientMiasto,telefon:o.telefon,uwagi:"",pozycje:[pustaPoz()]});setNumerOverride("");setEditingId(null);setSaved(false);setTab("nowe");}} title="Nowe zamówienie — ten sam klient">👤+</button>
