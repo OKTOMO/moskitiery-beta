@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260610.152</title>
+<title>MosquitoApp v20260610.154</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -4858,6 +4858,13 @@ function App() {
                   const cfg={domain,token};
                   setFakturowniaConfig(cfg);
                   localStorage.setItem('fakturownia_config',JSON.stringify(cfg));
+                  // Zapisz też per firma na podstawie domeny
+                  const _allCfg=JSON.parse(localStorage.getItem('fakturownia_all_configs')||'{}');
+                  if(domain.includes('favour')||domain.includes('favo')) _allCfg['F']=cfg;
+                  else if(domain.includes('arlis')) _allCfg['AR']=cfg;
+                  else if(domain.includes('everis')) _allCfg['E']=cfg;
+                  else if(domain.includes('albama')) _allCfg['AP']=cfg;
+                  localStorage.setItem('fakturownia_all_configs',JSON.stringify(_allCfg));
                   alert('✅ Zapisano konfigurację Fakturowni');
                 }}>💾 Zapisz konfigurację</button>
                 <button className="btn-sm" style={{background:'#0a1a2a',borderColor:'#2a4a7a',color:'#7abfdf'}} onClick={async()=>{
@@ -5667,15 +5674,19 @@ function App() {
                         </button>
                         {canAttach&&<button title="Przypisz fakturę do zamówienia Allegro (klient zobaczy w panelu)" style={{padding:'4px 7px',fontSize:11,borderRadius:5,cursor:'pointer',background:'#1a2a0a',border:'1px solid #4a7a2a',color:'#9fcf7a',fontWeight:700}}
                           onClick={function(){
-                            const _cfg=JSON.parse(localStorage.getItem('fakturownia_config')||'{}');
+                            // Użyj konfiguracji odpowiedniej firmy
+                            const _allCfg=JSON.parse(localStorage.getItem('fakturownia_all_configs')||'{}');
+                            const _firma=KONTO_DO_FIRMY[imp.kontoId]||'F';
+                            const _cfg=_allCfg[_firma]||JSON.parse(localStorage.getItem('fakturownia_config')||'{}');
                             fetch(WORKER_URL+'/allegro/invoice/attach',{
                               method:'POST',
                               headers:{'Content-Type':'application/json','x-api-key':AUTORESPONDER_KEY},
                               body:JSON.stringify({kontoId:imp.kontoId,allegroOrderId:imp.allegroOrderId,fakturowniaInvoiceId:invSent.fakturowniaId,fakturowniaToken:_cfg.token,fakturowniaDomain:_cfg.domain})
                             }).then(function(r){return r.json();}).then(function(d){
-                              if(d.ok){
+                              const isDup=!d.ok&&d.error&&(d.error.includes('DUPLICATED')||d.error.includes('409'));
+                              if(d.ok||isDup){
                                 setInvoicesSent(function(prev){const next={...prev,[imp.allegroOrderId]:{...prev[imp.allegroOrderId],allegroAttached:true}};localStorage.setItem('invoices_sent',JSON.stringify(next));return next;});
-                                alert('✅ Faktura przypisana do zamówienia Allegro!');
+                                alert(isDup?'✅ Faktura już była przypisana do Allegro (klient ją widzi)':'✅ Faktura przypisana do zamówienia Allegro!');
                               } else {
                                 alert('❌ Błąd: '+(d.error||JSON.stringify(d)));
                               }
