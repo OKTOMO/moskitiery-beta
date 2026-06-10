@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260608.149</title>
+<title>MosquitoApp v20260608.150</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -1798,6 +1798,50 @@ function App() {
       setAllegroImportShow(true);
       // Auto-pobierz porzucone po załadowaniu zamówień
       fetchLeads().catch(function(){});
+      // Auto-sync faktur z Fakturowni (co 10 minut max)
+      const _lastSync=parseInt(localStorage.getItem('fakturownia_last_sync')||'0');
+      if(Date.now()-_lastSync > 10*60*1000){
+        const _cfg=JSON.parse(localStorage.getItem('fakturownia_config')||'{}');
+        if(_cfg.token&&_cfg.domain){
+          localStorage.setItem('fakturownia_last_sync',String(Date.now()));
+          fetch(AUTORESPONDER_URL+'/fakturownia/invoices?token='+encodeURIComponent(_cfg.token)+'&domain='+encodeURIComponent(_cfg.domain)+'&period=this_month&per_page=100&page=1',{headers:{'x-api-key':AUTORESPONDER_KEY}})
+            .then(function(r){return r.json();})
+            .then(function(rd){
+              if(!rd.ok) return;
+              const invList=rd.invoices||[];
+              setInvoicesSent(function(prev){
+                const next={...prev};
+                (invList||[]).forEach(function(inv){
+                  const exists=Object.values(next).some(function(v){return v.id===inv.id||v.fakturowniaId===String(inv.id);});
+                  if(!exists){
+                    const nip=(inv.buyer_tax_no||'').replace(/[^0-9]/g,'');
+                    const kwota=parseFloat(inv.gross_price||inv.price_gross||0);
+                    const invName=(inv.buyer_name||'').toLowerCase();
+                    // Dopasuj po NIP lub nazwie+kwocie
+                    const matchedImp=allResults.find(function(i){
+                      if(nip&&(i.nip||'').replace(/[^0-9]/g,'')===nip) return true;
+                      const impName=(i.nabywcaNazwa||i.klientImie||'').toLowerCase();
+                      const impKwota=parseFloat(i.totalAmount||0);
+                      return invName&&impName&&invName===impName&&Math.abs(kwota-impKwota)<1;
+                    });
+                    const orderId=matchedImp?matchedImp.allegroOrderId:('fakturownia_'+inv.id);
+                    next[orderId]={
+                      id:inv.id,fakturowniaId:String(inv.id),number:inv.number||inv.full_number,
+                      date:inv.issue_date,kwota:kwota,
+                      klientNazwa:inv.buyer_name||'',nip:inv.buyer_tax_no||'',
+                      allegroOrderId:matchedImp?matchedImp.allegroOrderId:'',
+                      kontoId:matchedImp?matchedImp.kontoId:'',
+                      firma:matchedImp?(KONTO_DO_FIRMY[matchedImp.kontoId]||'F'):'F',
+                      allegroAttached:false,_autoSync:true
+                    };
+                  }
+                });
+                try{localStorage.setItem('invoices_sent',JSON.stringify(next));}catch(e){}
+                return next;
+              });
+            }).catch(function(){});
+        }
+      }
       // Auto-aktualizuj statusy na podstawie fulfillmentStatus z Allegro
       setAppStatuses(prev=>{
         const next={...prev};
@@ -5606,17 +5650,40 @@ function App() {
                         color:sh?.mailWyslany?'#7acf7a':'#9a9adf'}}>
                       ✉️{sh?.mailWyslany?' ✅':''}
                     </button>
-                    {(()=>{const invSent=invoicesSent[imp.allegroOrderId];return(
-                    <button onClick={()=>{
-                        const ord=orders.find(o=>o.allegroOrderId===imp.allegroOrderId);
-                        openFakModal(imp,ord||null,true);
-                      }} title={invSent?`Faktura ${invSent.number} (${invSent.date})`:(imp.invoiceRequired?"Klient zamówił fakturę — wystaw":"Wystaw fakturę")}
-                      style={{padding:'4px 8px',fontSize:12,borderRadius:5,cursor:'pointer',
-                        background:invSent?'#0a2a0a':imp.invoiceRequired?'#3a2a1a':'#1a1a2a',
-                        border:`1px solid ${invSent?'#2a7a2a':imp.invoiceRequired?'#7a5a2a':'#3a3a6a'}`,
-                        color:invSent?'#7acf7a':imp.invoiceRequired?'#dfaf5a':'#8a8acf'}}>
-                      {invSent?'🧾✅':imp.invoiceRequired?'🧾❗':'🧾'}
-                    </button>);})()}
+                    {(()=>{
+                      const invSent=invoicesSent[imp.allegroOrderId];
+                      const canAttach=invSent&&invSent.fakturowniaId&&!invSent.allegroAttached&&imp.allegroOrderId&&!imp.allegroOrderId.startsWith('manual_');
+                      return <span style={{display:'inline-flex',gap:3}}>
+                        <button onClick={function(){
+                          const ord=orders.find(function(o){return o.allegroOrderId===imp.allegroOrderId;});
+                          openFakModal(imp,ord||null,true);
+                        }} title={invSent?('Faktura '+(invSent.number||'')+(invSent.date?' ('+invSent.date+')':'')):(imp.invoiceRequired?'Klient zamówił fakturę — wystaw':'Wystaw fakturę')}
+                          style={{padding:'4px 8px',fontSize:12,borderRadius:5,cursor:'pointer',
+                            background:invSent?'#0a2a0a':imp.invoiceRequired?'#3a2a1a':'#1a1a2a',
+                            border:'1px solid '+(invSent?'#2a7a2a':imp.invoiceRequired?'#7a5a2a':'#3a3a6a'),
+                            color:invSent?'#7acf7a':imp.invoiceRequired?'#dfaf5a':'#8a8acf'}}>
+                          {invSent?'🧾✅':imp.invoiceRequired?'🧾❗':'🧾'}
+                        </button>
+                        {canAttach&&<button title="Przypisz fakturę do zamówienia Allegro (klient zobaczy w panelu)" style={{padding:'4px 7px',fontSize:11,borderRadius:5,cursor:'pointer',background:'#1a2a0a',border:'1px solid #4a7a2a',color:'#9fcf7a',fontWeight:700}}
+                          onClick={function(){
+                            const _cfg=JSON.parse(localStorage.getItem('fakturownia_config')||'{}');
+                            fetch(WORKER_URL+'/allegro/invoice/attach',{
+                              method:'POST',
+                              headers:{'Content-Type':'application/json','x-api-key':AUTORESPONDER_KEY},
+                              body:JSON.stringify({kontoId:imp.kontoId,allegroOrderId:imp.allegroOrderId,fakturowniaInvoiceId:invSent.fakturowniaId,fakturowniaToken:_cfg.token,fakturowniaDomain:_cfg.domain})
+                            }).then(function(r){return r.json();}).then(function(d){
+                              if(d.ok){
+                                setInvoicesSent(function(prev){const next={...prev,[imp.allegroOrderId]:{...prev[imp.allegroOrderId],allegroAttached:true}};localStorage.setItem('invoices_sent',JSON.stringify(next));return next;});
+                                alert('✅ Faktura przypisana do zamówienia Allegro!');
+                              } else {
+                                alert('❌ Błąd: '+(d.error||JSON.stringify(d)));
+                              }
+                            }).catch(function(e){alert('❌ '+e.message);});
+                          }}>
+                          📎 Allegro
+                        </button>}
+                      </span>;
+                    })()}
 
                     <button onClick={function(){var _oid=imp.allegroOrderId;toggleBox(_oid,'chat');if(zamOpenBox[_oid]==='chat') return;fetch(AUTORESPONDER_URL+'/messaging/threads?kontoId='+imp.kontoId+'&orderId='+_oid+'&limit=10',{headers:{'x-api-key':AUTORESPONDER_KEY}}).then(function(r){return r.json();}).then(function(d){var threads=d.threads||[];var _login=(imp.klientLogin||'').toLowerCase();var thread=threads.find(function(t){return t.interlocutor&&t.interlocutor.login&&t.interlocutor.login.toLowerCase()===_login;});if(!thread&&threads.length===1) thread=threads[0];if(thread&&thread.id){fetch(AUTORESPONDER_URL+'/messaging/threads/'+thread.id+'/messages?kontoId='+imp.kontoId,{headers:{'x-api-key':AUTORESPONDER_KEY}}).then(function(r2){return r2.json();}).then(function(md){setZamChatHistory(function(prev){var n={};Object.keys(prev).forEach(function(k){n[k]=prev[k];});n[_oid]=md.messages||[];return n;});});}}).catch(function(e){console.warn('chat history error',e);});}} title="Napisz wiadomość do klienta"
                       style={{padding:'4px 7px',fontSize:12,borderRadius:5,cursor:'pointer',
