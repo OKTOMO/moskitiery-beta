@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260608.148</title>
+<title>MosquitoApp v20260608.149</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -2908,6 +2908,11 @@ function App() {
     if(!fakModal) return;
     const cfg=fakturowniaConfig;
     if(!cfg.token||!cfg.domain){alert('Uzupełnij konfigurację Fakturowni w Admin → Fakturownia');return;}
+    // Sprawdź czy faktura już istnieje w invoicesSent
+    const _oid=fakModal.imp?.allegroOrderId||fakModal.order?.allegroOrderId||'';
+    if(_oid&&invoicesSent[_oid]){
+      if(!confirm('⚠️ Dla tego zamówienia faktura już została wystawiona ('+(invoicesSent[_oid].number||'?')+')! Czy na pewno chcesz wystawić kolejną?')) return;
+    }
     setFakModal(m=>({...m,sending:true}));
     try{
       const f=fakModal.form;
