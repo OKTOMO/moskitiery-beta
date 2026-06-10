@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260608.151</title>
+<title>MosquitoApp v20260610.152</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -1199,6 +1199,7 @@ function App() {
   const [showOrderedLeads,setShowOrderedLeads]=useState(false);
   const [leadQrModal,setLeadQrModal]=useState(null);
   const [mailPreviewHtml,setMailPreviewHtml]=useState(null);
+  const [fakturySearch,setFakturySearch]=useState('');
   const [expandedOrders,setExpandedOrders]=useState(new Set());
   const [leadContacted,setLeadContacted]=useState(function(){try{return JSON.parse(localStorage.getItem('lead_contacted')||'{}');}catch{return {};}});
   const [leadStatus,setLeadStatus]=useState(function(){try{return JSON.parse(localStorage.getItem('lead_status')||'{}');}catch{return {};}});
@@ -6394,6 +6395,9 @@ function App() {
 
                       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10,flexWrap:'wrap',gap:8}}>
                         <span style={{color:'#cf9fff',fontWeight:700,fontSize:14}}>🧾 Wystawione faktury</span>
+                        <input value={fakturySearch} onChange={function(e){setFakturySearch(e.target.value);}}
+                          placeholder="Szukaj klienta, nr faktury..."
+                          style={{padding:'4px 10px',fontSize:12,background:'#1a0a2a',border:'1px solid #4a2a6a',borderRadius:5,color:'#cfafff',width:200,marginLeft:8}}/>
                         <button onClick={()=>{
                           const dzis=new Date().toISOString().slice(0,10);
                           setFakModal({order:null,imp:null,
@@ -6422,7 +6426,14 @@ function App() {
                           <th style={{padding:'8px 10px',textAlign:'center',color:'#cf9fff'}}></th>
                         </tr></thead>
                         <tbody>
-                          {fvList.map((fv,i)=>{
+                          {fvList.filter(function(fv){
+                        if(!fakturySearch.trim()) return true;
+                        const q=fakturySearch.toLowerCase();
+                        return (fv.klientNazwa||'').toLowerCase().includes(q)||
+                          (fv.number||'').toLowerCase().includes(q)||
+                          (fv.klientMiasto||'').toLowerCase().includes(q)||
+                          (fv.offerNames||'').toLowerCase().includes(q);
+                      }).map((fv,i)=>{
                             const zebra=i%2===0;
                             const imp=allegroImportResults.find(x=>x.allegroOrderId===fv.allegroOrderId);
                             const FIRMA_LABEL={F:'Favour',AR:'Arlis',E:'Everis',AP:'Albama'};
@@ -9428,7 +9439,14 @@ setFvForm(f=>({...f,nabywcaNazwa:_keepName,nabywcaAdres:d.ulica||f.nabywcaAdres,
 
           // ── Lista faktur ──
           // ── Lista faktur ──
-          const listaFirmy=faktury.filter(f=>!currentProfile||f.firma===currentProfile.id).sort(function(a,b){
+          const listaFirmy=faktury.filter(function(f){
+            if(currentProfile&&f.firma!==currentProfile.id) return false;
+            if(!fakturySearch||!fakturySearch.trim()) return true;
+            const q=fakturySearch.toLowerCase();
+            return (f.nabywca||f.buyer_name||'').toLowerCase().includes(q)||
+              (f.numer||f.number||f.full_number||'').toLowerCase().includes(q)||
+              (f.miasto||'').toLowerCase().includes(q);
+          }).sort(function(a,b){
             // Sortuj po dacie wystawienia malejąco (najnowsze na górze)
             const da=a.dataWystawienia||a.data||'';
             const db=b.dataWystawienia||b.data||'';
@@ -9442,6 +9460,9 @@ setFvForm(f=>({...f,nabywcaNazwa:_keepName,nabywcaAdres:d.ulica||f.nabywcaAdres,
             <div style={{maxWidth:1000,margin:"0 auto"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
                 <h2 style={{color:"#9fcf9f",margin:0}}>🧾 Faktury — {currentProfile?.nazwa||"wszystkie"}</h2>
+                <input value={fakturySearch} onChange={function(e){setFakturySearch(e.target.value);}}
+                  placeholder="Szukaj klienta, nr faktury..."
+                  style={{padding:'5px 10px',fontSize:13,background:'#0a0a1a',border:'1px solid #3a3a6a',borderRadius:5,color:'#cfcfff',width:220}}/>
                 <button className="btn" style={{fontSize:14}} onClick={()=>{setFvForm(pustyFvForm(firma));setFvAllegroId("");setFvAllegroStatus("");}}>+ Nowa faktura</button>
               </div>
 
