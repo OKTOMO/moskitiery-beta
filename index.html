@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260610.154</title>
+<title>MosquitoApp v20260610.155</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -10441,10 +10441,6 @@ setFvForm(f=>({...f,nabywcaNazwa:_keepName,nabywcaAdres:d.ulica||f.nabywcaAdres,
             </div>
             {/* Pozycje z szablonu / Allegro */}
             {fakModal.pozLoading&&<div style={{padding:'8px 12px',background:'#0a1a0a',border:'1px solid #2a4a2a',borderRadius:6,marginBottom:8,fontSize:12,color:'#5a9a7a'}}>⏳ Pobieranie pozycji z Allegro...</div>}
-            {/* Info o automatycznym wystawianiu */}
-            <div style={{background:'#0a1a0a',border:'1px solid #2a5a2a',borderRadius:6,padding:'8px 12px',marginBottom:10,fontSize:12,color:'#7acf7a'}}>
-              ℹ️ Fakturownia wystawia faktury automatycznie przez integrację Allegro. Użyj przycisku <strong>📎 Allegro</strong> na karcie zamówienia żeby przypisać fakturę do zamówienia. Poniższa opcja tylko gdy faktura nie powstała automatycznie.
-            </div>
             {/* Szybkie przypisanie istniejącej faktury */}
             {(function(){
               const _oid=fakModal.imp?.allegroOrderId||fakModal.order?.allegroOrderId||'';
@@ -10592,12 +10588,12 @@ setFvForm(f=>({...f,nabywcaNazwa:_keepName,nabywcaAdres:d.ulica||f.nabywcaAdres,
                 style={{padding:'8px 18px',borderRadius:6,border:'1px solid #2a4a2a',background:'none',color:'#5a7a5a',cursor:'pointer'}}>
                 Anuluj
               </button>
-              <button onClick={function(){if(!confirm('⚠️ Fakturownia wystawia faktury automatycznie.\nCzy na pewno chcesz wystawić przez aplikację?\n\nUżyj tej opcji tylko gdy Fakturownia NIE wystawiła faktury automatycznie.')) return; wyslijFakture();}} disabled={fakModal.sending||fakModal.pozLoading||(!fakModal.form.kwota&&!(fakModal.form.pozycjeAllegro&&fakModal.form.pozycjeAllegro.length>0))}
+              <button onClick={wyslijFakture} disabled={fakModal.sending||fakModal.pozLoading||(!fakModal.form.kwota&&!(fakModal.form.pozycjeAllegro&&fakModal.form.pozycjeAllegro.length>0))}
                 style={{padding:'8px 22px',borderRadius:6,border:'1px solid #4a9a5a',
                   background:fakModal.sending||fakModal.pozLoading||(!fakModal.form.kwota&&!(fakModal.form.pozycjeAllegro&&fakModal.form.pozycjeAllegro.length>0))?'#1a2a1a':'#1a5a2a',
                   color:fakModal.sending||(!fakModal.form.kwota&&!(fakModal.form.pozycjeAllegro&&fakModal.form.pozycjeAllegro.length>0))?'#3a5a3a':'#7fcf7f',
                   cursor:fakModal.sending||fakModal.pozLoading||(!fakModal.form.kwota&&!(fakModal.form.pozycjeAllegro&&fakModal.form.pozycjeAllegro.length>0))?'not-allowed':'pointer',fontWeight:700,fontSize:14}}>
-                {fakModal.sending?'⏳ Wysyłam...':'🧾 Wystaw przez aplikację'}
+                {fakModal.sending?'⏳ Wysyłam...':'🧾 Wystaw fakturę'}
               </button>
             </div>
           </div>
