@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MosquitoApp v20260610.155</title>
+<title>MosquitoApp v20260610.157</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -137,6 +137,14 @@ const ALLEGRO_KONTA = [
 ];
 
 // Normalizuje głębokość do mm — jeśli AI zwróciło wartość w cm (1-3.5), przelicza ×10
+function formatTel(tel){
+  if(!tel) return '';
+  const digits=String(tel).replace(/[^0-9]/g,'');
+  let d=digits;
+  if(d.length===11&&d.startsWith('48')) d=d.slice(2);
+  if(d.length!==9) return tel;
+  return '48 '+d.slice(0,3)+' '+d.slice(3,6)+' '+d.slice(6,9);
+}
 function normalizujGlebokosc(g) {
   const v = parseFloat(g);
   if (!v || isNaN(v)) return DOMYSLNA_GLEBOKOS;
@@ -2661,16 +2669,16 @@ function App() {
           pdfHtmls.push({html: drukujPDF_drzwi(orderDrzwi, true), name: subject+' DRZWI.pdf'});
         }
         // Mix jako dwa osobne zlecenia - dodaj PDF drzwi z _mixDrzwiOrder
-        if(!hasDrzwi && mixDrzwiOrder && mixDrzwiOrder.pozycje && mixDrzwiOrder.pozycje.length>0) {
+        if(!hasDrzwi && mixDrzwiOrder && mixDrzwiOrder.pozycje && mixDrzwiOrder.pozycje.length>0 && !removedFiles.includes('drzwi')) {
           pdfHtmls.push({html: drukujPDF_drzwi(mixDrzwiOrder, true), name: subject+' DRZWI.pdf'});
         }
         if(pdfHtmls.length === 0) pdfHtmls.push({html: generateOrderHtml(order), name: subject+'.pdf'});
         for(const {html, name} of pdfHtmls){
           console.log('[PDF] wysyłam HTML do workera:',name,'długość:',html.length);
-          // Retry z backoffem przy 429
+          // Retry z backoffem przy 429 - dłuższe odstępy
           let pd=null;
-          for(let _try=0;_try<3;_try++){
-            if(_try>0) await new Promise(r=>setTimeout(r,2000*_try));
+          for(let _try=0;_try<5;_try++){
+            if(_try>0) await new Promise(r=>setTimeout(r,3000*_try));
             const pr=await fetch(AUTORESPONDER_URL+'/pdf/render',{
               method:'POST',
               headers:{'Content-Type':'application/json','x-api-key':AUTORESPONDER_KEY},
@@ -6156,7 +6164,7 @@ function App() {
                           <div style={{flex:1,minWidth:0}}>
                             <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginBottom:2}}>
                               {lead.name&&<span style={{fontWeight:700,color:'#9fcfdf',fontSize:14}}>{lead.name}</span>}
-                              {lead.phone&&<span style={{fontSize:12,color:'#7acfaf',fontFamily:'monospace'}}>📞 {lead.phone}</span>}
+                              {lead.phone&&<span style={{fontSize:12,color:'#7acfaf',fontFamily:'monospace'}}>📞 {formatTel(lead.phone)}</span>}
                               {lead.email&&<span style={{fontSize:11,color:'#5a8aaf',fontFamily:'monospace'}}>✉️ {lead.email}</span>}
                               {matchedImp&&<span style={{fontSize:11,color:'#5acf9a',background:'#0a2a1a',border:'1px solid #2a6a4a',borderRadius:4,padding:'1px 6px'}}>✅ Zamówił {ordDate?'('+ordDate+')':''}</span>}
               {leadContacted[lead.id]&&<span style={{fontSize:11,color:'#dfdf7a',background:'#1a1a0a',border:'1px solid #5a5a2a',borderRadius:4,padding:'1px 6px'}} title={'SMS wysłany: '+new Date(leadContacted[lead.id]).toLocaleString('pl-PL')}>📱 SMS {new Date(leadContacted[lead.id]).toLocaleDateString('pl-PL')}</span>}
@@ -10908,6 +10916,13 @@ setFvForm(f=>({...f,nabywcaNazwa:_keepName,nabywcaAdres:d.ulica||f.nabywcaAdres,
                 <div style={{color:"#7acf7a",display:"flex",alignItems:"center",gap:6}}>
                   📄 {mailPreview.subject}.pdf
                   <span onClick={()=>setMailPreview(p=>({...p,removedFiles:[...(p.removedFiles||[]),'zlecenie']}))}
+                    style={{cursor:"pointer",color:"#cf4a4a",fontSize:10}}>✕</span>
+                </div>
+              )}
+              {mailPreview.order&&mailPreview.order._mixDrzwiOrder&&mailPreview.order._mixDrzwiOrder.pozycje&&mailPreview.order._mixDrzwiOrder.pozycje.length>0&&!(mailPreview.removedFiles||[]).includes('drzwi')&&(
+                <div style={{color:"#7acf7a",display:"flex",alignItems:"center",gap:6}}>
+                  📄 {mailPreview.subject} DRZWI.pdf
+                  <span onClick={()=>setMailPreview(p=>({...p,removedFiles:[...(p.removedFiles||[]),'drzwi']}))}
                     style={{cursor:"pointer",color:"#cf4a4a",fontSize:10}}>✕</span>
                 </div>
               )}
