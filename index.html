@@ -310,10 +310,13 @@ Jak rozpoznać 4 wymiary jednych drzwi:
 - klient pisze "98,5/102,5 x 216,5/220,5" → JEDNA pozycja
 - klient oznacza wymiary literami A,B,C,D — ZAWSZE chodzi o JEDNE drzwi
 
-KLUCZOWE: litery A,B,C,D nie mają stałego znaczenia — klient może używać ich dowolnie.
-Zawsze szukaj DWÓCH grup wartości: mniejsze pary (szerokości) i większe pary (wysokości).
-Przykład: "A-79,5 B-223 C-93 D-237" → wartości ok.79-93 to szerokości, ok.223-237 to wysokości
+KLUCZOWE: litery A,B,C,D nie mają stałego znaczenia — klient może używać ich dowolnie i w DOWOLNEJ KOLEJNOŚCI.
+OBOWIĄZKOWO użyj WSZYSTKICH podanych wartości (jeśli jest ich 4 — użyj wszystkich 4, nie tylko pierwszej i ostatniej).
+Algorytm: zbierz wszystkie podane liczby do jednej listy, posortuj. Dwie najmniejsze = szerokości (szerokosc=mniejsza, szer2=większa), dwie największe = wysokości (wysokosc=mniejsza, wys2=większa).
+Przykład: "A-79,5 B-223 C-93 D-237" → lista: [79.5,223,93,237] → posortowane: [79.5,93,223,237] → szerokości={79.5,93}, wysokości={223,237}
 → szerokosc=79.5, szer2=93, wysokosc=223, wys2=237
+Przykład: "A – 99,5 cm, B – 218 cm, C – 109 cm, D – 231 cm" → lista: [99.5,218,109,231] → posortowane: [99.5,109,218,231] → szerokości={99.5,109}, wysokości={218,231}
+→ szerokosc=99.5, szer2=109, wysokosc=218, wys2=231
 
 Przypisanie wartości dla JEDNEJ pozycji drzwi:
 - szerokosc = MNIEJSZA wartość spośród szerokości
