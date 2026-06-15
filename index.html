@@ -7980,29 +7980,15 @@ function App() {
                 return isMata(imp)&&!isMataDuza(imp);
               };
               const countSzt=function(list){return list.reduce(function(s,imp){return s+(imp.pozycje&&imp.pozycje.length>0?imp.pozycje.reduce(function(a,p){return a+(parseInt(p.ilosc)||1);},0):1);},0);};
-              const sumWart=function(list){return list.reduce(function(s,imp){
-                var poz=imp.pozycje&&imp.pozycje.length>0?imp.pozycje:[{nazwa:imp.offerNames||'',ilosc:1,cenaNetto:parseFloat(imp.totalAmount||0)/1.23}];
-                var kwota=0;
-                poz.forEach(function(p){
-                  var n=(p.nazwa||imp.offerNames||'').toLowerCase();
-                  if(n.includes('dostawa')||n.includes('przesyłka')||n.includes('przesylka')||n.includes('kurier')) return;
-                  var szt=parseInt(p.ilosc)||1;
-                  var cenaB=parseFloat(p.cenaNetto||0)*1.23*szt;
-                  if(!cenaB&&poz.length===1) cenaB=parseFloat(imp.totalAmount||0);
-                  if(cenaB>=0.10) kwota+=cenaB;
-                });
-                return s+kwota;
-              },0);};
+              const sumWart=function(list){return list.reduce(function(s,imp){return s+parseFloat(imp.totalAmount||0);},0);};
               const matyDuza=zamMies.filter(isMataDuza);
               const matyMala=zamMies.filter(isMataMala);
               const matyDuzaSzt=countSzt(matyDuza)+(parseInt(statMatyDuzaExtra)||0);
               const matyMalaSzt=countSzt(matyMala)+(parseInt(statMatyMalaExtra)||0);
-              const matyDuzaWart=sumWart(matyDuza);
-              const matyMalaWart=sumWart(matyMala);
               const AVG_DUZA=167.5;
               const AVG_MALA=85.5;
-              const matyDuzaWartRazem=matyDuzaWart+(parseInt(statMatyDuzaExtra)||0)*AVG_DUZA;
-              const matyMalaWartRazem=matyMalaWart+(parseInt(statMatyMalaExtra)||0)*AVG_MALA;
+              const matyDuzaWartRazem=countSzt(matyDuza)*AVG_DUZA+(parseInt(statMatyDuzaExtra)||0)*AVG_DUZA;
+              const matyMalaWartRazem=countSzt(matyMala)*AVG_MALA+(parseInt(statMatyMalaExtra)||0)*AVG_MALA;
               const matySzt=matyDuzaSzt+matyMalaSzt;
               const matyWart=matyDuzaWartRazem+matyMalaWartRazem;
               const matyFavo=zamMies.filter(function(i){return isMata(i)&&i.kontoId==='favo5';});
