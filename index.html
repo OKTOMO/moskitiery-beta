@@ -3738,11 +3738,11 @@ function App() {
               return {insurance:{amount:(_r*50).toFixed(2),currency:_cur}};
             }
             // DHL Automat krajowy, ORLEN krajowy i DHL Czechy nie obsługują insurance
+            const _svcName=(service?.name||'').toLowerCase();
+            const _isAutomat=_svcName.includes('automat')||_svcName.includes('paczkomat')||_svcName.includes('parcel locker')||_svcName.includes('box');
             const _isDHLCzechy=_svcName.includes('dhl')&&(_kraj==='CZ'||_svcName.includes('czech'));
             if(isDHLAutomat||isORLEN||_isDHLCzechy) return {};
             // Zagraniczne paczkomaty - nie zawsze obsługują ubezpieczenie
-            const _svcName=(service?.name||'').toLowerCase();
-            const _isAutomat=_svcName.includes('automat')||_svcName.includes('paczkomat')||_svcName.includes('parcel locker')||_svcName.includes('box');
             if(_ins && !_isAutomat) return {
               insurance:{amount:(_kwota*_ins.r).toFixed(2),currency:_ins.c}
             };
